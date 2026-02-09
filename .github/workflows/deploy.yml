@@ -1,0 +1,95 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          ssh $SERVER_USER@$SERVER_HOST << 'EOF'
+            set -e
+            
+            # Переход в директорию проекта
+            cd /var/www/montaj
+            
+            # Обновление кода
+            echo "📥 Pulling latest code..."
+            git pull origin main
+            
+            # Остановка контейнеров
+            echo "⏸️  Stopping containers..."
+            docker-compose -f docker-compose.prod.yml down
+            
+            # Обновление зависимостей backend
+            echo "📦 Installing backend dependencies..."
+            cd backend
+            npm ci --only=production
+            
+            # Prisma миграции
+            echo "🔄 Running migrations..."
+            npx prisma migrate deploy
+            npx prisma generate
+            cd ..
+            
+            # Обновление зависимостей frontend
+            echo "📦 Installing frontend dependencies..."
+            cd frontend
+            npm ci --only=production
+            cd ..
+            
+            # Сборка образов
+            echo "🔨 Building Docker images..."
+            docker-compose -f docker-compose.prod.yml build --no-cache
+            
+            # Запуск контейнеров
+            echo "▶️  Starting containers..."
+            docker-compose -f docker-compose.prod.yml up -d
+            
+            # Очистка неиспользуемых образов
+            echo "🧹 Cleaning up..."
+            docker system prune -af --volumes || true
+            
+            echo "✅ Deployment completed successfully!"
+          EOF
+
+      - name: Health check
+        run: |
+          sleep 30
+          curl -f https://${{ secrets.DOMAIN }}/health || exit 1
+
+      - name: Notify success
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          # Здесь можно добавить уведомление в Telegram/Slack
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          # Здесь можно добавить уведомление в Telegram/Slack
+

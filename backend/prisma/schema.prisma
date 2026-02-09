@@ -1,0 +1,491 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER  // Заказчик
+  EXECUTOR  // Исполнитель
+  ADMIN     // Администратор
+}
+
+enum UserStatus {
+  PENDING   // Ожидает модерации
+  ACTIVE    // Активирован
+  REJECTED  // Отклонен
+  BLOCKED   // Заблокирован
+}
+
+enum Specialization {
+  WINDOWS        // Окна
+  DOORS          // Двери
+  CEILINGS       // Потолки
+  CONDITIONERS   // Кондиционеры
+  BLINDS         // Жалюзи
+  FURNITURE      // Мебель
+}
+
+enum TariffType {
+  STANDARD  // 150₽ за отклик
+  COMFORT   // 500₽ за взятый заказ
+  PREMIUM   // 5000₽ на 30 дней
+}
+
+enum OrderStatus {
+  PUBLISHED    // Опубликован, ожидает откликов
+  IN_PROGRESS  // Исполнитель выбран, работа в процессе
+  COMPLETED    // Работа завершена
+  CANCELLED    // Отменен
+  ARCHIVED     // Архивирован
+}
+
+enum PaymentMethod {
+  CASH         // Наличные
+  CARD         // Перевод на карту
+  BANK         // Безналичный расчет
+}
+
+model User {
+  id                String      @id @default(uuid())
+  role              Role
+  phone             String      @unique
+  email             String?
+  password          String
+  fullName          String
+  organization      String?
+  city              String
+  address           String?
+  messengers        Json?       // {whatsapp: string, telegram: string}
+  photo             String?
+  inn               String?
+  ogrn              String?
+  rating            Float       @default(3.0)
+  completedOrders   Int         @default(0)
+  status            UserStatus  @default(ACTIVE)
+  isPhoneVerified   Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  executorProfile   ExecutorProfile?
+  balance           Balance?
+  subscription      Subscription?
+  createdOrders     Order[]          @relation("CustomerOrders")
+  assignedOrders    Order[]          @relation("ExecutorOrders")
+  responses         Response[]
+  reviewsGiven      Review[]         @relation("ReviewsGiven")
+  reviewsReceived   Review[]         @relation("ReviewsReceived")
+  transactions      Transaction[]
+  payments          Payment[]
+  adminLogs         AdminLog[]
+  notifications     Notification[]
+  notificationSettings NotificationSettings?
+  messages          Message[]       // Сообщения в чате
+
+  @@index([phone])
+  @@index([status])
+  @@index([role])
+  @@map("users")
+}
+
+model ExecutorProfile {
+  id                  String            @id @default(uuid())
+  userId              String            @unique
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  region              String
+  specializations     Specialization[]
+  shortDescription    String?
+  fullDescription     String?
+  workPhotos          String[]          // Массив URL фотографий работ (до 5)
+  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([userId])
+  @@map("executor_profiles")
+}
+
+model Balance {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  amount        Decimal  @default(0) @db.Decimal(10, 2)      // Основной баланс
+  bonusAmount   Decimal  @default(0) @db.Decimal(10, 2)      // Бонусный баланс
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("balances")
+}
+
+model Subscription {
+  id                    String      @id @default(uuid())
+  userId                String      @unique
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tariffType            TariffType  @default(PREMIUM)
+  startedAt             DateTime    @default(now())
+  expiresAt             DateTime
+  autoRenew             Boolean     @default(false)      // Автопродление
+  specializationCount   Int         @default(3)          // Количество доступных специализаций
+  
+  // История оплат
+  lastPaymentId         String?
+  nextPaymentDate       DateTime?
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([nextPaymentDate])
+  @@map("subscriptions")
+}
+
+model SMSVerification {
+  id          String   @id @default(uuid())
+  phone       String
+  code        String
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  @@index([phone, code])
+  @@index([expiresAt])
+  @@map("sms_verifications")
+}
+
+model Order {
+  id              String          @id @default(uuid())
+  customerId      String
+  customer        User            @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Cascade)
+  executorId      String?
+  executor        User?           @relation("ExecutorOrders", fields: [executorId], references: [id], onDelete: SetNull)
+  
+  // Основная информация
+  category        Specialization
+  title           String
+  description     String          @db.Text
+  
+  // Местоположение
+  region          String
+  address         String
+  latitude        Float?          // Для отображения на карте
+  longitude       Float?
+  
+  // Даты
+  startDate       DateTime
+  endDate         DateTime?
+  
+  // Финансы
+  budget          Decimal         @db.Decimal(10, 2)
+  budgetType      String          @default("fixed")  // fixed или negotiable
+  paymentMethod   PaymentMethod
+  
+  // Файлы
+  files           String[]        // Массив URL файлов
+  
+  // Статус
+  status          OrderStatus     @default(PUBLISHED)
+  
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  publishedAt     DateTime        @default(now())
+  workStartedAt   DateTime?       // Когда исполнитель приступил к работе
+  closedAt        DateTime?
+  
+  // Relations
+  responses       Response[]
+  reviews         Review[]
+  messages        Message[]       // Чат между заказчиком и исполнителем
+  
+  @@index([customerId])
+  @@index([executorId])
+  @@index([status])
+  @@index([category])
+  @@index([region])
+  @@index([startDate])
+  @@map("orders")
+}
+
+model Response {
+  id              String      @id @default(uuid())
+  orderId         String
+  order           Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  executorId      String
+  executor        User        @relation(fields: [executorId], references: [id], onDelete: Cascade)
+  
+  // Финансы
+  commissionPaid  Decimal     @db.Decimal(10, 2)
+  tariffType      TariffType  // Тариф, по которому был отклик
+  
+  // Статус
+  status          String      @default("pending")  // pending, accepted, rejected
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  acceptedAt      DateTime?
+  rejectedAt      DateTime?
+  
+  @@unique([orderId, executorId])  // Один исполнитель - один отклик на заказ
+  @@index([orderId])
+  @@index([executorId])
+  @@index([status])
+  @@map("responses")
+}
+
+enum ReviewStatus {
+  PENDING   // На модерации
+  APPROVED  // Одобрен
+  REJECTED  // Отклонён
+}
+
+model Review {
+  id              String      @id @default(uuid())
+  orderId         String
+  order           Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // Кто оставил отзыв
+  reviewerId      String
+  reviewer        User        @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  
+  // О ком отзыв
+  revieweeId      String
+  reviewee        User        @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  
+  // Контент отзыва
+  rating          Int         // 1-5 звёзд
+  comment         String      @db.Text
+  
+  // Модерация
+  status          ReviewStatus @default(PENDING)  // PENDING, APPROVED, REJECTED
+  moderationNote  String?      @db.Text  // Заметка модератора (если отклонён)
+  moderatedBy     String?
+  moderatedAt     DateTime?
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@unique([orderId, reviewerId])  // Один пользователь - один отзыв на заказ
+  @@index([reviewerId])
+  @@index([revieweeId])
+  @@index([orderId])
+  @@index([status])
+  @@map("reviews")
+}
+
+enum TransactionType {
+  RESPONSE_FEE    // Комиссия за отклик
+  ORDER_FEE       // Комиссия за взятый заказ
+  REFUND          // Возврат средств
+  TOP_UP          // Пополнение баланса
+  SUBSCRIPTION    // Оплата подписки
+  BONUS           // Начисление бонуса
+}
+
+enum PaymentStatus {
+  PENDING         // Ожидает оплаты
+  PROCESSING      // Обрабатывается
+  SUCCEEDED       // Успешно
+  CANCELLED       // Отменён
+  FAILED          // Ошибка
+}
+
+enum ModerationAction {
+  APPROVE
+  REJECT
+  BLOCK
+  UNBLOCK
+}
+
+enum NotificationType {
+  ORDER_NEW              // Новый заказ
+  ORDER_RESPONSE         // Отклик на заказ
+  ORDER_SELECTED         // Исполнитель выбран
+  ORDER_STARTED          // Работа началась
+  ORDER_COMPLETED        // Работа завершена
+  ORDER_CANCELLED        // Заказ отменён
+  REVIEW_NEW             // Новый отзыв
+  REVIEW_APPROVED        // Отзыв одобрен
+  PAYMENT_SUCCESS        // Оплата успешна
+  PAYMENT_FAILED         // Оплата не прошла
+  SUBSCRIPTION_EXPIRING  // Подписка истекает
+  SUBSCRIPTION_EXPIRED   // Подписка истекла
+  USER_APPROVED          // Пользователь одобрен
+  USER_REJECTED          // Пользователь отклонён
+  USER_BLOCKED           // Пользователь заблокирован
+  BALANCE_LOW            // Низкий баланс
+  SYSTEM                 // Системное уведомление
+}
+
+enum NotificationChannel {
+  IN_APP     // Внутри приложения
+  EMAIL      // Email
+  SMS        // SMS
+}
+
+model Transaction {
+  id              String          @id @default(uuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type            TransactionType
+  amount          Decimal         @db.Decimal(10, 2)
+  description     String
+  relatedOrderId  String?
+  relatedPaymentId String?        // ID платежа в ЮKassa
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // ЮKassa данные
+  yookassaPaymentId String?       @unique  // ID платежа в ЮKassa
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("RUB")
+  status            PaymentStatus @default(PENDING)
+  
+  // Назначение
+  purpose           String        // top_up, subscription
+  description       String
+  
+  // Данные подтверждения
+  confirmationUrl   String?       // URL для оплаты
+  paid              Boolean       @default(false)
+  paidAt            DateTime?
+  
+  // Метаданные
+  metadata          Json?         // Дополнительные данные
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([userId])
+  @@index([yookassaPaymentId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+model AdminLog {
+  id          String            @id @default(uuid())
+  adminId     String
+  admin       User              @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  
+  action      ModerationAction
+  targetType  String            // USER, ORDER, REVIEW
+  targetId    String
+  reason      String?
+  metadata    Json?
+  
+  createdAt   DateTime          @default(now())
+  
+  @@index([adminId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("admin_logs")
+}
+
+model Notification {
+  id          String              @id @default(uuid())
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        NotificationType
+  channel     NotificationChannel @default(IN_APP)
+  
+  title       String
+  message     String              @db.Text
+  data        Json?               // Дополнительные данные
+  
+  // Статус
+  read        Boolean             @default(false)
+  readAt      DateTime?
+  sent        Boolean             @default(false)
+  sentAt      DateTime?
+  failed      Boolean             @default(false)
+  failedReason String?
+  
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@index([read])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model NotificationSettings {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Email уведомления
+  emailEnabled          Boolean  @default(true)
+  emailOrderNew         Boolean  @default(true)
+  emailOrderResponse    Boolean  @default(true)
+  emailOrderSelected    Boolean  @default(true)
+  emailOrderCompleted   Boolean  @default(true)
+  emailReviewNew        Boolean  @default(true)
+  emailPaymentSuccess   Boolean  @default(true)
+  
+  // SMS уведомления
+  smsEnabled            Boolean  @default(true)
+  smsOrderSelected      Boolean  @default(true)
+  smsOrderCompleted     Boolean  @default(false)
+  smsPaymentSuccess     Boolean  @default(true)
+  
+  // In-App уведомления
+  inAppEnabled          Boolean  @default(true)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([userId])
+  @@map("notification_settings")
+}
+
+// Модель для чата между заказчиком и исполнителем
+model Message {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  senderId    String
+  sender      User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  content     String   @db.Text
+  fileUrl     String?  // URL файла/фото (опционально)
+  
+  read        Boolean  @default(false)
+  readAt      DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([orderId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}

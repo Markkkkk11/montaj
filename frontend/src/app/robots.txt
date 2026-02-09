@@ -1,0 +1,20 @@
+# Robots.txt для Montaj Platform
+
+User-agent: *
+Allow: /
+Allow: /orders
+Allow: /login
+Allow: /register
+
+# Закрыть приватные страницы
+Disallow: /admin
+Disallow: /profile
+Disallow: /notifications
+Disallow: /api
+
+# Sitemap
+Sitemap: https://your-domain.com/sitemap.xml
+
+# Crawler settings
+Crawl-delay: 1
+
