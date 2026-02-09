@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSocket } from '@/hooks/useSocket';
 import { chatApi, Message } from '@/lib/api/chat';
-import { useAuthStore } from '@/store/auth';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';

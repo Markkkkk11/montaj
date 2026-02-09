@@ -52,27 +52,30 @@ export class AdminService {
       }),
     ]);
 
+    // Подсчитываем заказы в работе
+    const inProgressOrders = await prisma.order.count({ where: { status: 'IN_PROGRESS' } });
+
     return {
-      users: {
-        total: totalUsers,
-        executors: totalExecutors,
-        customers: totalCustomers,
-        pending: pendingUsers,
-        active: activeUsers,
-      },
-      orders: {
-        total: totalOrders,
-        published: publishedOrders,
-        completed: completedOrders,
-      },
-      reviews: {
-        total: totalReviews,
-        pending: pendingReviews,
-      },
-      revenue: {
-        total: parseFloat(totalRevenue._sum.amount?.toString() || '0'),
-        thisMonth: parseFloat(thisMonthRevenue._sum.amount?.toString() || '0'),
-      },
+      // Пользователи
+      totalUsers,
+      totalExecutors,
+      totalCustomers,
+      pendingUsers,
+      activeUsers,
+      
+      // Заказы
+      totalOrders,
+      publishedOrders,
+      inProgressOrders,
+      completedOrders,
+      
+      // Отзывы
+      totalReviews,
+      pendingReviews,
+      
+      // Доходы
+      totalRevenue: parseFloat(totalRevenue._sum.amount?.toString() || '0'),
+      monthlyRevenue: parseFloat(thisMonthRevenue._sum.amount?.toString() || '0'),
     };
   }
 

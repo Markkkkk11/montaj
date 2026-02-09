@@ -9,6 +9,8 @@ export class OrderController {
    */
   async createOrder(req: AuthRequest, res: Response): Promise<void> {
     try {
+      console.log('📝 Создание заказа, данные:', JSON.stringify(req.body, null, 2));
+
       if (!req.user) {
         res.status(401).json({ error: 'Не авторизован' });
         return;
@@ -42,6 +44,7 @@ export class OrderController {
         order,
       });
     } catch (error: any) {
+      console.error('❌ Ошибка создания заказа:', error.message);
       res.status(400).json({ error: error.message });
     }
   }

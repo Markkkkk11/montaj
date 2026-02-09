@@ -9,14 +9,9 @@ export class AdminController {
   async getStatistics(req: AuthRequest, res: Response) {
     try {
       const statistics = await adminService.getStatistics();
-
-      res.json({
-        success: true,
-        statistics,
-      });
+      res.json(statistics);
     } catch (error: any) {
       res.status(500).json({
-        success: false,
         error: error.message,
       });
     }

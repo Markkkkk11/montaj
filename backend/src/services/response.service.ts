@@ -164,10 +164,11 @@ export class ResponseService {
             completedOrders: true,
             executorProfile: {
               select: {
-                bio: true,
-                detailedBio: true,
+                region: true,
+                shortDescription: true,
+                fullDescription: true,
                 specializations: true,
-                photos: true,
+                workPhotos: true,
               },
             },
           },

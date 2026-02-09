@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useAuthStore } from '@/store/auth';
+import { useAuthStore } from '@/stores/authStore';
 import { Message } from '@/lib/api/chat';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
