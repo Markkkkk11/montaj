@@ -21,8 +21,7 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": false,
-    "types": ["node"],
-    "suppressImplicitAnyIndexErrors": true
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"],
