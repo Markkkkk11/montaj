@@ -1,4 +1,3 @@
-import { User, ExecutorProfile, Prisma } from '@prisma/client';
 import prisma from '../config/database';
 import { UpdateProfileData, UpdateExecutorProfileData } from '../types';
 

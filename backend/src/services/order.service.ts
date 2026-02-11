@@ -1,4 +1,3 @@
-import { Order, Prisma, OrderStatus, Specialization } from '@prisma/client';
 import prisma from '../config/database';
 import notificationService from './notification.service';
 

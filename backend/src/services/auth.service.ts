@@ -1,4 +1,3 @@
-import { User, Prisma } from '@prisma/client';
 import prisma from '../config/database';
 import { hashPassword, comparePassword } from '../utils/hash';
 import { generateToken } from '../utils/jwt';
