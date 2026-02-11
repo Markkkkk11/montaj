@@ -23,6 +23,12 @@ export const createOrderSchema = Joi.object({
   address: Joi.string().required().messages({
     'any.required': 'Адрес обязателен',
   }),
+  latitude: Joi.number().optional().allow(null).messages({
+    'number.base': 'Широта должна быть числом',
+  }),
+  longitude: Joi.number().optional().allow(null).messages({
+    'number.base': 'Долгота должна быть числом',
+  }),
   startDate: Joi.date().iso().min('now').required().messages({
     'date.min': 'Дата начала не может быть в прошлом',
     'any.required': 'Дата начала обязательна',

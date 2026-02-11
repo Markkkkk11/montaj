@@ -6,8 +6,10 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { OrderFilters } from '@/components/orders/OrderFilters';
+import { OrdersMap } from '@/components/orders/OrdersMap';
 import { ordersApi } from '@/lib/api/orders';
 import { Order, OrderFilters as Filters } from '@/lib/types';
+import { List, Map } from 'lucide-react';
 
 export default function OrdersPage() {
   const { user, logout } = useAuthStore();
@@ -17,6 +19,7 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<Filters>({});
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   useEffect(() => {
     if (!user) {
@@ -88,21 +91,48 @@ export default function OrdersPage() {
               Найдено заказов: {total}
             </p>
           </div>
-          {user.role === 'CUSTOMER' && (
-            <Button onClick={() => router.push('/orders/create')}>
-              Создать заказ
-            </Button>
-          )}
+          <div className="flex gap-3 items-center">
+            {/* Переключатель вида для исполнителей */}
+            {user.role === 'EXECUTOR' && (
+              <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="gap-2"
+                >
+                  <List className="w-4 h-4" />
+                  Список
+                </Button>
+                <Button
+                  variant={viewMode === 'map' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('map')}
+                  className="gap-2"
+                >
+                  <Map className="w-4 h-4" />
+                  Карта
+                </Button>
+              </div>
+            )}
+            {user.role === 'CUSTOMER' && (
+              <Button onClick={() => router.push('/orders/create')}>
+                Создать заказ
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <OrderFilters onApply={handleApplyFilters} initialFilters={filters} />
-          </div>
+          {viewMode === 'list' && (
+            <div className="lg:col-span-1">
+              <OrderFilters onApply={handleApplyFilters} initialFilters={filters} />
+            </div>
+          )}
 
-          {/* Orders List */}
-          <div className="lg:col-span-3">
+          {/* Orders List or Map */}
+          <div className={viewMode === 'list' ? 'lg:col-span-3' : 'lg:col-span-4'}>
             {isLoading ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Загрузка заказов...</p>
@@ -116,7 +146,14 @@ export default function OrdersPage() {
                   </Button>
                 )}
               </div>
+            ) : viewMode === 'map' ? (
+              /* Map View */
+              <OrdersMap 
+                orders={orders} 
+                onOrderSelect={(orderId) => router.push(`/orders/${orderId}`)}
+              />
             ) : (
+              /* List View */
               <div className="space-y-4">
                 {orders.map((order) => (
                   <OrderCard

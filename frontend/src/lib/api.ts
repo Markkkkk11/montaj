@@ -16,6 +16,16 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Логирование для отладки
+    if (config.url?.includes('/orders') && config.method === 'post') {
+      console.log('🌐 Axios Interceptor: Отправка запроса', {
+        url: config.url,
+        baseURL: config.baseURL,
+        data: config.data,
+      });
+    }
+    
     return config;
   },
   (error) => {

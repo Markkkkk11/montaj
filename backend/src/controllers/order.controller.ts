@@ -9,7 +9,10 @@ export class OrderController {
    */
   async createOrder(req: AuthRequest, res: Response): Promise<void> {
     try {
+      console.log('📝 Создание заказа, RAW req.body:', req.body);
       console.log('📝 Создание заказа, данные:', JSON.stringify(req.body, null, 2));
+      console.log('📝 req.body.latitude:', req.body.latitude, 'typeof:', typeof req.body.latitude);
+      console.log('📝 req.body.longitude:', req.body.longitude, 'typeof:', typeof req.body.longitude);
 
       if (!req.user) {
         res.status(401).json({ error: 'Не авторизован' });
@@ -36,6 +39,12 @@ export class OrderController {
         endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
         files: req.body.files || [],
       };
+
+      console.log('📍 Координаты в orderData:', {
+        latitude: orderData.latitude,
+        longitude: orderData.longitude,
+        address: orderData.address,
+      });
 
       const order = await orderService.createOrder(orderData);
 
@@ -107,10 +116,13 @@ export class OrderController {
         return;
       }
 
+      console.log(`📋 Получение заказов для пользователя: ${req.user.id}, роль: ${req.user.role}`);
+
       let orders;
 
       if (req.user.role === 'CUSTOMER') {
         orders = await orderService.getCustomerOrders(req.user.id);
+        console.log(`✅ Найдено заказов заказчика: ${orders.length}`);
       } else {
         // Для исполнителей - заказы, где он назначен
         const result = await orderService.getOrders(
@@ -119,6 +131,7 @@ export class OrderController {
           100
         );
         orders = result.orders;
+        console.log(`✅ Найдено заказов исполнителя: ${orders.length}`);
       }
 
       res.json({ orders });

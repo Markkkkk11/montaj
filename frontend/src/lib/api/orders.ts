@@ -22,6 +22,11 @@ export const ordersApi = {
 
   // Создать заказ
   async createOrder(data: CreateOrderData) {
+    console.log('🌐 API: Отправка заказа:', data);
+    console.log('🌐 API: Координаты в data:', {
+      latitude: data.latitude,
+      longitude: data.longitude,
+    });
     const response = await api.post('/orders', data);
     return response.data;
   },

@@ -45,6 +45,14 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Логирование body ПОСЛЕ парсинга
+app.use((req, res, next) => {
+  if (req.url === '/api/orders' && req.method === 'POST') {
+    console.log('🔍 PARSED BODY (после парсинга):', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
 // Static files (uploads)
 app.use('/uploads', express.static(config.uploadDir));
 

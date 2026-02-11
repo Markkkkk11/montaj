@@ -167,6 +167,8 @@ export interface CreateOrderData {
   description: string;
   region: string;
   address: string;
+  latitude?: number;
+  longitude?: number;
   startDate: Date | string;
   endDate?: Date | string;
   budget: number;

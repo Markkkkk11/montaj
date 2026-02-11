@@ -9,6 +9,8 @@ interface CreateOrderData {
   description: string;
   region: string;
   address: string;
+  latitude?: number;
+  longitude?: number;
   startDate: Date;
   endDate?: Date;
   budget: number;
@@ -44,6 +46,8 @@ export class OrderService {
         description: data.description,
         region: data.region,
         address: data.address,
+        latitude: data.latitude,
+        longitude: data.longitude,
         startDate: data.startDate,
         endDate: data.endDate,
         budget: data.budget,
@@ -132,7 +136,7 @@ export class OrderService {
           },
         },
         orderBy: {
-          startDate: 'asc',
+          createdAt: 'desc',
         },
         skip: (page - 1) * limit,
         take: limit,

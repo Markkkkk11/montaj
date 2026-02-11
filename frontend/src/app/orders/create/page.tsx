@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AddressAutocomplete } from '@/components/ui/address-autocomplete';
 import { ordersApi } from '@/lib/api/orders';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { CreateOrderData, Specialization, PaymentMethod } from '@/lib/types';
+import { validateAddress } from '@/lib/geocoding';
 
 export default function CreateOrderPage() {
   const { user } = useAuthStore();
@@ -21,6 +23,7 @@ export default function CreateOrderPage() {
     budgetType: 'fixed',
     paymentMethod: 'CASH',
   });
+  const [addressError, setAddressError] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,11 +50,38 @@ export default function CreateOrderPage() {
       return;
     }
 
+    // Валидация адреса
+    if (!formData.region || !formData.address) {
+      setError('Укажите регион и адрес');
+      return;
+    }
+
+    // СТРОГАЯ ПРОВЕРКА: адрес ДОЛЖЕН быть выбран из списка автодополнения
+    if (!formData.latitude || !formData.longitude) {
+      setError('❌ Адрес должен быть выбран из выпадающего списка! Начните вводить адрес и выберите вариант из предложенных.');
+      setAddressError('Выберите адрес из списка');
+      return;
+    }
+
     try {
       setIsLoading(true);
-      await ordersApi.createOrder(formData as CreateOrderData);
+      
+      // Логируем данные перед отправкой
+      console.log('📤 Отправка заказа на backend:', formData);
+      console.log('📍 Координаты:', {
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        type_lat: typeof formData.latitude,
+        type_lng: typeof formData.longitude,
+      });
+      
+      // Создаем заказ с проверенными координатами
+      const result = await ordersApi.createOrder(formData as CreateOrderData);
+      console.log('✅ Заказ создан:', result);
+      
       router.push('/customer/dashboard');
     } catch (err: any) {
+      console.error('❌ Ошибка создания заказа:', err);
       setError(err.response?.data?.error || 'Ошибка создания заказа');
     } finally {
       setIsLoading(false);
@@ -136,19 +166,47 @@ export default function CreateOrderPage() {
                     required
                     placeholder="Москва"
                     value={formData.region || ''}
-                    onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, region: e.target.value });
+                      setAddressError(''); // Сбрасываем ошибку при изменении региона
+                    }}
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="address">Адрес объекта *</Label>
-                  <Input
-                    id="address"
-                    required
-                    placeholder="ул. Примерная, д. 1"
+                  <AddressAutocomplete
+                    region={formData.region || ''}
                     value={formData.address || ''}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    onChange={(value, coords) => {
+                      if (coords) {
+                        // Адрес выбран из списка - сохраняем с координатами
+                        setFormData({
+                          ...formData,
+                          address: value,
+                          latitude: coords.latitude,
+                          longitude: coords.longitude,
+                        });
+                        setAddressError('');
+                        console.log('✅ Адрес выбран из списка:', value, coords);
+                      } else {
+                        // Ручной ввод - удаляем координаты
+                        setFormData({
+                          ...formData,
+                          address: value,
+                          latitude: undefined,
+                          longitude: undefined,
+                        });
+                        console.log('⚠️ Ручной ввод (координаты удалены):', value);
+                      }
+                    }}
+                    placeholder="Начните вводить адрес..."
+                    required
+                    error={addressError}
                   />
+                  <p className="text-xs text-amber-600 mt-1 font-medium">
+                     ОБЯЗАТЕЛЬНО выберите адрес из выпадающего списка! Ручной ввод не допускается.
+                  </p>
                 </div>
               </div>
 
