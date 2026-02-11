@@ -178,7 +178,7 @@ export class SubscriptionService {
     const subscription = await this.getUserSubscription(userId);
     const tariffType = subscription?.tariffType || 'STANDARD';
 
-    const costs = {
+    const costs: any = {
       STANDARD: 150,  // 150₽ за отклик
       COMFORT: 0,     // 0₽ за отклик, 500₽ при выборе
       PREMIUM: 0,     // Безлимитные отклики

@@ -322,14 +322,14 @@ export class ReviewService {
 
     // Подсчитать распределение по звёздам
     const distribution = {
-      5: reviews.filter(r => r.rating === 5).length,
-      4: reviews.filter(r => r.rating === 4).length,
-      3: reviews.filter(r => r.rating === 3).length,
-      2: reviews.filter(r => r.rating === 2).length,
-      1: reviews.filter(r => r.rating === 1).length,
+      5: reviews.filter((r: any) => r.rating === 5).length,
+      4: reviews.filter((r: any) => r.rating === 4).length,
+      3: reviews.filter((r: any) => r.rating === 3).length,
+      2: reviews.filter((r: any) => r.rating === 2).length,
+      1: reviews.filter((r: any) => r.rating === 1).length,
     };
 
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const totalRating = reviews.reduce((sum: any, review: any) => sum + review.rating, 0);
     const averageRating = Math.round((totalRating / total) * 10) / 10;
 
     return {

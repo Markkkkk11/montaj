@@ -5,7 +5,7 @@ export class UserService {
   /**
    * Получить профиль пользователя
    */
-  async getProfile(userId: string): Promise<User | null> {
+  async getProfile(userId: string): Promise<any | null> {
     return prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -19,15 +19,15 @@ export class UserService {
   /**
    * Обновить базовый профиль пользователя
    */
-  async updateProfile(userId: string, data: UpdateProfileData): Promise<User> {
-    const updateData: Prisma.UserUpdateInput = {};
+  async updateProfile(userId: string, data: UpdateProfileData): Promise<any> {
+    const updateData: any = {};
 
     if (data.fullName) updateData.fullName = data.fullName;
     if (data.organization !== undefined) updateData.organization = data.organization;
     if (data.city) updateData.city = data.city;
     if (data.address !== undefined) updateData.address = data.address;
     if (data.email !== undefined) updateData.email = data.email;
-    if (data.messengers) updateData.messengers = data.messengers as Prisma.JsonObject;
+    if (data.messengers) updateData.messengers = data.messengers as any;
     if (data.inn !== undefined) updateData.inn = data.inn;
     if (data.ogrn !== undefined) updateData.ogrn = data.ogrn;
 
@@ -45,7 +45,7 @@ export class UserService {
   /**
    * Обновить фото профиля
    */
-  async updatePhoto(userId: string, photoUrl: string): Promise<User> {
+  async updatePhoto(userId: string, photoUrl: string): Promise<any> {
     return prisma.user.update({
       where: { id: userId },
       data: { photo: photoUrl },
@@ -58,7 +58,7 @@ export class UserService {
   async updateExecutorProfile(
     userId: string,
     data: UpdateExecutorProfileData
-  ): Promise<ExecutorProfile> {
+  ): Promise<any> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { executorProfile: true },
@@ -76,7 +76,7 @@ export class UserService {
       throw new Error('Профиль исполнителя не найден');
     }
 
-    const updateData: Prisma.ExecutorProfileUpdateInput = {};
+    const updateData: any = {};
 
     if (data.region !== undefined) updateData.region = data.region;
     if (data.specializations !== undefined) {
@@ -94,7 +94,7 @@ export class UserService {
   /**
    * Добавить фото работ исполнителя
    */
-  async addWorkPhoto(userId: string, photoUrl: string): Promise<ExecutorProfile> {
+  async addWorkPhoto(userId: string, photoUrl: string): Promise<any> {
     const profile = await prisma.executorProfile.findUnique({
       where: { userId },
     });
@@ -121,7 +121,7 @@ export class UserService {
   /**
    * Удалить фото работы исполнителя
    */
-  async removeWorkPhoto(userId: string, photoUrl: string): Promise<ExecutorProfile> {
+  async removeWorkPhoto(userId: string, photoUrl: string): Promise<any> {
     const profile = await prisma.executorProfile.findUnique({
       where: { userId },
     });
@@ -130,7 +130,7 @@ export class UserService {
       throw new Error('Профиль исполнителя не найден');
     }
 
-    const updatedPhotos = profile.workPhotos.filter((photo) => photo !== photoUrl);
+    const updatedPhotos = profile.workPhotos.filter((photo: any) => photo !== photoUrl);
 
     return prisma.executorProfile.update({
       where: { userId },
