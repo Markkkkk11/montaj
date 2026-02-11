@@ -151,7 +151,7 @@ export class AuthService {
   /**
    * Получить текущего пользователя по ID
    */
-  async getCurrentUser(userId: string): Promise<User | null> {
+  async getCurrentUser(userId: string): Promise<any | null> {
     return prisma.user.findUnique({
       where: { id: userId },
       include: {

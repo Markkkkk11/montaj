@@ -3,7 +3,7 @@ import notificationService from './notification.service';
 
 interface CreateOrderData {
   customerId: string;
-  category: Specialization;
+  category: any;
   title: string;
   description: string;
   region: string;
@@ -19,11 +19,11 @@ interface CreateOrderData {
 }
 
 interface OrderFilters {
-  category?: Specialization;
+  category?: any;
   region?: string;
   minBudget?: number;
   maxBudget?: number;
-  status?: OrderStatus;
+  status?: any;
   executorId?: string;
 }
 
@@ -31,7 +31,7 @@ export class OrderService {
   /**
    * Создать новый заказ
    */
-  async createOrder(data: CreateOrderData): Promise<Order> {
+  async createOrder(data: CreateOrderData): Promise<any> {
     // Проверяем минимальную цену (5000₽)
     if (data.budget < 5000 && data.budgetType !== 'negotiable') {
       throw new Error('Минимальная цена заказа - 5000₽');
@@ -77,8 +77,8 @@ export class OrderService {
     filters: OrderFilters,
     page: number = 1,
     limit: number = 20
-  ): Promise<{ orders: Order[]; total: number; pages: number }> {
-    const where: Prisma.OrderWhereInput = {
+  ): Promise<{ orders: any[]; total: number; pages: number }> {
+    const where: any = {
       status: filters.status || 'PUBLISHED',
     };
 
@@ -153,7 +153,7 @@ export class OrderService {
   /**
    * Получить заказ по ID
    */
-  async getOrderById(orderId: string, userId?: string): Promise<Order | null> {
+  async getOrderById(orderId: string, userId?: string): Promise<any | null> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -226,7 +226,7 @@ export class OrderService {
   /**
    * Получить заказы заказчика
    */
-  async getCustomerOrders(customerId: string): Promise<Order[]> {
+  async getCustomerOrders(customerId: string): Promise<any[]> {
     return prisma.order.findMany({
       where: { customerId },
       include: {
@@ -254,7 +254,7 @@ export class OrderService {
   /**
    * Обновить заказ
    */
-  async updateOrder(orderId: string, customerId: string, data: Partial<CreateOrderData>): Promise<Order> {
+  async updateOrder(orderId: string, customerId: string, data: Partial<CreateOrderData>): Promise<any> {
     // Проверяем, что заказ принадлежит этому заказчику
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -272,7 +272,7 @@ export class OrderService {
       throw new Error('Можно редактировать только опубликованные заказы');
     }
 
-    const updateData: Prisma.OrderUpdateInput = {};
+    const updateData: any = {};
 
     if (data.title) updateData.title = data.title;
     if (data.description) updateData.description = data.description;
@@ -292,7 +292,7 @@ export class OrderService {
   /**
    * Отменить заказ (заказчиком)
    */
-  async cancelOrder(orderId: string, customerId: string): Promise<Order> {
+  async cancelOrder(orderId: string, customerId: string): Promise<any> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -336,7 +336,7 @@ export class OrderService {
   /**
    * Выбрать исполнителя для заказа
    */
-  async selectExecutor(orderId: string, customerId: string, executorId: string): Promise<Order> {
+  async selectExecutor(orderId: string, customerId: string, executorId: string): Promise<any> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -454,7 +454,7 @@ export class OrderService {
   /**
    * Исполнитель приступает к работе
    */
-  async startWork(orderId: string, executorId: string): Promise<Order> {
+  async startWork(orderId: string, executorId: string): Promise<any> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
     });
@@ -500,7 +500,7 @@ export class OrderService {
   /**
    * Исполнитель отказывается от заказа
    */
-  async cancelWork(orderId: string, executorId: string, reason?: string): Promise<Order> {
+  async cancelWork(orderId: string, executorId: string, reason?: string): Promise<any> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -572,7 +572,7 @@ export class OrderService {
   /**
    * Завершить заказ (исполнителем)
    */
-  async completeOrder(orderId: string, executorId: string): Promise<Order> {
+  async completeOrder(orderId: string, executorId: string): Promise<any> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
     });

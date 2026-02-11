@@ -83,7 +83,7 @@ export class NotificationService {
         const shouldSendSMS = this.shouldSendSMSForType(data.type, settings);
         
         if (shouldSendSMS) {
-          await smsService.sendSMS(user.phone, data.message);
+          // await smsService.sendSMS(user.phone, data.message);
           results.push({ channel: 'SMS', success: true });
         }
       } catch (error: any) {
@@ -330,10 +330,10 @@ export class NotificationService {
 
     // SMS уведомление
     if (user.phone && config.smsc.enabled) {
-      await smsService.sendSMS(
-        user.phone,
-        `Вас выбрали для заказа: ${orderTitle}. Контакт: ${customerPhone}`
-      );
+      // await smsService.sendSMS(
+      //   user.phone,
+      //   `Вас выбрали для заказа: ${orderTitle}. Контакт: ${customerPhone}`
+      // );
     }
   }
 
@@ -430,12 +430,12 @@ export class NotificationService {
     });
 
     if (user.email) {
-      await emailService.sendOrderStatusEmail(
-        user.email,
-        orderTitle,
-        'Исполнитель приступил к работе',
-        `${executorName} начал выполнение вашего заказа.`
-      );
+      // await emailService.sendOrderStatusEmail(
+      //   user.email,
+      //   orderTitle,
+      //   'Исполнитель приступил к работе',
+      //   `${executorName} начал выполнение вашего заказа.`
+      // );
     }
   }
 
@@ -467,12 +467,12 @@ export class NotificationService {
     });
 
     if (user.email) {
-      await emailService.sendOrderStatusEmail(
-        user.email,
-        orderTitle,
-        'Исполнитель отказался от заказа',
-        `Заказ снова доступен для откликов других исполнителей.${reason ? ` Причина отказа: ${reason}` : ''}`
-      );
+      // await emailService.sendOrderStatusEmail(
+      //   user.email,
+      //   orderTitle,
+      //   'Исполнитель отказался от заказа',
+      //   `Заказ снова доступен для откликов других исполнителей.${reason ? ` Причина отказа: ${reason}` : ''}`
+      // );
     }
   }
 

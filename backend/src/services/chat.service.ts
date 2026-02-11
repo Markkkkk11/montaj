@@ -11,7 +11,7 @@ class ChatService {
     senderId: string,
     content: string,
     fileUrl?: string
-  ): Promise<Message> {
+  ): Promise<any> {
     // Проверяем, что отправитель имеет доступ к заказу
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -54,7 +54,7 @@ class ChatService {
   /**
    * Получить историю сообщений по заказу
    */
-  async getMessages(orderId: string, userId: string, limit = 100, offset = 0): Promise<Message[]> {
+  async getMessages(orderId: string, userId: string, limit = 100, offset = 0): Promise<any[]> {
     // Проверяем доступ
     const order = await prisma.order.findUnique({
       where: { id: orderId },
