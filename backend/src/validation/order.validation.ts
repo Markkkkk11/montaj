@@ -29,8 +29,7 @@ export const createOrderSchema = Joi.object({
   longitude: Joi.number().optional().allow(null).messages({
     'number.base': 'Долгота должна быть числом',
   }),
-  startDate: Joi.date().iso().min('now').required().messages({
-    'date.min': 'Дата начала не может быть в прошлом',
+  startDate: Joi.date().iso().required().messages({
     'any.required': 'Дата начала обязательна',
   }),
   endDate: Joi.date().iso().min(Joi.ref('startDate')).optional().allow(null).messages({
@@ -52,7 +51,7 @@ export const updateOrderSchema = Joi.object({
   description: Joi.string().min(20).optional(),
   region: Joi.string().optional(),
   address: Joi.string().optional(),
-  startDate: Joi.date().iso().min('now').optional(),
+  startDate: Joi.date().iso().optional(),
   endDate: Joi.date().iso().optional().allow(null),
   budget: Joi.number().min(0).optional(),
   budgetType: Joi.string().valid('fixed', 'negotiable').optional(),

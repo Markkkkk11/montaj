@@ -8,6 +8,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Specialization, OrderFilters as Filters } from '@/lib/types';
 
+// Список доступных регионов (совпадает с координатами в OrdersMap)
+const AVAILABLE_REGIONS = [
+  'Москва',
+  'Санкт-Петербург',
+  'Новосибирск',
+  'Екатеринбург',
+  'Казань',
+  'Нижний Новгород',
+  'Челябинск',
+  'Самара',
+  'Омск',
+  'Ростов-на-Дону',
+  'Уфа',
+  'Красноярск',
+  'Воронеж',
+  'Пермь',
+  'Волгоград',
+];
+
 interface OrderFiltersProps {
   onApply: (filters: Filters) => void;
   initialFilters?: Filters;
@@ -52,12 +71,19 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
 
         <div>
           <Label htmlFor="region">Регион</Label>
-          <Input
+          <select
             id="region"
-            placeholder="Москва, Санкт-Петербург..."
+            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={filters.region || ''}
             onChange={(e) => setFilters({ ...filters, region: e.target.value || undefined })}
-          />
+          >
+            <option value="">Все регионы</option>
+            {AVAILABLE_REGIONS.map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

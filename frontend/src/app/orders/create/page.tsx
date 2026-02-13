@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,20 @@ export default function CreateOrderPage() {
     paymentMethod: 'CASH',
   });
   const [addressError, setAddressError] = useState<string>('');
+  const [budgetError, setBudgetError] = useState<string>('');
+
+  // Загрузка Yandex Maps API
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.ymaps) {
+      const script = document.createElement('script');
+      script.src = `https://api-maps.yandex.ru/2.1/?apikey=${process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY}&lang=ru_RU`;
+      script.async = true;
+      script.onload = () => {
+        console.log('✅ Yandex Maps API загружен');
+      };
+      document.head.appendChild(script);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,11 +273,28 @@ export default function CreateOrderPage() {
                     min={5000}
                     placeholder="5000"
                     value={formData.budget || ''}
-                    onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setFormData({ ...formData, budget: value });
+                      
+                      // Проверяем минимальную цену
+                      if (value > 0 && value < 5000) {
+                        setBudgetError('Цена не может быть ниже 5000₽');
+                      } else {
+                        setBudgetError('');
+                      }
+                    }}
+                    className={budgetError ? 'border-red-500' : ''}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Минимум 5000₽
-                  </p>
+                  {budgetError ? (
+                    <p className="text-xs text-red-600 mt-1 font-medium">
+                      {budgetError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Минимум 5000₽
+                    </p>
+                  )}
                 </div>
 
                 <div>

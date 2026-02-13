@@ -1,8 +1,13 @@
 /**
- * Геокодирование адреса с использованием Яндекс.Карт API
+ * Геокодирование адреса с использованием Яндекс.Карт JavaScript API
  */
 
-const YANDEX_API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '';
+// Глобальная переменная ymaps будет доступна после загрузки скрипта
+declare global {
+  interface Window {
+    ymaps: any;
+  }
+}
 
 export interface GeocodingResult {
   latitude: number;
@@ -21,28 +26,27 @@ export async function geocodeAddress(
   address: string
 ): Promise<GeocodingResult | null> {
   try {
-    const query = `${address}, ${region}, Россия`;
-    const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(
-      query
-    )}&format=json&results=1`;
-
-    console.log('🔍 Геокодирование:', query);
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      console.error('Geocoding API error:', response.status);
+    // Ждем загрузки ymaps
+    if (typeof window === 'undefined' || !window.ymaps) {
+      console.error('❌ Yandex Maps API не загружен');
       return null;
     }
 
-    const data = await response.json();
-    const geoObject = data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
+    const query = `${address}, ${region}, Россия`;
+    console.log('🔍 Геокодирование (Yandex Maps JS):', query);
 
-    if (geoObject) {
-      const coords = geoObject.Point.pos.split(' ');
+    // Используем ymaps.geocode
+    const result = await window.ymaps.geocode(query, {
+      results: 1,
+    });
+
+    const firstGeoObject = result.geoObjects.get(0);
+    
+    if (firstGeoObject) {
+      const coords = firstGeoObject.geometry.getCoordinates();
       return {
-        latitude: parseFloat(coords[1]),
-        longitude: parseFloat(coords[0]),
+        latitude: coords[0],
+        longitude: coords[1],
       };
     }
 
@@ -87,7 +91,7 @@ export async function getCoordinates(
 }
 
 /**
- * Поиск адресов с автодополнением (Яндекс.Геосаджест)
+ * Поиск адресов с автодополнением (используем геокодер для поиска)
  */
 export async function searchAddresses(
   region: string,
@@ -99,44 +103,41 @@ export async function searchAddresses(
   }
 
   try {
+    // Ждем загрузки ymaps
+    if (typeof window === 'undefined' || !window.ymaps) {
+      console.error('❌ Yandex Maps API не загружен');
+      return [];
+    }
+
     const searchQuery = `${region}, ${query}`;
-    const url = `https://suggest-maps.yandex.ru/v1/suggest?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(
-      searchQuery
-    )}&results=5&types=house,street`;
+    console.log('🔍 Поиск адресов (Yandex Geocoder):', searchQuery);
 
-    console.log('🔍 Поиск адресов (Яндекс.Геосаджест):', searchQuery);
+    // Используем ymaps.geocode для поиска (возвращает до 10 результатов)
+    const result = await window.ymaps.geocode(searchQuery, {
+      results: 5,
+    });
 
-    const response = await fetch(url);
+    const geoObjects = result.geoObjects;
+    const suggestions: AddressSuggestion[] = [];
 
-    console.log('📡 Статус ответа:', response.status);
+    console.log('📦 Получено результатов:', geoObjects.getLength());
 
-    if (!response.ok) {
-      console.error('❌ Address search API error:', response.status, response.statusText);
-      return [];
+    for (let i = 0; i < geoObjects.getLength(); i++) {
+      const geoObject = geoObjects.get(i);
+      const coords = geoObject.geometry.getCoordinates();
+      const address = geoObject.getAddressLine();
+      const name = geoObject.properties.get('name') || address;
+
+      suggestions.push({
+        displayName: name,
+        address: address,
+        latitude: coords[0],
+        longitude: coords[1],
+      });
     }
-
-    const data = await response.json();
-    console.log('📦 Получено результатов:', data.results?.length || 0);
-
-    if (!data.results || data.results.length === 0) {
-      return [];
-    }
-
-    // Геокодируем каждый результат для получения координат
-    const suggestions = await Promise.all(
-      data.results.map(async (item: any) => {
-        const coords = await geocodeAddress(region, item.title.text);
-        return {
-          displayName: item.title.text,
-          address: item.subtitle?.text || item.title.text,
-          latitude: coords?.latitude || 0,
-          longitude: coords?.longitude || 0,
-        };
-      })
-    );
 
     console.log('✅ Подсказки адресов:', suggestions);
-    return suggestions.filter(s => s.latitude !== 0 && s.longitude !== 0);
+    return suggestions;
   } catch (error) {
     console.error('❌ Address search error:', error);
     return [];

@@ -6,6 +6,7 @@ import { MapPin } from 'lucide-react';
 
 interface OrdersMapProps {
   orders: Order[];
+  region?: string;
   onOrderSelect: (orderId: string) => void;
 }
 
@@ -16,14 +17,38 @@ declare global {
   }
 }
 
-export function OrdersMap({ orders, onOrderSelect }: OrdersMapProps) {
+// Координаты городов России
+const CITY_COORDS: Record<string, [number, number]> = {
+  'Москва': [55.7558, 37.6173],
+  'Санкт-Петербург': [59.9343, 30.3351],
+  'Новосибирск': [55.0084, 82.9357],
+  'Екатеринбург': [56.8389, 60.6057],
+  'Казань': [55.8304, 49.0661],
+  'Нижний Новгород': [56.2965, 43.9361],
+  'Челябинск': [55.1644, 61.4368],
+  'Самара': [53.1959, 50.1002],
+  'Омск': [54.9885, 73.3242],
+  'Ростов-на-Дону': [47.2357, 39.7015],
+  'Уфа': [54.7388, 55.9721],
+  'Красноярск': [56.0153, 92.8932],
+  'Воронеж': [51.6605, 39.2006],
+  'Пермь': [58.0105, 56.2502],
+  'Волгоград': [48.7080, 44.5133],
+};
+
+export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
   const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const isInitialized = useRef(false);
+  const scriptLoaded = useRef(false);
 
   useEffect(() => {
-    // Загружаем Яндекс.Карты API
-    if (!window.ymaps) {
+    // Проверяем, не загружен ли уже скрипт Яндекс.Карт
+    const existingScript = document.querySelector('script[src*="api-maps.yandex.ru"]');
+    
+    if (!window.ymaps && !existingScript && !scriptLoaded.current) {
+      // Загружаем Яндекс.Карты API только если его еще нет
+      scriptLoaded.current = true;
       const script = document.createElement('script');
       script.src = `https://api-maps.yandex.ru/2.1/?apikey=${process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY}&lang=ru_RU`;
       script.async = true;
@@ -31,17 +56,31 @@ export function OrdersMap({ orders, onOrderSelect }: OrdersMapProps) {
         window.ymaps.ready(initMap);
       };
       document.head.appendChild(script);
-    } else if (!isInitialized.current) {
+    } else if (window.ymaps && !isInitialized.current) {
+      // API уже загружен, просто инициализируем карту
       window.ymaps.ready(initMap);
     }
 
     function initMap() {
-      if (!mapContainerRef.current || isInitialized.current) return;
+      if (!mapContainerRef.current) return;
+      
+      // Если карта уже инициализирована, удаляем её
+      if (mapRef.current && isInitialized.current) {
+        mapRef.current.destroy();
+        mapRef.current = null;
+      }
+
+      // Определяем центр карты на основе региона
+      const center = region && CITY_COORDS[region] 
+        ? CITY_COORDS[region] 
+        : [55.7558, 37.6173]; // Москва по умолчанию
+
+      console.log('🗺️ Initializing map with center:', center, 'for region:', region);
 
       // Создаем карту
       mapRef.current = new window.ymaps.Map(mapContainerRef.current, {
-        center: [55.7558, 37.6173], // Москва по умолчанию
-        zoom: 10,
+        center: center,
+        zoom: 11,
         controls: ['zoomControl', 'fullscreenControl'],
       });
 
@@ -116,8 +155,8 @@ export function OrdersMap({ orders, onOrderSelect }: OrdersMapProps) {
         bounds.push([order.latitude, order.longitude]);
       });
 
-      // Подстраиваем карту под все метки
-      if (bounds.length > 0) {
+      // Подстраиваем карту под все метки ТОЛЬКО если НЕ выбран конкретный регион
+      if (bounds.length > 0 && !region) {
         mapRef.current.setBounds(bounds, {
           checkZoomRange: true,
           zoomMargin: 50,
@@ -126,19 +165,16 @@ export function OrdersMap({ orders, onOrderSelect }: OrdersMapProps) {
     }
 
     // Обновляем метки при изменении заказов
-    if (isInitialized.current) {
+    if (isInitialized.current && window.ymaps) {
       updateMarkers();
     }
 
     return () => {
-      // Cleanup при размонтировании
-      if (mapRef.current && isInitialized.current) {
-        mapRef.current.destroy();
-        mapRef.current = null;
-        isInitialized.current = false;
-      }
+      // Cleanup при размонтировании компонента
+      // НЕ удаляем карту при изменении региона
     };
-  }, [orders, onOrderSelect]);
+  }, [orders, region, onOrderSelect]);
+
 
   const ordersWithCoords = orders.filter(order => 
     order.latitude && 

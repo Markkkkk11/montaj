@@ -17,6 +17,7 @@ import webhookRoutes from './routes/webhook.routes';
 import adminRoutes from './routes/admin.routes';
 import notificationRoutes from './routes/notification.routes';
 import chatRoutes from './routes/chat.routes';
+import geocodingRoutes from './routes/geocoding.routes';
 
 // Инициализация приложения
 const app: Application = express();
@@ -68,6 +69,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/geocoding', geocodingRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

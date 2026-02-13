@@ -124,15 +124,13 @@ export default function OrdersPage() {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
-          {viewMode === 'list' && (
-            <div className="lg:col-span-1">
-              <OrderFilters onApply={handleApplyFilters} initialFilters={filters} />
-            </div>
-          )}
+          {/* Filters Sidebar - всегда видны */}
+          <div className="lg:col-span-1">
+            <OrderFilters onApply={handleApplyFilters} initialFilters={filters} />
+          </div>
 
           {/* Orders List or Map */}
-          <div className={viewMode === 'list' ? 'lg:col-span-3' : 'lg:col-span-4'}>
+          <div className="lg:col-span-3">
             {isLoading ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Загрузка заказов...</p>
@@ -150,6 +148,7 @@ export default function OrdersPage() {
               /* Map View */
               <OrdersMap 
                 orders={orders} 
+                region={filters.region}
                 onOrderSelect={(orderId) => router.push(`/orders/${orderId}`)}
               />
             ) : (

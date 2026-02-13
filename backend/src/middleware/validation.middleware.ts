@@ -6,6 +6,8 @@ import Joi from 'joi';
  */
 export const validateBody = (schema: Joi.ObjectSchema) => {
   return (req: Request, res: Response, next: NextFunction): void => {
+    console.log('🔍 Валидация body:', JSON.stringify(req.body, null, 2));
+    
     const { error, value } = schema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
@@ -16,6 +18,8 @@ export const validateBody = (schema: Joi.ObjectSchema) => {
         field: detail.path.join('.'),
         message: detail.message,
       }));
+
+      console.log('❌ Ошибка валидации:', errors);
 
       res.status(400).json({
         error: 'Ошибка валидации',
