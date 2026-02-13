@@ -1,6 +1,8 @@
 /**
- * Геокодирование адреса с использованием Nominatim (OpenStreetMap)
+ * Геокодирование адреса с использованием Яндекс.Карт API
  */
+
+const YANDEX_API_KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || '';
 
 export interface GeocodingResult {
   latitude: number;
@@ -20,15 +22,13 @@ export async function geocodeAddress(
 ): Promise<GeocodingResult | null> {
   try {
     const query = `${address}, ${region}, Россия`;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+    const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(
       query
-    )}&limit=1`;
+    )}&format=json&results=1`;
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'MontajApp/1.0',
-      },
-    });
+    console.log('🔍 Геокодирование:', query);
+
+    const response = await fetch(url);
 
     if (!response.ok) {
       console.error('Geocoding API error:', response.status);
@@ -36,11 +36,13 @@ export async function geocodeAddress(
     }
 
     const data = await response.json();
+    const geoObject = data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
 
-    if (data && data.length > 0) {
+    if (geoObject) {
+      const coords = geoObject.Point.pos.split(' ');
       return {
-        latitude: parseFloat(data[0].lat),
-        longitude: parseFloat(data[0].lon),
+        latitude: parseFloat(coords[1]),
+        longitude: parseFloat(coords[0]),
       };
     }
 
@@ -85,7 +87,7 @@ export async function getCoordinates(
 }
 
 /**
- * Поиск адресов с автодополнением
+ * Поиск адресов с автодополнением (Яндекс.Геосаджест)
  */
 export async function searchAddresses(
   region: string,
@@ -97,19 +99,14 @@ export async function searchAddresses(
   }
 
   try {
-    const searchQuery = `${query}, ${region}, Россия`;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+    const searchQuery = `${region}, ${query}`;
+    const url = `https://suggest-maps.yandex.ru/v1/suggest?apikey=${YANDEX_API_KEY}&text=${encodeURIComponent(
       searchQuery
-    )}&limit=5&addressdetails=1`;
+    )}&results=5&types=house,street`;
 
-    console.log('🔍 Поиск адресов:', searchQuery);
-    console.log('📡 URL:', url);
+    console.log('🔍 Поиск адресов (Яндекс.Геосаджест):', searchQuery);
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'MontajApp/1.0',
-      },
-    });
+    const response = await fetch(url);
 
     console.log('📡 Статус ответа:', response.status);
 
@@ -119,37 +116,33 @@ export async function searchAddresses(
     }
 
     const data = await response.json();
-    console.log('📦 Получено результатов:', data.length);
-    console.log('📦 Данные:', data);
+    console.log('📦 Получено результатов:', data.results?.length || 0);
 
-    const suggestions = data.map((item: any) => ({
-      displayName: item.display_name,
-      address: extractAddress(item),
-      latitude: parseFloat(item.lat),
-      longitude: parseFloat(item.lon),
-    }));
+    if (!data.results || data.results.length === 0) {
+      return [];
+    }
+
+    // Геокодируем каждый результат для получения координат
+    const suggestions = await Promise.all(
+      data.results.map(async (item: any) => {
+        const coords = await geocodeAddress(region, item.title.text);
+        return {
+          displayName: item.title.text,
+          address: item.subtitle?.text || item.title.text,
+          latitude: coords?.latitude || 0,
+          longitude: coords?.longitude || 0,
+        };
+      })
+    );
 
     console.log('✅ Подсказки адресов:', suggestions);
-    return suggestions;
+    return suggestions.filter(s => s.latitude !== 0 && s.longitude !== 0);
   } catch (error) {
     console.error('❌ Address search error:', error);
     return [];
   }
 }
 
-/**
- * Извлечь короткий адрес из полного
- */
-function extractAddress(item: any): string {
-  const addr = item.address;
-  const parts = [];
-
-  if (addr.road) parts.push(addr.road);
-  if (addr.house_number) parts.push(`д. ${addr.house_number}`);
-  if (addr.suburb) parts.push(addr.suburb);
-  
-  return parts.join(', ') || item.display_name.split(',')[0];
-}
 
 /**
  * Проверить существование адреса
