@@ -9,6 +9,7 @@ import { OrderCard } from '@/components/orders/OrderCard';
 import { ordersApi } from '@/lib/api/orders';
 import { Order } from '@/lib/types';
 import { Plus, FileText, User } from 'lucide-react';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export default function CustomerDashboard() {
   const { user, logout } = useAuthStore();
@@ -63,6 +64,7 @@ export default function CustomerDashboard() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>
             <Button variant="outline" onClick={handleLogout}>
               Выйти
@@ -126,7 +128,7 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/orders/create')}>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -140,23 +142,6 @@ export default function CustomerDashboard() {
             <CardContent>
               <Button className="w-full">
                 Создать заказ
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/orders')}>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <CardTitle>Все заказы</CardTitle>
-              </div>
-              <CardDescription>
-                Просмотр всех заказов на платформе
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full">
-                Смотреть заказы
               </Button>
             </CardContent>
           </Card>
@@ -197,7 +182,7 @@ export default function CustomerDashboard() {
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
                 {activeOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} />
+                  <OrderCard key={order.id} order={order} isCustomer={true} />
                 ))}
               </div>
             )}
@@ -208,7 +193,7 @@ export default function CustomerDashboard() {
               <h3 className="text-2xl font-bold mb-4">Завершённые заказы ({completedOrders.length})</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 {completedOrders.slice(0, 4).map((order) => (
-                  <OrderCard key={order.id} order={order} />
+                  <OrderCard key={order.id} order={order} isCustomer={true} />
                 ))}
               </div>
             </div>

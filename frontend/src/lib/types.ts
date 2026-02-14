@@ -115,6 +115,7 @@ export interface Order {
   updatedAt: string;
   publishedAt: string;
   closedAt?: string;
+  hasViewed?: boolean;  // Исполнитель уже просматривал этот заказ
   customer?: {
     id: string;
     fullName: string;

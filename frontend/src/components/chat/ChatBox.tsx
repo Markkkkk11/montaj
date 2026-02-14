@@ -13,9 +13,10 @@ import { ru } from 'date-fns/locale';
 
 interface ChatBoxProps {
   orderId: string;
+  otherUserId?: string; // ID собеседника (заказчика или исполнителя)
 }
 
-export function ChatBox({ orderId }: ChatBoxProps) {
+export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [inputValue, setInputValue] = useState('');
@@ -28,11 +29,16 @@ export function ChatBox({ orderId }: ChatBoxProps) {
     messages: socketMessages,
     setMessages,
     isTyping,
+    onlineUsers,
+    roomUsers,
     sendMessage,
     emitTyping,
     emitStopTyping,
     markAsRead,
   } = useSocket(orderId);
+
+  // Проверяем, онлайн ли собеседник
+  const isOtherUserOnline = otherUserId ? roomUsers.includes(otherUserId) : false;
 
   // Загрузка истории сообщений
   useEffect(() => {
@@ -117,15 +123,23 @@ export function ChatBox({ orderId }: ChatBoxProps) {
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-lg">Чат по заказу</h3>
-          {!connected && (
-            <span className="text-xs text-muted-foreground">Переподключение...</span>
-          )}
-          {connected && (
-            <span className="text-xs text-green-600 flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-              Онлайн
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {!connected && (
+              <span className="text-xs text-muted-foreground">Переподключение...</span>
+            )}
+            {connected && otherUserId && (
+              <span className={`text-xs flex items-center gap-1 ${isOtherUserOnline ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className={`w-2 h-2 rounded-full ${isOtherUserOnline ? 'bg-green-600 animate-pulse' : 'bg-gray-400'}`} />
+                {isOtherUserOnline ? 'Собеседник онлайн' : 'Офлайн'}
+              </span>
+            )}
+            {connected && !otherUserId && (
+              <span className="text-xs text-green-600 flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
+                Подключено
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

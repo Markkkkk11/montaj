@@ -12,6 +12,8 @@ export function useSocket(orderId?: string) {
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]); // Онлайн пользователи глобально
+  const [roomUsers, setRoomUsers] = useState<string[]>([]); // Активные пользователи в комнате
   const { token } = useAuthStore();
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -39,6 +41,22 @@ export function useSocket(orderId?: string) {
       console.error('Socket error:', error.message);
     });
 
+    // Слушаем события онлайн/офлайн пользователей
+    socketInstance.on('user-online', (data: { userId: string }) => {
+      console.log(`🟢 User ${data.userId} is online`);
+      setOnlineUsers((prev) => {
+        if (!prev.includes(data.userId)) {
+          return [...prev, data.userId];
+        }
+        return prev;
+      });
+    });
+
+    socketInstance.on('user-offline', (data: { userId: string }) => {
+      console.log(`🔴 User ${data.userId} is offline`);
+      setOnlineUsers((prev) => prev.filter((id) => id !== data.userId));
+    });
+
     setSocket(socketInstance);
 
     return () => {
@@ -56,9 +74,18 @@ export function useSocket(orderId?: string) {
       console.log(`👤 Joined order room: ${data.orderId}`);
     });
 
+    // Слушаем обновления списка активных пользователей в комнате
+    socket.on('room-users', (data: { orderId: string; users: string[] }) => {
+      if (data.orderId === orderId) {
+        console.log(`👥 Room users updated:`, data.users);
+        setRoomUsers(data.users);
+      }
+    });
+
     return () => {
       socket.emit('leave-order', orderId);
       socket.off('joined-order');
+      socket.off('room-users');
     };
   }, [socket, orderId, connected]);
 
@@ -131,6 +158,8 @@ export function useSocket(orderId?: string) {
     messages,
     setMessages,
     isTyping,
+    onlineUsers,
+    roomUsers,
     sendMessage,
     emitTyping,
     emitStopTyping,

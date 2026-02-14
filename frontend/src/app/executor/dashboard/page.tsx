@@ -9,7 +9,8 @@ import { OrderCard } from '@/components/orders/OrderCard';
 import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
-import { TARIFF_LABELS } from '@/lib/utils';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { TARIFF_LABELS, isExecutorProfileComplete } from '@/lib/utils';
 import { Wallet, FileText, User, Star, Search } from 'lucide-react';
 
 export default function ExecutorDashboard() {
@@ -18,6 +19,7 @@ export default function ExecutorDashboard() {
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [myResponses, setMyResponses] = useState<Response[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [bonusBannerClosed, setBonusBannerClosed] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -28,6 +30,18 @@ export default function ExecutorDashboard() {
       router.push('/customer/dashboard');
       return;
     }
+    
+    // Загрузить состояние баннера из localStorage
+    const closedBanners = localStorage.getItem('closedBanners');
+    if (closedBanners) {
+      try {
+        const banners = JSON.parse(closedBanners);
+        setBonusBannerClosed(banners.bonusBanner || false);
+      } catch (e) {
+        console.error('Error parsing closedBanners:', e);
+      }
+    }
+    
     loadData();
   }, [user, router]);
 
@@ -38,6 +52,8 @@ export default function ExecutorDashboard() {
         ordersApi.getMyOrders(),
         responsesApi.getMyResponses(),
       ]);
+      console.log('📊 Loaded orders:', orders);
+      console.log('📊 Loaded responses:', responses);
       setMyOrders(orders);
       setMyResponses(responses);
     } catch (error) {
@@ -45,6 +61,23 @@ export default function ExecutorDashboard() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCloseBonusBanner = () => {
+    setBonusBannerClosed(true);
+    
+    // Сохранить в localStorage
+    const closedBanners = localStorage.getItem('closedBanners');
+    let banners = {};
+    if (closedBanners) {
+      try {
+        banners = JSON.parse(closedBanners);
+      } catch (e) {
+        console.error('Error parsing closedBanners:', e);
+      }
+    }
+    banners = { ...banners, bonusBanner: true };
+    localStorage.setItem('closedBanners', JSON.stringify(banners));
   };
 
   if (!user) {
@@ -77,6 +110,9 @@ export default function ExecutorDashboard() {
   const activeOrders = myOrders.filter(o => o.status === 'IN_PROGRESS');
   const completedOrders = myOrders.filter(o => o.status === 'COMPLETED');
   const pendingResponses = myResponses.filter(r => r.status === 'PENDING');
+  
+  console.log('📊 Active orders:', activeOrders);
+  console.log('📊 All my orders:', myOrders);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,6 +121,7 @@ export default function ExecutorDashboard() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>
             <Button variant="outline" onClick={handleLogout}>
               Выйти
@@ -120,16 +157,16 @@ export default function ExecutorDashboard() {
           </Card>
         )}
 
-        {(!profile?.region || profile.specializations.length === 0) && user.status === 'ACTIVE' && (
+        {!isExecutorProfileComplete(user) && user.status === 'ACTIVE' && (
           <Card className="mb-6 bg-blue-50 border-blue-200">
             <CardHeader>
               <CardTitle>Заполните профиль исполнителя</CardTitle>
               <CardDescription>
-                Укажите регион работы и специализации, чтобы получать подходящие заказы
+                Укажите регион работы, специализации и краткое описание, чтобы получать подходящие заказы
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => router.push('/profile')}>
+              <Button onClick={() => router.push('/profile/edit')}>
                 Заполнить профиль
               </Button>
             </CardContent>
@@ -137,9 +174,30 @@ export default function ExecutorDashboard() {
         )}
 
         {/* Welcome Bonus */}
-        {balance && balance.bonusAmount !== undefined && parseFloat(balance.bonusAmount.toString()) > 0 && (
+        {!bonusBannerClosed && 
+         balance && 
+         balance.bonusAmount !== undefined && 
+         parseFloat(balance.bonusAmount.toString()) > 0 && (
           <Card className="mb-6 bg-green-50 border-green-200">
-            <CardHeader>
+            <CardHeader className="relative">
+              <button
+                onClick={handleCloseBonusBanner}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+                aria-label="Закрыть"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
               <CardTitle>🎁 Приветственный бонус</CardTitle>
               <CardDescription>
                 На ваш счёт зачислено {balance.bonusAmount} ₽ бонусов! Используйте их для первых
@@ -392,13 +450,21 @@ export default function ExecutorDashboard() {
         {/* Active Orders */}
         <div className="space-y-6">
           <div>
-            <h3 className="text-2xl font-bold mb-4">Активные заказы ({activeOrders.length})</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold">Активные заказы ({activeOrders.length})</h3>
+              <p className="text-sm text-muted-foreground">
+                Заказы, которые вы выполняете
+              </p>
+            </div>
             {isLoading ? (
               <p className="text-muted-foreground">Загрузка...</p>
             ) : activeOrders.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground mb-4">У вас пока нет активных заказов</p>
+                  <p className="text-muted-foreground mb-2">У вас пока нет активных заказов</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Активные заказы появятся здесь после того, как заказчик выберет вас исполнителем
+                  </p>
                   <Button onClick={() => router.push('/orders')}>
                     Найти заказы
                   </Button>
@@ -407,6 +473,32 @@ export default function ExecutorDashboard() {
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
                 {activeOrders.map((order) => (
+                  <OrderCard key={order.id} order={order} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Completed Orders */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold">Завершённые заказы ({completedOrders.length})</h3>
+              <p className="text-sm text-muted-foreground">
+                Ваша история выполненных работ
+              </p>
+            </div>
+            {completedOrders.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <p className="text-muted-foreground">Нет завершённых заказов</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Здесь будут отображаться все ваши выполненные заказы
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {completedOrders.map((order) => (
                   <OrderCard key={order.id} order={order} />
                 ))}
               </div>

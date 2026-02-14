@@ -85,5 +85,12 @@ export const ordersApi = {
     const response = await api.post(`/orders/${orderId}/cancel-work`, { reason });
     return response.data.order;
   },
+
+  /**
+   * Записать просмотр заказа исполнителем
+   */
+  recordView: async (orderId: string): Promise<void> => {
+    await api.post(`/orders/${orderId}/view`);
+  },
 };
 

@@ -11,7 +11,6 @@ export interface Notification {
   read: boolean;
   readAt?: string;
   sent: boolean;
-  sentAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -19,79 +18,74 @@ export interface Notification {
 export interface NotificationSettings {
   id: string;
   userId: string;
-  emailEnabled: boolean;
-  emailOrderNew: boolean;
-  emailOrderResponse: boolean;
-  emailOrderSelected: boolean;
-  emailOrderCompleted: boolean;
-  emailReviewNew: boolean;
-  emailPaymentSuccess: boolean;
-  smsEnabled: boolean;
-  smsOrderSelected: boolean;
-  smsOrderCompleted: boolean;
-  smsPaymentSuccess: boolean;
   inAppEnabled: boolean;
-  createdAt: string;
-  updatedAt: string;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  emailOrders: boolean;
+  emailResponses: boolean;
+  emailMessages: boolean;
+  smsOrders: boolean;
+  smsResponses: boolean;
 }
 
-/**
- * Получить уведомления
- */
-export async function getNotifications(page: number = 1, limit: number = 20) {
-  const { data } = await api.get('/notifications', {
-    params: { page, limit },
-  });
-  return data;
-}
+export const notificationsApi = {
+  /**
+   * Получить уведомления
+   */
+  async getNotifications(page: number = 1, limit: number = 20): Promise<{
+    notifications: Notification[];
+    total: number;
+    pages: number;
+    currentPage: number;
+  }> {
+    const response = await api.get('/notifications', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
 
-/**
- * Получить количество непрочитанных
- */
-export async function getUnreadCount(): Promise<number> {
-  const { data } = await api.get('/notifications/unread-count');
-  return data.count;
-}
+  /**
+   * Получить количество непрочитанных
+   */
+  async getUnreadCount(): Promise<number> {
+    const response = await api.get('/notifications/unread-count');
+    return response.data.count;
+  },
 
-/**
- * Отметить уведомление как прочитанное
- */
-export async function markAsRead(notificationId: string) {
-  const { data } = await api.patch(`/notifications/${notificationId}/read`);
-  return data;
-}
+  /**
+   * Отметить уведомление как прочитанное
+   */
+  async markAsRead(notificationId: string): Promise<void> {
+    await api.patch(`/notifications/${notificationId}/read`);
+  },
 
-/**
- * Отметить все как прочитанные
- */
-export async function markAllAsRead() {
-  const { data } = await api.post('/notifications/mark-all-read');
-  return data;
-}
+  /**
+   * Отметить все как прочитанные
+   */
+  async markAllAsRead(): Promise<void> {
+    await api.post('/notifications/mark-all-read');
+  },
 
-/**
- * Удалить уведомление
- */
-export async function deleteNotification(notificationId: string) {
-  const { data } = await api.delete(`/notifications/${notificationId}`);
-  return data;
-}
+  /**
+   * Удалить уведомление
+   */
+  async deleteNotification(notificationId: string): Promise<void> {
+    await api.delete(`/notifications/${notificationId}`);
+  },
 
-/**
- * Получить настройки уведомлений
- */
-export async function getNotificationSettings(): Promise<NotificationSettings> {
-  const { data } = await api.get('/notifications/settings');
-  return data.settings;
-}
+  /**
+   * Получить настройки уведомлений
+   */
+  async getSettings(): Promise<NotificationSettings> {
+    const response = await api.get('/notifications/settings');
+    return response.data.settings;
+  },
 
-/**
- * Обновить настройки уведомлений
- */
-export async function updateNotificationSettings(
-  settings: Partial<NotificationSettings>
-) {
-  const { data } = await api.put('/notifications/settings', settings);
-  return data.settings;
-}
-
+  /**
+   * Обновить настройки уведомлений
+   */
+  async updateSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
+    const response = await api.put('/notifications/settings', settings);
+    return response.data.settings;
+  },
+};

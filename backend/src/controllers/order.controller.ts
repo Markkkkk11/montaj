@@ -74,12 +74,41 @@ export class OrderController {
 
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 20;
+      
+      // Передаем userId для фильтрации и информации о просмотрах
+      const userId = req.user?.id;
 
-      const result = await orderService.getOrders(filters, page, limit);
+      const result = await orderService.getOrders(filters, page, limit, userId);
 
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/orders/:id/view
+   * Записать просмотр заказа исполнителем
+   */
+  async recordOrderView(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Не авторизован' });
+        return;
+      }
+
+      if (req.user.role !== 'EXECUTOR') {
+        res.status(403).json({ error: 'Только исполнители могут просматривать заказы' });
+        return;
+      }
+
+      const { id } = req.params;
+
+      await orderService.recordOrderView(id, req.user.id);
+
+      res.json({ message: 'Просмотр записан' });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
     }
   }
 
@@ -124,9 +153,12 @@ export class OrderController {
         orders = await orderService.getCustomerOrders(req.user.id);
         console.log(`✅ Найдено заказов заказчика: ${orders.length}`);
       } else {
-        // Для исполнителей - заказы, где он назначен
+        // Для исполнителей - заказы, где он назначен (любой статус)
         const result = await orderService.getOrders(
-          { executorId: req.user.id },
+          { 
+            executorId: req.user.id,
+            status: undefined  // Не фильтруем по статусу, берем все заказы исполнителя
+          },
           1,
           100
         );

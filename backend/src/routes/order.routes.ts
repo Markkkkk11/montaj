@@ -19,6 +19,13 @@ router.get('/', validateQuery(getOrdersQuerySchema), orderController.getOrders);
 router.get('/my/list', orderController.getMyOrders);
 router.get('/:id', orderController.getOrderById);
 
+// Записать просмотр заказа (для исполнителей)
+router.post(
+  '/:id/view',
+  requireRole('EXECUTOR'),
+  orderController.recordOrderView
+);
+
 // Маршруты для заказчиков
 router.post(
   '/',

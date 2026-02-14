@@ -79,6 +79,7 @@ model User {
   createdOrders     Order[]          @relation("CustomerOrders")
   assignedOrders    Order[]          @relation("ExecutorOrders")
   responses         Response[]
+  orderViews        OrderView[]      // Просмотренные заказы
   reviewsGiven      Review[]         @relation("ReviewsGiven")
   reviewsReceived   Review[]         @relation("ReviewsReceived")
   transactions      Transaction[]
@@ -208,6 +209,7 @@ model Order {
   responses       Response[]
   reviews         Review[]
   messages        Message[]       // Чат между заказчиком и исполнителем
+  views           OrderView[]     // Просмотры заказа исполнителями
   
   @@index([customerId])
   @@index([executorId])
@@ -216,6 +218,22 @@ model Order {
   @@index([region])
   @@index([startDate])
   @@map("orders")
+}
+
+model OrderView {
+  id              String      @id @default(uuid())
+  orderId         String
+  order           Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  executorId      String
+  executor        User        @relation(fields: [executorId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  viewedAt        DateTime    @default(now())
+  
+  @@unique([orderId, executorId])  // Один исполнитель может просмотреть заказ только раз (для учета)
+  @@index([orderId])
+  @@index([executorId])
+  @@map("order_views")
 }
 
 model Response {

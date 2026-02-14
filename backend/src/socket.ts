@@ -3,10 +3,18 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { config } from './config/env';
 import chatService from './services/chat.service';
+import notificationService from './services/notification.service';
+import prisma from './config/database';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
 }
+
+// Хранилище онлайн пользователей: userId -> Set<socketId>
+const onlineUsers = new Map<string, Set<string>>();
+
+// Хранилище комнат пользователей: orderId -> Set<userId>
+const orderRooms = new Map<string, Set<string>>();
 
 /**
  * Инициализация Socket.io для real-time чата
@@ -42,6 +50,18 @@ export function initializeSocket(httpServer: HTTPServer): SocketIOServer {
   io.on('connection', (socket: AuthenticatedSocket) => {
     console.log(`✅ User connected: ${socket.userId}`);
 
+    // Добавляем пользователя в список онлайн
+    if (socket.userId) {
+      if (!onlineUsers.has(socket.userId)) {
+        onlineUsers.set(socket.userId, new Set());
+      }
+      onlineUsers.get(socket.userId)!.add(socket.id);
+
+      // Уведомляем всех о новом онлайн пользователе
+      io.emit('user-online', { userId: socket.userId });
+      console.log(`🟢 User ${socket.userId} is now online`);
+    }
+
     // Пользователь присоединяется к комнате заказа
     socket.on('join-order', async (orderId: string) => {
       try {
@@ -55,6 +75,17 @@ export function initializeSocket(httpServer: HTTPServer): SocketIOServer {
         
         // Если нет ошибки, значит доступ есть
         socket.join(`order-${orderId}`);
+        
+        // Добавляем в список пользователей комнаты
+        if (!orderRooms.has(orderId)) {
+          orderRooms.set(orderId, new Set());
+        }
+        orderRooms.get(orderId)!.add(socket.userId);
+
+        // Уведомляем всех в комнате об активных пользователях
+        const activeUsers = Array.from(orderRooms.get(orderId) || []);
+        io.to(`order-${orderId}`).emit('room-users', { orderId, users: activeUsers });
+
         socket.emit('joined-order', { orderId });
         
         console.log(`👤 User ${socket.userId} joined order room: ${orderId}`);
@@ -66,6 +97,16 @@ export function initializeSocket(httpServer: HTTPServer): SocketIOServer {
     // Пользователь покидает комнату заказа
     socket.on('leave-order', (orderId: string) => {
       socket.leave(`order-${orderId}`);
+      
+      // Убираем из списка пользователей комнаты
+      if (socket.userId && orderRooms.has(orderId)) {
+        orderRooms.get(orderId)!.delete(socket.userId);
+        
+        // Уведомляем оставшихся об обновлении списка
+        const activeUsers = Array.from(orderRooms.get(orderId) || []);
+        io.to(`order-${orderId}`).emit('room-users', { orderId, users: activeUsers });
+      }
+
       socket.emit('left-order', { orderId });
       
       console.log(`👋 User ${socket.userId} left order room: ${orderId}`);
@@ -91,6 +132,46 @@ export function initializeSocket(httpServer: HTTPServer): SocketIOServer {
 
         // Отправляем всем в комнате (включая отправителя)
         io.to(`order-${orderId}`).emit('new-message', message);
+
+        // Отправляем уведомление получателю (если он не в чате)
+        try {
+          const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            select: {
+              title: true,
+              customerId: true,
+              executorId: true,
+            },
+          });
+
+          if (order) {
+            const recipientId = socket.userId === order.customerId ? order.executorId : order.customerId;
+            
+            // Проверяем, онлайн ли получатель в этой комнате
+            const recipientOnlineInRoom = orderRooms.get(orderId)?.has(recipientId || '');
+            
+            // Если получатель не в комнате, отправляем уведомление
+            if (recipientId && !recipientOnlineInRoom) {
+              const sender = await prisma.user.findUnique({
+                where: { id: socket.userId },
+                select: { fullName: true },
+              });
+
+              if (sender) {
+                await notificationService.notifyNewMessage(
+                  recipientId,
+                  sender.fullName,
+                  orderId,
+                  order.title,
+                  content
+                );
+              }
+            }
+          }
+        } catch (notifError) {
+          console.error('Failed to send message notification:', notifError);
+          // Не прерываем отправку сообщения из-за ошибки уведомления
+        }
 
         console.log(`💬 New message in order ${orderId} from user ${socket.userId}`);
       } catch (error: any) {
@@ -139,9 +220,46 @@ export function initializeSocket(httpServer: HTTPServer): SocketIOServer {
     // Отключение
     socket.on('disconnect', () => {
       console.log(`❌ User disconnected: ${socket.userId}`);
+
+      // Убираем сокет пользователя из онлайн-списка
+      if (socket.userId && onlineUsers.has(socket.userId)) {
+        onlineUsers.get(socket.userId)!.delete(socket.id);
+        
+        // Если у пользователя больше нет активных сокетов - он офлайн
+        if (onlineUsers.get(socket.userId)!.size === 0) {
+          onlineUsers.delete(socket.userId);
+          
+          // Уведомляем всех об офлайн статусе
+          io.emit('user-offline', { userId: socket.userId });
+          console.log(`🔴 User ${socket.userId} is now offline`);
+        }
+
+        // Убираем пользователя из всех комнат заказов
+        orderRooms.forEach((users, orderId) => {
+          if (users.has(socket.userId!)) {
+            users.delete(socket.userId!);
+            const activeUsers = Array.from(users);
+            io.to(`order-${orderId}`).emit('room-users', { orderId, users: activeUsers });
+          }
+        });
+      }
     });
   });
 
   return io;
+}
+
+/**
+ * Получить список онлайн пользователей
+ */
+export function getOnlineUsers(): string[] {
+  return Array.from(onlineUsers.keys());
+}
+
+/**
+ * Проверить, онлайн ли пользователь
+ */
+export function isUserOnline(userId: string): boolean {
+  return onlineUsers.has(userId) && onlineUsers.get(userId)!.size > 0;
 }
 

@@ -9,9 +9,10 @@ interface OrderCardProps {
   order: Order;
   showActions?: boolean;
   onSelect?: (orderId: string) => void;
+  isCustomer?: boolean;
 }
 
-export function OrderCard({ order, showActions = false, onSelect }: OrderCardProps) {
+export function OrderCard({ order, showActions = false, onSelect, isCustomer = false }: OrderCardProps) {
   const budget =
     order.budgetType === 'negotiable'
       ? 'Договорная'
@@ -19,8 +20,15 @@ export function OrderCard({ order, showActions = false, onSelect }: OrderCardPro
 
   const startDate = new Date(order.startDate).toLocaleDateString('ru-RU');
 
+  // Определяем стиль карточки в зависимости от того, просмотрен ли заказ
+  const cardClassName = order.hasViewed 
+    ? "hover:shadow-lg transition-shadow opacity-50" 
+    : "hover:shadow-lg transition-shadow";
+
+  const responsesCount = order._count?.responses || 0;
+
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className={cardClassName}>
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="flex-1">
@@ -61,10 +69,32 @@ export function OrderCard({ order, showActions = false, onSelect }: OrderCardPro
             <span className="font-semibold text-primary">{budget}</span>
           </div>
 
-          {order._count && order._count.responses > 0 && (
+          {/* Отклики для заказчика */}
+          {isCustomer && order.status === 'PUBLISHED' && (
+            <div className={`p-3 rounded-lg border ${responsesCount > 0 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className={`h-4 w-4 ${responsesCount > 0 ? 'text-green-600' : 'text-gray-400'}`} />
+                  <span className={`font-medium ${responsesCount > 0 ? 'text-green-900' : 'text-gray-600'}`}>
+                    {responsesCount === 0 ? 'Нет откликов' : `${responsesCount} ${responsesCount === 1 ? 'отклик' : responsesCount < 5 ? 'отклика' : 'откликов'}`}
+                  </span>
+                </div>
+                {responsesCount > 0 && (
+                  <Link href={`/orders/${order.id}`}>
+                    <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-100">
+                      Смотреть
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Просто счётчик для исполнителя */}
+          {!isCustomer && responsesCount > 0 && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
-              <span>{order._count.responses} откликов</span>
+              <span>{responsesCount} откликов</span>
             </div>
           )}
 

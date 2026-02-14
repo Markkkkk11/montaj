@@ -93,8 +93,11 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <Button variant="outline" disabled>
-              Редактировать профиль (скоро)
+            <Button 
+              variant="outline" 
+              onClick={() => router.push('/profile/edit')}
+            >
+              Редактировать профиль
             </Button>
           </CardContent>
         </Card>
@@ -144,28 +147,11 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Фото работ ({user.executorProfile.workPhotos.length}/5)
-                </p>
-                {user.executorProfile.workPhotos.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-2">
-                    {user.executorProfile.workPhotos.map((photo, idx) => (
-                      <div
-                        key={idx}
-                        className="aspect-square bg-gray-200 rounded-lg overflow-hidden"
-                      >
-                        <img src={photo} alt={`Work ${idx + 1}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">Фото не загружены</p>
-                )}
-              </div>
-
-              <Button variant="outline" disabled>
-                Редактировать профиль исполнителя (скоро)
+              <Button 
+                variant="outline" 
+                onClick={() => router.push('/profile/edit')}
+              >
+                Редактировать профиль исполнителя
               </Button>
             </CardContent>
           </Card>

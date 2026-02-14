@@ -273,14 +273,19 @@ export class NotificationService {
    * Уведомление об отклике на заказ (для заказчика)
    */
   async notifyOrderResponse(customerId: string, executorName: string, orderId: string, orderTitle: string) {
+    console.log(`📬 Создание уведомления о новом отклике для заказчика ${customerId}`);
     const user = await prisma.user.findUnique({
       where: { id: customerId },
     });
 
-    if (!user || !user.email) return;
+    if (!user) {
+      console.log(`❌ Заказчик ${customerId} не найден`);
+      return;
+    }
 
     const orderLink = `${config.frontendUrl}/orders/${orderId}`;
 
+    // Всегда создаём IN_APP уведомление
     await this.createNotification({
       userId: customerId,
       type: 'ORDER_RESPONSE',
@@ -288,8 +293,12 @@ export class NotificationService {
       message: `${executorName} откликнулся на ваш заказ: ${orderTitle}`,
       data: { orderId, executorName },
     });
+    console.log(`✅ Уведомление о новом отклике создано для ${user.fullName}`);
 
-    await emailService.sendOrderResponseEmail(user.email, executorName, orderTitle, orderLink);
+    // Email отправляем только если указан
+    if (user.email) {
+      await emailService.sendOrderResponseEmail(user.email, executorName, orderTitle, orderLink);
+    }
   }
 
   /**
@@ -302,11 +311,15 @@ export class NotificationService {
     customerName: string,
     customerPhone: string
   ) {
+    console.log(`📬 Создание уведомления о выборе для исполнителя ${executorId}`);
     const user = await prisma.user.findUnique({
       where: { id: executorId },
     });
 
-    if (!user) return;
+    if (!user) {
+      console.log(`❌ Исполнитель ${executorId} не найден`);
+      return;
+    }
 
     const orderLink = `${config.frontendUrl}/orders/${orderId}`;
 
@@ -317,6 +330,7 @@ export class NotificationService {
       message: `Вас выбрали для выполнения заказа: ${orderTitle}`,
       data: { orderId, customerName, customerPhone },
     });
+    console.log(`✅ Уведомление о выборе создано для ${user.fullName}`);
 
     if (user.email) {
       await emailService.sendExecutorSelectedEmail(
@@ -524,6 +538,19 @@ export class NotificationService {
     if (user.email) {
       await emailService.sendUserApprovedEmail(user.email, user.fullName, loginLink);
     }
+  }
+
+  /**
+   * Уведомление о новом сообщении в чате
+   */
+  async notifyNewMessage(recipientId: string, senderName: string, orderId: string, orderTitle: string, messagePreview: string) {
+    await this.createNotification({
+      userId: recipientId,
+      type: 'NEW_MESSAGE',
+      title: `Новое сообщение от ${senderName}`,
+      message: messagePreview.length > 50 ? messagePreview.substring(0, 50) + '...' : messagePreview,
+      data: { orderId, orderTitle },
+    });
   }
 }
 

@@ -36,6 +36,16 @@ const CITY_COORDS: Record<string, [number, number]> = {
   'Волгоград': [48.7080, 44.5133],
 };
 
+// Цвета маркеров по категориям
+const CATEGORY_COLORS: Record<string, string> = {
+  'WINDOWS': '#2563eb',      // Окна - синий
+  'DOORS': '#9333ea',        // Двери - фиолетовый
+  'CEILINGS': '#16a34a',     // Потолки - зелёный
+  'BLINDS': '#dc2626',       // Жалюзи - красный
+  'CONDITIONERS': '#ea580c', // Кондиционеры - оранжевый
+  'FURNITURE': '#6b7280',    // Мебель - серый
+};
+
 export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
   const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -109,6 +119,19 @@ export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
       ordersWithCoords.forEach((order) => {
         if (!order.latitude || !order.longitude) return;
 
+        // Определяем цвет маркера по категории
+        let markerColor = CATEGORY_COLORS[order.category] || '#2563eb';
+        
+        // Если заказ просмотрен - делаем цвет бледнее (добавляем прозрачность)
+        if (order.hasViewed) {
+          // Преобразуем hex в rgba с opacity 0.4
+          const hex = markerColor.replace('#', '');
+          const r = parseInt(hex.substring(0, 2), 16);
+          const g = parseInt(hex.substring(2, 4), 16);
+          const b = parseInt(hex.substring(4, 6), 16);
+          markerColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
+        }
+
         // Создаем метку
         const placemark = new window.ymaps.Placemark(
           [order.latitude, order.longitude],
@@ -120,10 +143,10 @@ export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
                 <p style="margin: 8px 0;"><strong>Адрес:</strong> ${order.address}</p>
                 <p style="margin: 8px 0;">${order.description.substring(0, 100)}${order.description.length > 100 ? '...' : ''}</p>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-                  <span style="font-weight: bold; color: #2563eb; font-size: 16px;">${parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
+                  <span style="font-weight: bold; color: ${CATEGORY_COLORS[order.category] || '#2563eb'}; font-size: 16px;">${parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
                   <button 
                     id="order-details-${order.id}"
-                    style="background: #2563eb; color: white; padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;"
+                    style="background: ${CATEGORY_COLORS[order.category] || '#2563eb'}; color: white; padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;"
                   >
                     Подробнее
                   </button>
@@ -134,7 +157,7 @@ export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
           },
           {
             preset: 'islands#blueDotIcon',
-            iconColor: '#2563eb',
+            iconColor: markerColor,
           }
         );
 
@@ -156,11 +179,15 @@ export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
       });
 
       // Подстраиваем карту под все метки ТОЛЬКО если НЕ выбран конкретный регион
-      if (bounds.length > 0 && !region) {
-        mapRef.current.setBounds(bounds, {
-          checkZoomRange: true,
-          zoomMargin: 50,
-        });
+      if (bounds.length > 0 && !region && mapRef.current && mapRef.current.setBounds) {
+        try {
+          mapRef.current.setBounds(bounds, {
+            checkZoomRange: true,
+            zoomMargin: 50,
+          });
+        } catch (error) {
+          console.error('❌ Ошибка при установке границ карты:', error);
+        }
       }
     }
 

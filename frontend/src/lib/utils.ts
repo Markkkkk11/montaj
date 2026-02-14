@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { User } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -13,6 +14,23 @@ export function formatPhone(phone: string): string {
     return `+7 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7, 9)}-${cleaned.slice(9)}`;
   }
   return phone;
+}
+
+// Проверка заполненности профиля исполнителя
+export function isExecutorProfileComplete(user: User | null): boolean {
+  if (!user || user.role !== 'EXECUTOR' || !user.executorProfile) {
+    return false;
+  }
+
+  const profile = user.executorProfile;
+
+  return (
+    user.fullName.length > 0 &&
+    user.city.length > 0 &&
+    (profile.region?.length || 0) > 0 &&
+    profile.specializations.length > 0 &&
+    (profile.shortDescription?.length || 0) > 0
+  );
 }
 
 // Маппинг специализаций на русский

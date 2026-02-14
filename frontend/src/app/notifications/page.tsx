@@ -2,54 +2,55 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
-import {
-  getNotifications,
-  markAsRead,
-  markAllAsRead,
-  deleteNotification,
-  Notification,
-} from '@/lib/api/notifications';
-import { Bell, CheckCheck, Trash2, Settings } from 'lucide-react';
+import { notificationsApi, Notification } from '@/lib/api/notifications';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { ArrowLeft, Trash2 } from 'lucide-react';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export default function NotificationsPage() {
+  const { user, logout } = useAuthStore();
   const router = useRouter();
-  const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
       return;
     }
-
     loadNotifications();
   }, [user, page]);
 
   const loadNotifications = async () => {
     try {
-      setLoading(true);
-      const data = await getNotifications(page, 20);
-      setNotifications(data.notifications);
-      setTotalPages(data.totalPages);
-      setUnreadCount(data.unreadCount);
+      setIsLoading(true);
+      const result = await notificationsApi.getNotifications(page, 20);
+      setNotifications(result.notifications);
+      setTotal(result.total);
     } catch (error) {
       console.error('Failed to load notifications:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await markAsRead(notificationId);
-      loadNotifications();
+      await notificationsApi.markAsRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+      );
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }
@@ -57,168 +58,218 @@ export default function NotificationsPage() {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllAsRead();
-      loadNotifications();
+      await notificationsApi.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }
   };
 
   const handleDelete = async (notificationId: string) => {
-    if (!confirm('Удалить это уведомление?')) return;
-
     try {
-      await deleteNotification(notificationId);
-      loadNotifications();
+      await notificationsApi.deleteNotification(notificationId);
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+      setTotal((prev) => prev - 1);
     } catch (error) {
       console.error('Failed to delete notification:', error);
     }
   };
 
+  const handleNotificationClick = (notification: Notification) => {
+    // Отмечаем как прочитанное
+    if (!notification.read) {
+      handleMarkAsRead(notification.id);
+    }
+
+    // Переходим на соответствующую страницу
+    if (notification.data?.orderId) {
+      router.push(`/orders/${notification.data.orderId}`);
+    }
+  };
+
   const getNotificationIcon = (type: string) => {
-    const icons: any = {
-      ORDER_NEW: '📦',
-      ORDER_RESPONSE: '👋',
-      ORDER_SELECTED: '🎉',
-      ORDER_STARTED: '🚀',
-      ORDER_COMPLETED: '✅',
-      REVIEW_NEW: '⭐',
-      PAYMENT_SUCCESS: '💳',
-      USER_APPROVED: '✅',
-      BALANCE_LOW: '⚠️',
-      SYSTEM: '🔔',
-    };
-    return icons[type] || '🔔';
+    switch (type) {
+      case 'NEW_ORDER':
+        return '📦';
+      case 'NEW_RESPONSE':
+      case 'ORDER_RESPONSE':
+        return '✋';
+      case 'RESPONSE_ACCEPTED':
+      case 'ORDER_SELECTED':
+        return '✅';
+      case 'RESPONSE_REJECTED':
+        return '❌';
+      case 'ORDER_COMPLETED':
+        return '🎉';
+      case 'NEW_MESSAGE':
+        return '💬';
+      case 'ADMIN_MESSAGE':
+        return '⚙️';
+      default:
+        return '🔔';
+    }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'только что';
-    if (minutes < 60) return `${minutes} мин назад`;
-    if (hours < 24) return `${hours} ч назад`;
-    if (days < 7) return `${days} дн назад`;
-
-    return date.toLocaleDateString('ru-RU');
+  const getNotificationTypeLabel = (type: string) => {
+    switch (type) {
+      case 'NEW_ORDER':
+        return 'Новый заказ';
+      case 'NEW_RESPONSE':
+      case 'ORDER_RESPONSE':
+        return 'Новый отклик';
+      case 'RESPONSE_ACCEPTED':
+      case 'ORDER_SELECTED':
+        return 'Вас выбрали';
+      case 'RESPONSE_REJECTED':
+        return 'Отклик отклонён';
+      case 'ORDER_COMPLETED':
+        return 'Заказ завершён';
+      case 'NEW_MESSAGE':
+        return 'Новое сообщение';
+      case 'ADMIN_MESSAGE':
+        return 'Сообщение от администрации';
+      default:
+        return 'Уведомление';
+    }
   };
 
-  if (loading && notifications.length === 0) {
-    return <div className="container mx-auto py-8">Загрузка...</div>;
+  if (!user) {
+    return null;
   }
 
-  return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Уведомления</h1>
-          {unreadCount > 0 && (
-            <p className="text-gray-600 mt-2">
-              {unreadCount} непрочитанных
-            </p>
-          )}
-        </div>
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/notifications/settings')}
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Настройки
-          </Button>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            <span className="text-sm text-muted-foreground">{user.fullName}</span>
+            <Button variant="outline" onClick={handleLogout}>
+              Выйти
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h2 className="text-2xl font-bold">Уведомления</h2>
+              {unreadCount > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Непрочитанных: {unreadCount}
+                </p>
+              )}
+            </div>
+          </div>
           {unreadCount > 0 && (
-            <Button onClick={handleMarkAllAsRead}>
-              <CheckCheck className="w-4 h-4 mr-2" />
-              Отметить все
+            <Button onClick={handleMarkAllAsRead} variant="outline" size="sm">
+              Прочитать все
             </Button>
           )}
         </div>
-      </div>
 
-      {notifications.length === 0 ? (
-        <div className="text-center py-12">
-          <Bell className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500">У вас пока нет уведомлений</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {notifications.map((notification) => (
-            <Card
-              key={notification.id}
-              className={`cursor-pointer hover:shadow-md transition-shadow ${
-                !notification.read ? 'border-l-4 border-l-blue-500 bg-blue-50' : ''
-              }`}
-              onClick={() => !notification.read && handleMarkAsRead(notification.id)}
-            >
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl">
-                        {getNotificationIcon(notification.type)}
-                      </span>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{notification.title}</h3>
-                        <p className="text-sm text-gray-600">
-                          {notification.message}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Загрузка уведомлений...</p>
+          </div>
+        ) : notifications.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">У вас пока нет уведомлений</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {notifications.map((notification) => (
+              <Card
+                key={notification.id}
+                className={`cursor-pointer transition-colors ${
+                  !notification.read ? 'bg-blue-50 border-blue-200' : ''
+                }`}
+                onClick={() => handleNotificationClick(notification)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className={`text-sm font-medium ${!notification.read ? 'font-semibold' : ''}`}>
+                          {notification.title}
                         </p>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {!notification.read && (
+                            <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(notification.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
-                      <span>{formatDate(notification.createdAt)}</span>
-                      {!notification.read && (
-                        <span className="text-blue-600 font-medium">Новое</span>
-                      )}
+                      <span className="text-xs text-muted-foreground mb-2 inline-block">
+                        {getNotificationTypeLabel(notification.type)}
+                      </span>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(notification.createdAt), {
+                          addSuffix: true,
+                          locale: ru,
+                        })}
+                      </p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(notification.id);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Пагинация */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-8">
-          <Button
-            variant="outline"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Назад
-          </Button>
-          <span className="flex items-center px-4">
-            Страница {page} из {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Вперёд
-          </Button>
-        </div>
-      )}
+        {/* Пагинация */}
+        {total > 20 && (
+          <div className="flex justify-center gap-2 mt-6">
+            <Button
+              variant="outline"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Назад
+            </Button>
+            <span className="py-2 px-4 text-sm">
+              Страница {page} из {Math.ceil(total / 20)}
+            </span>
+            <Button
+              variant="outline"
+              disabled={page >= Math.ceil(total / 20)}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Вперёд
+            </Button>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
-

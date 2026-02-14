@@ -26,6 +26,11 @@ export default function OrdersPage() {
       router.push('/login');
       return;
     }
+    // Заказчики не должны видеть каталог заказов - у них есть свой дашборд
+    if (user.role === 'CUSTOMER') {
+      router.push('/customer/dashboard');
+      return;
+    }
     loadOrders();
   }, [user, filters, page]);
 
@@ -122,6 +127,32 @@ export default function OrdersPage() {
             )}
           </div>
         </div>
+
+        {/* Предупреждение для исполнителей без специализаций */}
+        {user.role === 'EXECUTOR' && 
+         user.executorProfile && 
+         user.executorProfile.specializations.length === 0 && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-6">
+            <div className="flex items-start gap-4">
+              <div className="text-amber-600 text-4xl">⚠️</div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-amber-900 mb-2">
+                  Специализации не выбраны
+                </h3>
+                <p className="text-amber-700 mb-4">
+                  Чтобы видеть доступные заказы, выберите свои специализации в профиле.
+                  Ваш тариф "{user.subscription?.tariffType === 'STANDARD' ? 'Стандарт' : 
+                              user.subscription?.tariffType === 'COMFORT' ? 'Комфорт' : 'Премиум'}" 
+                  позволяет выбрать {user.subscription?.specializationCount || 3} специализаций
+                  {(user.subscription?.specializationCount || 3) === 1 ? 'ю' : 'и'}.
+                </p>
+                <Button onClick={() => router.push('/profile/specializations')}>
+                  Выбрать специализации →
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Filters Sidebar - всегда видны */}

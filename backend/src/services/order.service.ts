@@ -76,11 +76,19 @@ export class OrderService {
   async getOrders(
     filters: OrderFilters,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
+    userId?: string  // ID текущего пользователя (исполнителя)
   ): Promise<{ orders: any[]; total: number; pages: number }> {
-    const where: any = {
-      status: filters.status || 'PUBLISHED',
-    };
+    const where: any = {};
+
+    // Применяем статус только если он не undefined явно
+    if (filters.status !== undefined) {
+      where.status = filters.status;
+    } else if (!filters.executorId) {
+      // Если не указан executorId, то по умолчанию PUBLISHED
+      where.status = 'PUBLISHED';
+    }
+    // Если executorId указан и status === undefined, то не фильтруем по статусу
 
     if (filters.category) {
       where.category = filters.category;
@@ -105,6 +113,34 @@ export class OrderService {
 
     if (filters.executorId) {
       where.executorId = filters.executorId;
+    }
+
+    // Если запрос от исполнителя - применить дополнительные фильтры
+    if (userId) {
+      // Получить профиль исполнителя с его специализациями
+      const executorProfile = await prisma.executorProfile.findUnique({
+        where: { userId },
+        select: { specializations: true }
+      });
+
+      // Фильтровать заказы только по специализациям исполнителя
+      if (executorProfile && executorProfile.specializations.length > 0) {
+        where.category = {
+          in: executorProfile.specializations
+        };
+      } else {
+        // Если специализации не выбраны - не показывать никакие заказы
+        where.category = {
+          in: []  // Пустой массив = нет результатов
+        };
+      }
+
+      // Скрыть заказы, на которые он уже откликнулся
+      where.responses = {
+        none: {
+          executorId: userId
+        }
+      };
     }
 
     const [orders, total] = await Promise.all([
@@ -133,6 +169,16 @@ export class OrderService {
               responses: true,
             },
           },
+          // Включаем информацию о просмотрах для текущего пользователя
+          views: userId ? {
+            where: {
+              executorId: userId
+            },
+            select: {
+              id: true,
+              viewedAt: true,
+            }
+          } : false,
         },
         orderBy: {
           createdAt: 'desc',
@@ -143,8 +189,15 @@ export class OrderService {
       prisma.order.count({ where }),
     ]);
 
+    // Добавляем флаг hasViewed для каждого заказа
+    const ordersWithFlags = orders.map((order: any) => ({
+      ...order,
+      hasViewed: userId && order.views && order.views.length > 0,
+      views: undefined, // Удаляем массив views из ответа
+    }));
+
     return {
-      orders,
+      orders: ordersWithFlags,
       total,
       pages: Math.ceil(total / limit),
     };
@@ -589,13 +642,65 @@ export class OrderService {
       throw new Error('Можно завершить только активные заказы');
     }
 
-    return prisma.order.update({
+    // Обновляем заказ и счётчики выполненных заказов у исполнителя И заказчика
+    const [updatedOrder] = await prisma.$transaction([
+      prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'COMPLETED',
+          closedAt: new Date(),
+        },
+      }),
+      // Инкрементируем счётчик исполнителя
+      prisma.user.update({
+        where: { id: executorId },
+        data: {
+          completedOrders: {
+            increment: 1,
+          },
+        },
+      }),
+      // Инкрементируем счётчик заказчика
+      prisma.user.update({
+        where: { id: order.customerId },
+        data: {
+          completedOrders: {
+            increment: 1,
+          },
+        },
+      }),
+    ]);
+
+    return updatedOrder;
+  }
+
+  /**
+   * Записать просмотр заказа исполнителем
+   */
+  async recordOrderView(orderId: string, executorId: string): Promise<void> {
+    // Проверяем существование заказа
+    const order = await prisma.order.findUnique({
       where: { id: orderId },
-      data: {
-        status: 'COMPLETED',
-        closedAt: new Date(),
-      },
     });
+
+    if (!order) {
+      throw new Error('Заказ не найден');
+    }
+
+    // Записываем просмотр (если уже есть - игнорируем, благодаря unique constraint)
+    try {
+      await prisma.orderView.create({
+        data: {
+          orderId,
+          executorId,
+        },
+      });
+    } catch (error: any) {
+      // Если запись уже существует (unique constraint violation) - игнорируем
+      if (error.code !== 'P2002') {
+        throw error;
+      }
+    }
   }
 
   /**

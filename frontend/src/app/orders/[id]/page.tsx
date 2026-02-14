@@ -9,20 +9,23 @@ import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
-import { Calendar, MapPin, Wallet, User, Phone, Mail, MessageCircle } from 'lucide-react';
+import { Calendar, MapPin, Wallet, User, Phone, Mail, MessageCircle, CheckCircle } from 'lucide-react';
 import { ChatBox } from '@/components/chat/ChatBox';
+import { useToast } from '@/hooks/use-toast';
 
 export default function OrderDetailPage() {
   const { user } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   const orderId = params.id as string;
+  const { toast } = useToast();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [responses, setResponses] = useState<Response[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [hasResponded, setHasResponded] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -37,6 +40,24 @@ export default function OrderDetailPage() {
       setIsLoading(true);
       const orderData = await ordersApi.getOrderById(orderId);
       setOrder(orderData);
+
+      // Проверить, откликался ли уже текущий исполнитель
+      if (user?.role === 'EXECUTOR' && orderData.responses) {
+        const hasResponse = orderData.responses.some(
+          (response: Response) => response.executorId === user.id
+        );
+        setHasResponded(hasResponse);
+      }
+
+      // Записать просмотр, если это исполнитель
+      if (user?.role === 'EXECUTOR') {
+        try {
+          await ordersApi.recordView(orderId);
+        } catch (err) {
+          // Игнорируем ошибки записи просмотра (не критично)
+          console.error('Ошибка записи просмотра:', err);
+        }
+      }
 
       // Загрузить отклики (если это заказчик или сам исполнитель)
       if (user?.role === 'CUSTOMER' && orderData.customerId === user.id) {
@@ -55,11 +76,30 @@ export default function OrderDetailPage() {
       setActionLoading(true);
       setError(null);
       await responsesApi.createResponse(orderId);
-      alert('Отклик отправлен успешно!');
-      loadOrderDetails();
+      
+      // Показать успешное уведомление
+      toast({
+        variant: 'success',
+        title: '✅ Отклик отправлен!',
+        description: 'Заказчик получит уведомление о вашем отклике. Вы можете отслеживать статус в разделе "Мои отклики".',
+      });
+      
+      // Установить флаг, что откликнулись
+      setHasResponded(true);
+      
+      // Обновить данные заказа
+      setTimeout(() => {
+        loadOrderDetails();
+      }, 500);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Ошибка отправки отклика');
-      alert(err.response?.data?.error || 'Ошибка отправки отклика');
+      const errorMessage = err.response?.data?.error || 'Ошибка отправки отклика';
+      setError(errorMessage);
+      
+      toast({
+        variant: 'destructive',
+        title: '❌ Ошибка',
+        description: errorMessage,
+      });
     } finally {
       setActionLoading(false);
     }
@@ -73,10 +113,20 @@ export default function OrderDetailPage() {
     try {
       setActionLoading(true);
       await ordersApi.selectExecutor(orderId, executorId);
-      alert('Исполнитель выбран! Контакты теперь доступны обеим сторонам.');
+      
+      toast({
+        variant: 'success',
+        title: '✅ Исполнитель выбран!',
+        description: 'Контакты теперь доступны обеим сторонам.',
+      });
+      
       loadOrderDetails();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка выбора исполнителя');
+      toast({
+        variant: 'destructive',
+        title: '❌ Ошибка',
+        description: err.response?.data?.error || 'Ошибка выбора исполнителя',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -327,10 +377,30 @@ export default function OrderDetailPage() {
 
             {/* Actions */}
             <div className="flex gap-2 pt-4 flex-wrap">
-              {canRespond && (
+              {canRespond && !hasResponded && (
                 <Button onClick={handleRespond} disabled={actionLoading} className="flex-1">
-                  Откликнуться на заказ
+                  {actionLoading ? 'Отправка...' : 'Откликнуться на заказ'}
                 </Button>
+              )}
+              
+              {hasResponded && (
+                <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+                  <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-green-900">Отклик отправлен!</p>
+                    <p className="text-sm text-green-700">
+                      Заказчик рассмотрит ваш отклик и свяжется с вами
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => router.push('/executor/dashboard')}
+                    className="border-green-300 hover:bg-green-100"
+                  >
+                    Мои отклики
+                  </Button>
+                </div>
               )}
 
               {isAssignedExecutor && order.status === 'IN_PROGRESS' && !order.workStartedAt && (
@@ -439,7 +509,10 @@ export default function OrderDetailPage() {
               <MessageCircle className="h-5 w-5" />
               Чат с {isCustomer ? 'исполнителем' : 'заказчиком'}
             </h2>
-            <ChatBox orderId={orderId} />
+            <ChatBox 
+              orderId={orderId} 
+              otherUserId={isCustomer ? order.executorId || undefined : order.customerId}
+            />
           </div>
         )}
       </div>
