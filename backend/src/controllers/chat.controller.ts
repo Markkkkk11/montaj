@@ -1,6 +1,7 @@
 import { Response } from 'express';
-import { AuthRequest } from '../types/express';
+import { AuthRequest } from '../types';
 import chatService from '../services/chat.service';
+import path from 'path';
 
 class ChatController {
   /**
@@ -94,6 +95,45 @@ class ChatController {
       const count = await chatService.getUnreadCount(req.user.id);
 
       res.json({ count });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/chat/:orderId/upload-file
+   * Загрузить файл в чат
+   */
+  async uploadFile(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Не авторизован' });
+        return;
+      }
+
+      if (!req.file) {
+        res.status(400).json({ error: 'Файл не предоставлен' });
+        return;
+      }
+
+      const { orderId } = req.params;
+      const fileUrl = `/uploads/${req.file.filename}`;
+
+      // Create a message with the file
+      const message = await chatService.createMessage(
+        orderId,
+        req.user.id,
+        req.body.content || `📎 ${req.file.originalname}`,
+        fileUrl
+      );
+
+      // Broadcast via Socket.io
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`order-${orderId}`).emit('new-message', message);
+      }
+
+      res.status(201).json({ message, fileUrl });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }

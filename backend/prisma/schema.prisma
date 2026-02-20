@@ -65,7 +65,7 @@ model User {
   photo             String?
   inn               String?
   ogrn              String?
-  rating            Float       @default(3.0)
+  rating            Float       @default(0)
   completedOrders   Int         @default(0)
   status            UserStatus  @default(ACTIVE)
   isPhoneVerified   Boolean     @default(false)
@@ -105,6 +105,7 @@ model ExecutorProfile {
   shortDescription    String?
   fullDescription     String?
   workPhotos          String[]          // Массив URL фотографий работ (до 5)
+  isSelfEmployed      Boolean           @default(false) // Самозанятый
   
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
@@ -167,6 +168,7 @@ model SMSVerification {
 
 model Order {
   id              String          @id @default(uuid())
+  orderNumber     Int             @unique @default(autoincrement()) // Номер заказа
   customerId      String
   customer        User            @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Cascade)
   executorId      String?
@@ -495,6 +497,7 @@ model Message {
   
   content     String   @db.Text
   fileUrl     String?  // URL файла/фото (опционально)
+  fileName    String?  // Имя файла
   
   read        Boolean  @default(false)
   readAt      DateTime?

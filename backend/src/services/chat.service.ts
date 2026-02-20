@@ -25,8 +25,8 @@ class ChatService {
       throw new Error('У вас нет доступа к этому чату');
     }
 
-    if (order.status !== 'IN_PROGRESS' && order.status !== 'COMPLETED') {
-      throw new Error('Чат доступен только для заказов в работе или завершённых');
+    if (order.status !== 'IN_PROGRESS') {
+      throw new Error('Отправка сообщений доступна только для заказов в работе');
     }
 
     const message = await prisma.message.create({
@@ -115,7 +115,7 @@ class ChatService {
     const orders = await prisma.order.findMany({
       where: {
         OR: [{ customerId: userId }, { executorId: userId }],
-        status: { in: ['IN_PROGRESS', 'COMPLETED'] },
+        status: 'IN_PROGRESS',
       },
       select: { id: true },
     });

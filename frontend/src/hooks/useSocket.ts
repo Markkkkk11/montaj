@@ -5,7 +5,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/stores/authStore';
 import { Message } from '@/lib/api/chat';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export function useSocket(orderId?: string) {
   const [socket, setSocket] = useState<Socket | null>(null);

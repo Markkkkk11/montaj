@@ -51,6 +51,7 @@ export interface UpdateExecutorProfileData {
   specializations?: string[];
   shortDescription?: string;
   fullDescription?: string;
+  isSelfEmployed?: boolean;
 }
 
 export interface JWTPayload {

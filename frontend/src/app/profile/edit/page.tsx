@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,12 @@ import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Specialization } from '@/lib/types';
 
 export default function EditProfilePage() {
-  const { user, getCurrentUser } = useAuthStore();
+  const { user, getCurrentUser, isHydrated } = useAuthStore();
   const router = useRouter();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Basic profile fields
   const [fullName, setFullName] = useState('');
@@ -34,8 +36,50 @@ export default function EditProfilePage() {
   const [region, setRegion] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [fullDescription, setFullDescription] = useState('');
+  const [isSelfEmployed, setIsSelfEmployed] = useState(false);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        variant: 'destructive',
+        title: '❌ Ошибка',
+        description: 'Максимальный размер файла — 5 МБ',
+      });
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      const formData = new FormData();
+      formData.append('photo', file);
+      await api.post('/users/upload-photo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      toast({
+        variant: 'success',
+        title: '✅ Фото обновлено!',
+      });
+
+      await getCurrentUser();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: '❌ Ошибка',
+        description: error.response?.data?.error || 'Не удалось загрузить фото',
+      });
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
@@ -56,8 +100,9 @@ export default function EditProfilePage() {
       setRegion(user.executorProfile.region || '');
       setShortDescription(user.executorProfile.shortDescription || '');
       setFullDescription(user.executorProfile.fullDescription || '');
+      setIsSelfEmployed(user.executorProfile.isSelfEmployed || false);
     }
-  }, [user, router]);
+  }, [user, router, isHydrated]);
 
   const handleSaveBasicProfile = async () => {
     try {
@@ -113,6 +158,7 @@ export default function EditProfilePage() {
         region: region || undefined,
         shortDescription: shortDescription || undefined,
         fullDescription: fullDescription || undefined,
+        isSelfEmployed,
       });
 
       toast({
@@ -155,14 +201,14 @@ export default function EditProfilePage() {
     }
   };
 
-  if (!user) return null;
+  if (!isHydrated || !user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
           <Button variant="ghost" onClick={() => router.push('/profile')}>
             ← Назад к профилю
           </Button>
@@ -177,6 +223,45 @@ export default function EditProfilePage() {
             Обновите информацию о себе
           </p>
         </div>
+
+        {/* Avatar Upload */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Фото профиля</CardTitle>
+            <CardDescription>Загрузите аватар (макс. 5 МБ, jpg/png/webp)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                {user.photo ? (
+                  <img
+                    src={user.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.photo}` : user.photo}
+                    alt="Аватар"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-3xl text-gray-400">👤</span>
+                )}
+              </div>
+              <div>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                >
+                  {uploadingAvatar ? 'Загрузка...' : user.photo ? 'Изменить фото' : 'Загрузить фото'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Basic Profile */}
         <Card className="mb-6">
@@ -386,6 +471,19 @@ export default function EditProfilePage() {
                 <p className="text-xs text-muted-foreground text-right">
                   {fullDescription.length} / 3000
                 </p>
+              </div>
+
+              <div className="flex items-center gap-3 py-2">
+                <input
+                  type="checkbox"
+                  id="isSelfEmployed"
+                  checked={isSelfEmployed}
+                  onChange={(e) => setIsSelfEmployed(e.target.checked)}
+                  className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <Label htmlFor="isSelfEmployed" className="cursor-pointer">
+                  Я самозанятый
+                </Label>
               </div>
 
               <Button 

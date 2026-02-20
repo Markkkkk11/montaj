@@ -1,4 +1,5 @@
 import prisma from '../config/database';
+import notificationService from './notification.service';
 
 export class ReviewService {
   /**
@@ -103,6 +104,15 @@ export class ReviewService {
         },
       },
     });
+
+    // Уведомление о новом отзыве
+    await notificationService.notifyReviewReceived(
+      revieweeId,
+      review.reviewer.fullName,
+      rating,
+      orderId,
+      order.title
+    ).catch(err => console.error('Notification error:', err));
 
     return review;
   }
@@ -225,10 +235,22 @@ export class ReviewService {
         moderatedBy: moderatorId,
         moderatedAt: new Date(),
       },
+      include: {
+        reviewer: {
+          select: { fullName: true },
+        },
+      },
     });
 
     // Пересчитать рейтинг пользователя
     await this.recalculateUserRating(review.revieweeId);
+
+    // Уведомление о публикации отзыва
+    await notificationService.notifyReviewApproved(
+      review.revieweeId,
+      review.rating,
+      review.reviewer.fullName
+    ).catch(err => console.error('Notification error:', err));
 
     return review;
   }
@@ -246,6 +268,9 @@ export class ReviewService {
         moderatedAt: new Date(),
       },
     });
+
+    // Пересчитать рейтинг (на случай если отзыв ранее был APPROVED)
+    await this.recalculateUserRating(review.revieweeId);
 
     return review;
   }
@@ -266,12 +291,12 @@ export class ReviewService {
     });
 
     if (approvedReviews.length === 0) {
-      // Если нет отзывов, оставляем начальный рейтинг 3.0
+      // Если нет отзывов, рейтинг = 0
       await prisma.user.update({
         where: { id: userId },
-        data: { rating: 3.0 },
+        data: { rating: 0 },
       });
-      return 3.0;
+      return 0;
     }
 
     // Рассчитать средний рейтинг
@@ -309,7 +334,7 @@ export class ReviewService {
     if (total === 0) {
       return {
         total: 0,
-        averageRating: 3.0,
+        averageRating: 0,
         distribution: {
           5: 0,
           4: 0,

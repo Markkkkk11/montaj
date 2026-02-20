@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,15 @@ export default function RegisterPage() {
   });
   const [verificationCode, setVerificationCode] = useState('');
   const [registeredPhone, setRegisteredPhone] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Таймер повторной отправки
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const handleRoleSelect = (selectedRole: 'CUSTOMER' | 'EXECUTOR') => {
     setRole(selectedRole);
@@ -32,13 +41,48 @@ export default function RegisterPage() {
     setStep('info');
   };
 
+  const formatPhone = (value: string): string => {
+    // Оставляем только цифры
+    const digits = value.replace(/\D/g, '');
+    
+    // Форматируем
+    if (digits.length === 0) return '';
+    if (digits.length <= 1) return `+${digits}`;
+    if (digits.length <= 4) return `+${digits.slice(0, 1)} (${digits.slice(1)}`;
+    if (digits.length <= 7) return `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(4)}`;
+    if (digits.length <= 9) return `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+    return `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    // Если пользователь начинает вводить без +7, подставляем
+    const digits = value.replace(/\D/g, '');
+    if (digits.length > 0 && !digits.startsWith('7') && !digits.startsWith('8')) {
+      value = '7' + digits;
+    } else if (digits.startsWith('8')) {
+      value = '7' + digits.slice(1);
+    }
+    
+    const formatted = formatPhone(value);
+    setFormData({ ...formData, phone: formatted });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    // Валидация телефона
+    const phoneDigits = (formData.phone || '').replace(/\D/g, '');
+    if (phoneDigits.length !== 11) {
+      setError('Введите корректный номер телефона');
+      return;
+    }
+
     try {
       await register(formData as RegisterData);
       setRegisteredPhone(formData.phone!);
+      setResendTimer(60); // 60 секунд до повторной отправки
       setStep('verify');
     } catch (err) {
       // Ошибка уже в store
@@ -48,6 +92,11 @@ export default function RegisterPage() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (verificationCode.length < 4) {
+      setError('Введите код полностью');
+      return;
+    }
 
     try {
       const success = await verifyPhone(registeredPhone, verificationCode);
@@ -59,15 +108,18 @@ export default function RegisterPage() {
     }
   };
 
-  const handleResendCode = async () => {
+  const handleResendCode = useCallback(async () => {
+    if (resendTimer > 0) return;
     setError(null);
+    setVerificationCode('');
+    
     try {
       await sendSMS(registeredPhone);
-      alert('Код отправлен повторно');
+      setResendTimer(60);
     } catch (err) {
       // Ошибка уже в store
     }
-  };
+  }, [resendTimer, registeredPhone, sendSMS, setError]);
 
   // Шаг 1: Выбор роли
   if (step === 'role') {
@@ -141,24 +193,27 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <Label htmlFor="phone">Телефон *</Label>
+                <Label htmlFor="phone">Телефон * <span className="text-xs text-muted-foreground">(будет подтверждён звонком/SMS)</span></Label>
                 <Input
                   id="phone"
                   type="tel"
                   required
                   placeholder="+7 (999) 123-45-67"
                   value={formData.phone || ''}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={handlePhoneChange}
                 />
               </div>
 
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">
+                  Email <span className="text-xs text-muted-foreground">(необязательно, для уведомлений)</span>
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email || ''}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="example@mail.ru"
                 />
               </div>
 
@@ -236,48 +291,121 @@ export default function RegisterPage() {
     );
   }
 
-  // Шаг 3: Верификация SMS
+  // Шаг 3: Верификация телефона
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="text-center">
+          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <span className="text-3xl">📞</span>
+          </div>
           <CardTitle>Подтверждение телефона</CardTitle>
-          <CardDescription>
-            Мы отправили код подтверждения на номер <strong>{registeredPhone}</strong>
+          <CardDescription className="space-y-2">
+            <p>
+              Мы позвоним на номер <strong>{registeredPhone}</strong>
+            </p>
+            <p className="text-xs">
+              Введите <strong>последние 4 цифры</strong> входящего номера.
+              <br />
+              Если звонок не поступит, мы отправим SMS с кодом.
+            </p>
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleVerify} className="space-y-4">
-            <div>
-              <Label htmlFor="code">Код из SMS</Label>
-              <Input
-                id="code"
-                required
-                maxLength={6}
-                placeholder="123456"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-              />
+          <form onSubmit={handleVerify} className="space-y-6">
+            <div className="flex items-center justify-center gap-3 px-4">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="w-14 h-14 flex-shrink-0"
+                >
+                  <input
+                    id={`code-${i}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    autoComplete="one-time-code"
+                    autoFocus={i === 0}
+                    value={verificationCode[i] || ''}
+                    className="w-full h-full text-center text-2xl font-bold border-2 border-gray-300 rounded-xl bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      if (!val) {
+                        const newCode = verificationCode.split('');
+                        newCode[i] = '';
+                        setVerificationCode(newCode.join(''));
+                        return;
+                      }
+                      const newCode = verificationCode.padEnd(4, ' ').split('');
+                      newCode[i] = val[val.length - 1];
+                      setVerificationCode(newCode.join('').replace(/ /g, '').slice(0, 4));
+                      if (i < 3) {
+                        document.getElementById(`code-${i + 1}`)?.focus();
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Backspace') {
+                        if (!verificationCode[i] && i > 0) {
+                          e.preventDefault();
+                          const newCode = verificationCode.padEnd(4, ' ').split('');
+                          newCode[i - 1] = '';
+                          setVerificationCode(newCode.join('').replace(/ /g, ''));
+                          document.getElementById(`code-${i - 1}`)?.focus();
+                        }
+                      }
+                      if (e.key === 'ArrowLeft' && i > 0) {
+                        document.getElementById(`code-${i - 1}`)?.focus();
+                      }
+                      if (e.key === 'ArrowRight' && i < 3) {
+                        document.getElementById(`code-${i + 1}`)?.focus();
+                      }
+                    }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
+                      setVerificationCode(pasted);
+                      const focusIdx = Math.min(pasted.length, 3);
+                      document.getElementById(`code-${focusIdx}`)?.focus();
+                    }}
+                    onFocus={(e) => e.target.select()}
+                  />
+                </div>
+              ))}
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base" 
+              disabled={isLoading || verificationCode.length < 4}
+            >
               {isLoading ? 'Проверка...' : 'Подтвердить'}
             </Button>
 
-            <div className="text-center">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleResendCode}
-                disabled={isLoading}
-              >
-                Отправить код повторно
-              </Button>
+            <div className="text-center space-y-3">
+              {resendTimer > 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Повторная отправка через <span className="font-semibold text-primary">{resendTimer} сек</span>
+                </p>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleResendCode}
+                  disabled={isLoading}
+                  className="text-primary"
+                >
+                  Отправить код повторно
+                </Button>
+              )}
             </div>
 
-            <div className="text-center">
+            <div className="text-center border-t pt-4">
               <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
                 Вернуться на главную
               </Link>
@@ -288,4 +416,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

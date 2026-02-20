@@ -25,6 +25,8 @@ interface OrderFilters {
   maxBudget?: number;
   status?: any;
   executorId?: string;
+  sortBy?: 'createdAt' | 'startDate';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export class OrderService {
@@ -32,9 +34,9 @@ export class OrderService {
    * Создать новый заказ
    */
   async createOrder(data: CreateOrderData): Promise<any> {
-    // Проверяем минимальную цену (5000₽)
-    if (data.budget < 5000 && data.budgetType !== 'negotiable') {
-      throw new Error('Минимальная цена заказа - 5000₽');
+    // Проверяем минимальную цену (3000₽)
+    if (data.budget < 3000 && data.budgetType !== 'negotiable') {
+      throw new Error('Минимальная цена заказа — 3000₽');
     }
 
     const order = await prisma.order.create({
@@ -181,7 +183,7 @@ export class OrderService {
           } : false,
         },
         orderBy: {
-          createdAt: 'desc',
+          [filters.sortBy || 'createdAt']: filters.sortOrder || 'desc',
         },
         skip: (page - 1) * limit,
         take: limit,
@@ -366,6 +368,7 @@ export class OrderService {
     }
 
     // Возвращаем деньги всем откликнувшимся исполнителям
+    const executorIds: string[] = [];
     for (const response of order.responses) {
       await prisma.balance.update({
         where: { userId: response.executorId },
@@ -375,15 +378,27 @@ export class OrderService {
           },
         },
       });
+      executorIds.push(response.executorId);
     }
 
-    return prisma.order.update({
+    const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
         status: 'CANCELLED',
         closedAt: new Date(),
       },
     });
+
+    // Уведомление всем исполнителям, которые откликнулись
+    if (executorIds.length > 0) {
+      await notificationService.notifyOrderCancelledByCustomer(
+        executorIds,
+        orderId,
+        order.title
+      ).catch(err => console.error('Notification error:', err));
+    }
+
+    return updatedOrder;
   }
 
   /**
@@ -475,7 +490,7 @@ export class OrderService {
     await prisma.response.update({
       where: { id: response.id },
       data: {
-        status: 'accepted',
+        status: 'ACCEPTED',
         acceptedAt: new Date(),
       },
     });
@@ -489,16 +504,23 @@ export class OrderService {
       updatedOrder.customer.phone
     ).catch(err => console.error('Notification error:', err));
 
-    // Отклоняем остальные отклики
+    // Отклоняем остальные отклики и уведомляем отклонённых исполнителей
     const otherResponses = order.responses.filter((r) => r.executorId !== executorId);
     for (const otherResponse of otherResponses) {
       await prisma.response.update({
         where: { id: otherResponse.id },
         data: {
-          status: 'rejected',
+          status: 'REJECTED',
           rejectedAt: new Date(),
         },
       });
+
+      // Уведомление отклонённому исполнителю
+      await notificationService.notifyResponseRejected(
+        otherResponse.executorId,
+        orderId,
+        updatedOrder.title
+      ).catch(err => console.error('Notification error:', err));
     }
 
     return updatedOrder;
@@ -593,20 +615,20 @@ export class OrderService {
       await prisma.response.update({
         where: { id: executorResponse.id },
         data: {
-          status: 'cancelled',
+          status: 'CANCELLED',
           rejectedAt: new Date(),
         },
       });
     }
 
-    // Возвращаем все остальные отклики в статус pending
+    // Возвращаем все остальные отклики в статус PENDING
     await prisma.response.updateMany({
       where: {
         orderId,
-        status: 'rejected',
+        status: 'REJECTED',
       },
       data: {
-        status: 'pending',
+        status: 'PENDING',
         rejectedAt: null,
       },
     });
@@ -628,6 +650,9 @@ export class OrderService {
   async completeOrder(orderId: string, executorId: string): Promise<any> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
+      include: {
+        executor: true,
+      },
     });
 
     if (!order) {
@@ -670,6 +695,20 @@ export class OrderService {
         },
       }),
     ]);
+
+    // Уведомление заказчику о завершении заказа
+    await notificationService.notifyOrderCompleted(
+      order.customerId,
+      orderId,
+      order.title
+    ).catch(err => console.error('Notification error:', err));
+
+    // Уведомление исполнителю о завершении заказа
+    await notificationService.notifyOrderCompleted(
+      executorId,
+      orderId,
+      order.title
+    ).catch(err => console.error('Notification error:', err));
 
     return updatedOrder;
   }

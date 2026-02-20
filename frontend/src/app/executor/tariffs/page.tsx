@@ -8,11 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Check, ArrowLeft } from 'lucide-react';
 
 export default function TariffsPage() {
-  const { user } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const router = useRouter();
   const [selectedTariff, setSelectedTariff] = useState<string>('');
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
@@ -22,9 +23,9 @@ export default function TariffsPage() {
       return;
     }
     setSelectedTariff(user.subscription?.tariffType || 'STANDARD');
-  }, [user, router]);
+  }, [user, router, isHydrated]);
 
-  if (!user) {
+  if (!isHydrated || !user) {
     return null;
   }
 

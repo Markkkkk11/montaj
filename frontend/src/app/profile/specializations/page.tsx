@@ -13,7 +13,7 @@ import api from '@/lib/api';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 export default function SpecializationsPage() {
-  const { user, getCurrentUser } = useAuthStore();
+  const { user, getCurrentUser, isHydrated } = useAuthStore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -24,6 +24,7 @@ export default function SpecializationsPage() {
   const [canChange, setCanChange] = useState(true);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
@@ -48,7 +49,7 @@ export default function SpecializationsPage() {
     // TODO: добавить поле lastSpecializationsUpdate в модель ExecutorProfile
     // Пока разрешаем менять всегда
     setCanChange(true);
-  }, [user, router]);
+  }, [user, router, isHydrated]);
 
   const handleToggle = (spec: Specialization) => {
     if (selected.includes(spec)) {

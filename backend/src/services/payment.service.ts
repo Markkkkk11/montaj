@@ -195,6 +195,72 @@ export class PaymentService {
         description: `Пополнение баланса на ${amount}₽`,
       },
     });
+
+    // Проверить бонус за первое пополнение ≥150₽ в течение 30 дней после регистрации
+    if (amount >= 150) {
+      await this.checkAndAwardRegistrationBonus(userId, amount);
+    }
+  }
+
+  /**
+   * Начислить бонус 1000₽ за первое пополнение ≥150₽
+   * в течение 30 дней с момента регистрации (одноразово)
+   */
+  private async checkAndAwardRegistrationBonus(userId: string, topUpAmount: number) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { createdAt: true },
+      });
+
+      if (!user) return;
+
+      // Проверяем, что прошло не более 30 дней с регистрации
+      const daysSinceRegistration = (Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSinceRegistration > 30) {
+        return; // Срок акции истёк
+      }
+
+      // Проверяем, что бонус ещё не начислялся (по наличию транзакции BONUS с описанием)
+      const existingBonus = await prisma.transaction.findFirst({
+        where: {
+          userId,
+          type: 'BONUS',
+          description: { contains: 'Бонус за первое пополнение' },
+        },
+      });
+
+      if (existingBonus) {
+        return; // Бонус уже начислен
+      }
+
+      const bonusAmount = 1000;
+
+      // Начислить бонус
+      await prisma.balance.update({
+        where: { userId },
+        data: {
+          bonusAmount: {
+            increment: bonusAmount,
+          },
+        },
+      });
+
+      // Записать транзакцию
+      await prisma.transaction.create({
+        data: {
+          userId,
+          type: 'BONUS',
+          amount: bonusAmount,
+          description: `Бонус за первое пополнение (${topUpAmount}₽ в течение 30 дней после регистрации)`,
+        },
+      });
+
+      console.log(`🎁 Начислен бонус 1000₽ пользователю ${userId} за первое пополнение ${topUpAmount}₽`);
+    } catch (error) {
+      console.error('Ошибка при начислении бонуса:', error);
+      // Не бросаем ошибку — бонус не должен блокировать пополнение
+    }
   }
 
   /**

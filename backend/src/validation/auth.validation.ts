@@ -1,18 +1,27 @@
 import Joi from 'joi';
 
+// Кастомная валидация телефона: принимает любой формат, нормализует до цифр
+const phoneValidator = Joi.string()
+  .custom((value, helpers) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length < 10 || digits.length > 15) {
+      return helpers.error('string.pattern.base');
+    }
+    return value; // Оставляем оригинал, нормализация на сервисе
+  })
+  .required()
+  .messages({
+    'string.pattern.base': 'Неверный формат номера телефона (минимум 10 цифр)',
+    'any.required': 'Номер телефона обязателен',
+  });
+
 export const registerSchema = Joi.object({
   role: Joi.string().valid('CUSTOMER', 'EXECUTOR').required().messages({
     'any.required': 'Роль обязательна',
     'any.only': 'Роль должна быть CUSTOMER или EXECUTOR',
   }),
-  phone: Joi.string()
-    .pattern(/^\+?[1-9]\d{10,14}$/)
-    .required()
-    .messages({
-      'string.pattern.base': 'Неверный формат номера телефона',
-      'any.required': 'Номер телефона обязателен',
-    }),
-  email: Joi.string().email().optional().allow('').messages({
+  phone: phoneValidator,
+  email: Joi.string().email().optional().allow('', null).messages({
     'string.email': 'Неверный формат email',
   }),
   password: Joi.string().min(6).required().messages({
@@ -53,19 +62,14 @@ export const verifySMSSchema = Joi.object({
   phone: Joi.string().required().messages({
     'any.required': 'Номер телефона обязателен',
   }),
-  code: Joi.string().length(6).required().messages({
-    'string.length': 'Код должен содержать 6 цифр',
+  code: Joi.string().min(4).max(6).pattern(/^\d+$/).required().messages({
+    'string.min': 'Код должен содержать минимум 4 цифры',
+    'string.max': 'Код должен содержать максимум 6 цифр',
+    'string.pattern.base': 'Код должен содержать только цифры',
     'any.required': 'Код обязателен',
   }),
 });
 
 export const sendSMSSchema = Joi.object({
-  phone: Joi.string()
-    .pattern(/^\+?[1-9]\d{10,14}$/)
-    .required()
-    .messages({
-      'string.pattern.base': 'Неверный формат номера телефона',
-      'any.required': 'Номер телефона обязателен',
-    }),
+  phone: phoneValidator,
 });
-

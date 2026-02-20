@@ -1,5 +1,30 @@
 import api from '../api';
 
+export interface Statistics {
+  users: {
+    total: number;
+    executors: number;
+    customers: number;
+    pending: number;
+  };
+  orders: {
+    total: number;
+    published: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+  };
+  reviews: {
+    total: number;
+    pending: number;
+    approved: number;
+  };
+  revenue: {
+    total: number;
+    thisMonth: number;
+  };
+}
+
 export const adminApi = {
   // Статистика
   async getStats() {
@@ -59,6 +84,17 @@ export const adminApi = {
 
   async deleteOrder(orderId: string) {
     const { data } = await api.delete(`/admin/orders/${orderId}`);
+    return data;
+  },
+
+  // Отзывы (модерация)
+  async getReviews(params?: { page?: number; limit?: number; status?: string }) {
+    const { data } = await api.get('/admin/reviews', { params });
+    return data;
+  },
+
+  async moderateReview(reviewId: string, action: 'APPROVE' | 'REJECT', note?: string) {
+    const { data } = await api.post(`/admin/reviews/${reviewId}/moderate`, { action, note });
     return data;
   },
 };

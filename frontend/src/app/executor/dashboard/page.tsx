@@ -14,7 +14,7 @@ import { TARIFF_LABELS, isExecutorProfileComplete } from '@/lib/utils';
 import { Wallet, FileText, User, Star, Search } from 'lucide-react';
 
 export default function ExecutorDashboard() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
   const router = useRouter();
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [myResponses, setMyResponses] = useState<Response[]>([]);
@@ -22,6 +22,7 @@ export default function ExecutorDashboard() {
   const [bonusBannerClosed, setBonusBannerClosed] = useState(false);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
@@ -43,7 +44,7 @@ export default function ExecutorDashboard() {
     }
     
     loadData();
-  }, [user, router]);
+  }, [user, router, isHydrated]);
 
   const loadData = async () => {
     try {
@@ -80,7 +81,7 @@ export default function ExecutorDashboard() {
     localStorage.setItem('closedBanners', JSON.stringify(banners));
   };
 
-  if (!user) {
+  if (!isHydrated || !user) {
     return null;
   }
 
@@ -119,7 +120,7 @@ export default function ExecutorDashboard() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
           <div className="flex items-center gap-4">
             <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>

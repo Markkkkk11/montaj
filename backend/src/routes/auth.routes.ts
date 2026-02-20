@@ -16,6 +16,8 @@ router.post('/register', validateBody(registerSchema), authController.register);
 router.post('/login', validateBody(loginSchema), authController.login);
 router.post('/verify-sms', validateBody(verifySMSSchema), authController.verifySMS);
 router.post('/send-sms', validateBody(sendSMSSchema), authController.sendSMS);
+router.post('/request-reset', validateBody(sendSMSSchema), authController.requestPasswordReset);
+router.post('/reset-password', authController.resetPassword);
 
 // Защищённые маршруты
 router.get('/me', authenticate, authController.getCurrentUser);

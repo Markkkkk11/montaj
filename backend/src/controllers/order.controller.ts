@@ -70,6 +70,8 @@ export class OrderController {
         minBudget: req.query.minBudget ? Number(req.query.minBudget) : undefined,
         maxBudget: req.query.maxBudget ? Number(req.query.maxBudget) : undefined,
         status: req.query.status as any,
+        sortBy: (req.query.sortBy as 'createdAt' | 'startDate') || undefined,
+        sortOrder: (req.query.sortOrder as 'asc' | 'desc') || undefined,
       };
 
       const page = Number(req.query.page) || 1;

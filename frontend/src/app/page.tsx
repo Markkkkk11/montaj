@@ -29,7 +29,7 @@ export default function Home() {
       {/* Header */}
       <header className="border-b bg-white">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
           <div className="flex gap-3">
             <Link href="/login">
               <Button variant="outline">Войти</Button>

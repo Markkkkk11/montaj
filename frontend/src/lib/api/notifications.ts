@@ -21,11 +21,22 @@ export interface NotificationSettings {
   inAppEnabled: boolean;
   emailEnabled: boolean;
   smsEnabled: boolean;
+  // Granular email settings
   emailOrders: boolean;
   emailResponses: boolean;
   emailMessages: boolean;
+  emailOrderNew: boolean;
+  emailOrderResponse: boolean;
+  emailOrderSelected: boolean;
+  emailOrderCompleted: boolean;
+  emailReviewNew: boolean;
+  emailPaymentSuccess: boolean;
+  // Granular SMS settings
   smsOrders: boolean;
   smsResponses: boolean;
+  smsOrderSelected: boolean;
+  smsOrderCompleted: boolean;
+  smsPaymentSuccess: boolean;
 }
 
 export const notificationsApi = {
@@ -89,3 +100,8 @@ export const notificationsApi = {
     return response.data.settings;
   },
 };
+
+// Named exports for backwards compatibility
+export const getNotificationSettings = () => notificationsApi.getSettings();
+export const updateNotificationSettings = (settings: Partial<NotificationSettings>) =>
+  notificationsApi.updateSettings(settings);

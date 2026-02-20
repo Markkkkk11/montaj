@@ -1,4 +1,4 @@
-export type Role = 'CUSTOMER' | 'EXECUTOR';
+export type Role = 'CUSTOMER' | 'EXECUTOR' | 'ADMIN';
 export type UserStatus = 'PENDING' | 'ACTIVE' | 'REJECTED' | 'BLOCKED';
 export type Specialization =
   | 'WINDOWS'
@@ -42,7 +42,9 @@ export interface ExecutorProfile {
   specializations: Specialization[];
   shortDescription?: string;
   fullDescription?: string;
+  bio?: string;
   workPhotos: string[];
+  isSelfEmployed?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -95,6 +97,7 @@ export type PaymentMethod = 'CASH' | 'CARD' | 'BANK';
 
 export interface Order {
   id: string;
+  orderNumber?: number;
   customerId: string;
   executorId?: string;
   category: Specialization;
@@ -114,6 +117,7 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
+  workStartedAt?: string;  // Когда исполнитель приступил к работе
   closedAt?: string;
   hasViewed?: boolean;  // Исполнитель уже просматривал этот заказ
   customer?: {
@@ -160,6 +164,11 @@ export interface Response {
     completedOrders: number;
     executorProfile?: ExecutorProfile;
   };
+  order?: {
+    id: string;
+    title: string;
+    status: string;
+  };
 }
 
 export interface CreateOrderData {
@@ -184,6 +193,8 @@ export interface OrderFilters {
   minBudget?: number;
   maxBudget?: number;
   status?: OrderStatus;
+  sortBy?: 'createdAt' | 'startDate';
+  sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
 }

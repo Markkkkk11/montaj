@@ -58,3 +58,49 @@ export const TARIFF_LABELS: Record<string, string> = {
   PREMIUM: 'Премиум',
 };
 
+// Цвета по специализациям
+export const SPECIALIZATION_COLORS: Record<string, string> = {
+  WINDOWS: '#2563eb',       // Окна - синий
+  DOORS: '#9333ea',         // Двери - фиолетовый
+  CEILINGS: '#16a34a',      // Потолки - зелёный
+  CONDITIONERS: '#ea580c',  // Кондиционеры - оранжевый
+  BLINDS: '#dc2626',        // Жалюзи - красный
+  FURNITURE: '#6b7280',     // Мебель - серый
+};
+
+// Время на сайте (с даты регистрации)
+export function getTimeSinceRegistration(createdAt: string): string {
+  const now = new Date();
+  const regDate = new Date(createdAt);
+  
+  let years = now.getFullYear() - regDate.getFullYear();
+  let months = now.getMonth() - regDate.getMonth();
+  let days = now.getDate() - regDate.getDate();
+
+  if (days < 0) {
+    months--;
+    const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  const parts: string[] = [];
+  if (years > 0) {
+    const suffix = years === 1 ? 'год' : years < 5 ? 'года' : 'лет';
+    parts.push(`${years} ${suffix}`);
+  }
+  if (months > 0) {
+    const suffix = months === 1 ? 'месяц' : months < 5 ? 'месяца' : 'месяцев';
+    parts.push(`${months} ${suffix}`);
+  }
+  if (days > 0 && years === 0) {
+    const suffix = days === 1 ? 'день' : days < 5 ? 'дня' : 'дней';
+    parts.push(`${days} ${suffix}`);
+  }
+
+  return parts.length > 0 ? parts.join(' ') : 'Менее дня';
+}
+

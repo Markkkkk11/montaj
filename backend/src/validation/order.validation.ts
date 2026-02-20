@@ -35,8 +35,8 @@ export const createOrderSchema = Joi.object({
   endDate: Joi.date().iso().min(Joi.ref('startDate')).optional().allow(null).messages({
     'date.min': 'Дата окончания должна быть позже даты начала',
   }),
-  budget: Joi.number().min(0).required().messages({
-    'number.min': 'Бюджет не может быть отрицательным',
+  budget: Joi.number().min(3000).required().messages({
+    'number.min': 'Минимальный бюджет — 3000₽',
     'any.required': 'Бюджет обязателен',
   }),
   budgetType: Joi.string().valid('fixed', 'negotiable').optional().default('fixed'),
@@ -53,7 +53,9 @@ export const updateOrderSchema = Joi.object({
   address: Joi.string().optional(),
   startDate: Joi.date().iso().optional(),
   endDate: Joi.date().iso().optional().allow(null),
-  budget: Joi.number().min(0).optional(),
+  budget: Joi.number().min(3000).optional().messages({
+    'number.min': 'Минимальный бюджет — 3000₽',
+  }),
   budgetType: Joi.string().valid('fixed', 'negotiable').optional(),
   paymentMethod: Joi.string().valid('CASH', 'CARD', 'BANK').optional(),
 });
@@ -68,6 +70,8 @@ export const getOrdersQuerySchema = Joi.object({
   status: Joi.string()
     .valid('PUBLISHED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'ARCHIVED')
     .optional(),
+  sortBy: Joi.string().valid('createdAt', 'startDate').optional(),
+  sortOrder: Joi.string().valid('asc', 'desc').optional(),
   page: Joi.number().integer().min(1).optional().default(1),
   limit: Joi.number().integer().min(1).max(100).optional().default(20),
 });

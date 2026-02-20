@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
@@ -124,25 +123,33 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
         </div>
 
         <div>
-          <Label>Бюджет</Label>
-          <div className="grid grid-cols-2 gap-2 mt-1">
-            <Input
-              placeholder="От"
-              type="number"
-              value={filters.minBudget || ''}
-              onChange={(e) =>
-                setFilters({ ...filters, minBudget: Number(e.target.value) || undefined })
-              }
-            />
-            <Input
-              placeholder="До"
-              type="number"
-              value={filters.maxBudget || ''}
-              onChange={(e) =>
-                setFilters({ ...filters, maxBudget: Number(e.target.value) || undefined })
-              }
-            />
-          </div>
+          <Label htmlFor="sortBy">Сортировка</Label>
+          <select
+            id="sortBy"
+            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={filters.sortBy || 'createdAt'}
+            onChange={(e) =>
+              setFilters({ ...filters, sortBy: (e.target.value as 'createdAt' | 'startDate') || undefined })
+            }
+          >
+            <option value="createdAt">По дате размещения</option>
+            <option value="startDate">По дате начала работ</option>
+          </select>
+        </div>
+
+        <div>
+          <Label htmlFor="sortOrder">Порядок</Label>
+          <select
+            id="sortOrder"
+            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={filters.sortOrder || 'desc'}
+            onChange={(e) =>
+              setFilters({ ...filters, sortOrder: (e.target.value as 'asc' | 'desc') || undefined })
+            }
+          >
+            <option value="desc">Сначала новые</option>
+            <option value="asc">Сначала старые</option>
+          </select>
         </div>
 
         <div className="flex gap-2 pt-2">

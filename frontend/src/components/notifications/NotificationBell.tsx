@@ -105,6 +105,7 @@ export function NotificationBell() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case 'ORDER_NEW':
       case 'NEW_ORDER':
         return '📦';
       case 'NEW_RESPONSE':
@@ -113,13 +114,24 @@ export function NotificationBell() {
       case 'RESPONSE_ACCEPTED':
       case 'ORDER_SELECTED':
         return '✅';
+      case 'ORDER_STARTED':
+        return '🚀';
       case 'RESPONSE_REJECTED':
+      case 'ORDER_CANCELLED':
         return '❌';
       case 'ORDER_COMPLETED':
         return '🎉';
+      case 'REVIEW_NEW':
+      case 'REVIEW_APPROVED':
+        return '⭐';
       case 'NEW_MESSAGE':
         return '💬';
+      case 'BALANCE_LOW':
+        return '💰';
+      case 'USER_APPROVED':
+        return '👤';
       case 'ADMIN_MESSAGE':
+      case 'SYSTEM':
         return '⚙️';
       default:
         return '🔔';

@@ -12,12 +12,13 @@ import { Plus, FileText, User } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export default function CustomerDashboard() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
   const router = useRouter();
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
@@ -31,7 +32,7 @@ export default function CustomerDashboard() {
       return;
     }
     loadMyOrders();
-  }, [user, router]);
+  }, [user, router, isHydrated]);
 
   const loadMyOrders = async () => {
     try {
@@ -45,7 +46,7 @@ export default function CustomerDashboard() {
     }
   };
 
-  if (!user) {
+  if (!isHydrated || !user) {
     return null;
   }
 
@@ -62,7 +63,7 @@ export default function CustomerDashboard() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
           <div className="flex items-center gap-4">
             <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>

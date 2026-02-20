@@ -51,7 +51,7 @@ export default function UserReviewsPage() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => router.back()}>
               Назад

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
+import { reviewsApi } from '@/lib/api/reviews';
 import { Order, Response } from '@/lib/types';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Calendar, MapPin, Wallet, User, Phone, Mail, MessageCircle, CheckCircle } from 'lucide-react';
@@ -14,7 +15,7 @@ import { ChatBox } from '@/components/chat/ChatBox';
 import { useToast } from '@/hooks/use-toast';
 
 export default function OrderDetailPage() {
-  const { user } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   const orderId = params.id as string;
@@ -26,14 +27,16 @@ export default function OrderDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [hasResponded, setHasResponded] = useState(false);
+  const [canReview, setCanReview] = useState(false);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
     }
     loadOrderDetails();
-  }, [user, orderId]);
+  }, [user, orderId, isHydrated]);
 
   const loadOrderDetails = async () => {
     try {
@@ -63,6 +66,17 @@ export default function OrderDetailPage() {
       if (user?.role === 'CUSTOMER' && orderData.customerId === user.id) {
         const responsesData = await responsesApi.getOrderResponses(orderId);
         setResponses(responsesData);
+      }
+
+      // Проверить, может ли пользователь оставить отзыв
+      if (orderData.status === 'COMPLETED' && 
+          (orderData.customerId === user?.id || orderData.executorId === user?.id)) {
+        try {
+          const canLeaveData = await reviewsApi.canLeaveReview(orderId);
+          setCanReview(canLeaveData.canLeave);
+        } catch {
+          setCanReview(false);
+        }
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Ошибка загрузки заказа');
@@ -117,7 +131,7 @@ export default function OrderDetailPage() {
       toast({
         variant: 'success',
         title: '✅ Исполнитель выбран!',
-        description: 'Контакты теперь доступны обеим сторонам.',
+        description: 'Исполнитель получит уведомление и сможет приступить к работе.',
       });
       
       loadOrderDetails();
@@ -140,10 +154,18 @@ export default function OrderDetailPage() {
     try {
       setActionLoading(true);
       await ordersApi.completeOrder(orderId);
-      alert('Заказ завершён! Теперь заказчик может оставить отзыв.');
+      toast({
+        variant: 'success',
+        title: '✅ Заказ завершён!',
+        description: 'Теперь заказчик может оставить отзыв.',
+      });
       loadOrderDetails();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка завершения заказа');
+      toast({
+        variant: 'destructive',
+        title: '❌ Ошибка',
+        description: err.response?.data?.error || 'Ошибка завершения заказа',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -157,10 +179,18 @@ export default function OrderDetailPage() {
     try {
       setActionLoading(true);
       await ordersApi.cancelOrder(orderId);
-      alert('Заказ отменён');
+      toast({
+        variant: 'success',
+        title: 'Заказ отменён',
+        description: 'Средства возвращены исполнителям.',
+      });
       router.push('/customer/dashboard');
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка отмены заказа');
+      toast({
+        variant: 'destructive',
+        title: '❌ Ошибка',
+        description: err.response?.data?.error || 'Ошибка отмены заказа',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -174,10 +204,18 @@ export default function OrderDetailPage() {
     try {
       setActionLoading(true);
       await ordersApi.startWork(orderId);
-      alert('Вы приступили к работе! Заказчик получил уведомление.');
+      toast({
+        variant: 'success',
+        title: '🔧 Вы приступили к работе!',
+        description: 'Заказчик получил уведомление. Чат доступен.',
+      });
       loadOrderDetails();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка начала работы');
+      toast({
+        variant: 'destructive',
+        title: '❌ Ошибка',
+        description: err.response?.data?.error || 'Ошибка начала работы',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -192,10 +230,18 @@ export default function OrderDetailPage() {
     try {
       setActionLoading(true);
       await ordersApi.cancelWork(orderId, reason || undefined);
-      alert('Вы отказались от заказа. Он снова доступен для откликов.');
+      toast({
+        variant: 'success',
+        title: 'Вы отказались от заказа',
+        description: 'Заказ снова доступен для откликов других исполнителей.',
+      });
       loadOrderDetails();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Ошибка отказа от заказа');
+      toast({
+        variant: 'destructive',
+        title: '❌ Ошибка',
+        description: err.response?.data?.error || 'Ошибка отказа от заказа',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -247,9 +293,16 @@ export default function OrderDetailPage() {
                   <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                     {SPECIALIZATION_LABELS[order.category]}
                   </span>
-                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                  <span className={`px-3 py-1 rounded-full text-sm ${
+                    order.status === 'PUBLISHED' ? 'bg-blue-100 text-blue-700' :
+                    order.status === 'IN_PROGRESS' && !order.workStartedAt ? 'bg-yellow-100 text-yellow-700' :
+                    order.status === 'IN_PROGRESS' && order.workStartedAt ? 'bg-green-100 text-green-700' :
+                    order.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
                     {order.status === 'PUBLISHED' && 'Опубликован'}
-                    {order.status === 'IN_PROGRESS' && 'В работе'}
+                    {order.status === 'IN_PROGRESS' && !order.workStartedAt && 'Исполнитель выбран'}
+                    {order.status === 'IN_PROGRESS' && order.workStartedAt && 'В работе'}
                     {order.status === 'COMPLETED' && 'Завершён'}
                     {order.status === 'CANCELLED' && 'Отменён'}
                   </span>
@@ -319,6 +372,31 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
+            {/* Приложенные файлы */}
+            {order.files && order.files.length > 0 && (
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold mb-3">📎 Приложенные файлы</h3>
+                <div className="flex flex-wrap gap-2">
+                  {order.files.map((file, idx) => {
+                    const filename = file.split('/').pop() || file;
+                    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
+                    const fileUrl = file.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${file}` : file;
+                    return (
+                      <a
+                        key={idx}
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-2 text-sm transition-colors"
+                      >
+                        {isImage ? '🖼️' : '📄'} {filename}
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Контакты заказчика (видны только выбранному исполнителю) */}
             {isAssignedExecutor && order.customer && (
               <div className="pt-4 border-t bg-blue-50 -mx-6 px-6 py-4">
@@ -375,6 +453,52 @@ export default function OrderDetailPage() {
               </div>
             )}
 
+            {/* Баннер: Исполнитель выбран, но не приступил к работе */}
+            {isAssignedExecutor && order.status === 'IN_PROGRESS' && !order.workStartedAt && (
+              <div className="pt-4 border-t bg-yellow-50 -mx-6 px-6 py-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🎉</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-yellow-900">Заказчик выбрал вас!</p>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Вы можете приступить к выполнению заказа или отказаться.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Баннер: Работа начата */}
+            {isAssignedExecutor && order.status === 'IN_PROGRESS' && order.workStartedAt && (
+              <div className="pt-4 border-t bg-green-50 -mx-6 px-6 py-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🔧</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-green-900">Вы выполняете этот заказ</p>
+                    <p className="text-sm text-green-700 mt-1">
+                      Работа начата {new Date(order.workStartedAt).toLocaleDateString('ru-RU')}. 
+                      По завершению нажмите «Заказ выполнен».
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Баннер: Для заказчика — ожидание начала работы */}
+            {isCustomer && order.status === 'IN_PROGRESS' && !order.workStartedAt && order.executor && (
+              <div className="pt-4 border-t bg-yellow-50 -mx-6 px-6 py-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">⏳</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-yellow-900">Ожидание начала работы</p>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Исполнитель {order.executor.fullName} ещё не приступил к выполнению заказа.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex gap-2 pt-4 flex-wrap">
               {canRespond && !hasResponded && (
@@ -383,7 +507,7 @@ export default function OrderDetailPage() {
                 </Button>
               )}
               
-              {hasResponded && (
+              {hasResponded && !isAssignedExecutor && (
                 <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
                   <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
                   <div className="flex-1">
@@ -404,21 +528,25 @@ export default function OrderDetailPage() {
               )}
 
               {isAssignedExecutor && order.status === 'IN_PROGRESS' && !order.workStartedAt && (
-                <Button onClick={handleStartWork} disabled={actionLoading} className="flex-1">
-                  Приступить к работе
-                </Button>
+                <>
+                  <Button onClick={handleStartWork} disabled={actionLoading} className="flex-1" size="lg">
+                    ▶ Приступить к работе
+                  </Button>
+                  <Button onClick={handleCancelWork} disabled={actionLoading} variant="destructive" size="lg">
+                    Отказаться
+                  </Button>
+                </>
               )}
 
               {isAssignedExecutor && order.status === 'IN_PROGRESS' && order.workStartedAt && (
-                <Button onClick={handleCompleteOrder} disabled={actionLoading} className="flex-1">
-                  Заказ выполнен
-                </Button>
-              )}
-
-              {isAssignedExecutor && order.status === 'IN_PROGRESS' && (
-                <Button onClick={handleCancelWork} disabled={actionLoading} variant="outline">
-                  Отказаться от заказа
-                </Button>
+                <>
+                  <Button onClick={handleCompleteOrder} disabled={actionLoading} className="flex-1" size="lg">
+                    ✅ Заказ выполнен
+                  </Button>
+                  <Button onClick={handleCancelWork} disabled={actionLoading} variant="outline">
+                    Отказаться от заказа
+                  </Button>
+                </>
               )}
 
               {isCustomer && order.status === 'PUBLISHED' && (
@@ -428,14 +556,19 @@ export default function OrderDetailPage() {
               )}
 
               {/* Кнопка оставить отзыв после завершения */}
-              {order.status === 'COMPLETED' && (isCustomer || isAssignedExecutor) && (
+              {order.status === 'COMPLETED' && (isCustomer || isAssignedExecutor) && canReview && (
                 <Button
                   onClick={() => router.push(`/orders/${orderId}/review`)}
                   variant="outline"
                   className="flex-1"
                 >
-                  Оставить отзыв
+                  ⭐ Оставить отзыв
                 </Button>
+              )}
+              {order.status === 'COMPLETED' && (isCustomer || isAssignedExecutor) && !canReview && (
+                <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-green-700">✅ Отзыв оставлен</p>
+                </div>
               )}
             </div>
           </CardContent>
@@ -501,9 +634,8 @@ export default function OrderDetailPage() {
           </Card>
         )}
 
-        {/* Чат - показывается только когда заказ в работе или завершён */}
-        {(order.status === 'IN_PROGRESS' || order.status === 'COMPLETED') && 
-         (isCustomer || isAssignedExecutor) && (
+        {/* Чат - показывается только когда заказ в работе */}
+        {order.status === 'IN_PROGRESS' && (isCustomer || isAssignedExecutor) && (
           <div className="mt-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
@@ -513,6 +645,19 @@ export default function OrderDetailPage() {
               orderId={orderId} 
               otherUserId={isCustomer ? order.executorId || undefined : order.customerId}
             />
+          </div>
+        )}
+
+        {/* Для завершённых заказов — чат закрыт */}
+        {order.status === 'COMPLETED' && (isCustomer || isAssignedExecutor) && (
+          <div className="mt-6">
+            <Card className="p-6 text-center bg-gray-50">
+              <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-muted-foreground font-medium">Чат завершён</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Заказ выполнен. Переписка по этому заказу закрыта.
+              </p>
+            </Card>
           </div>
         )}
       </div>

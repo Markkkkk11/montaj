@@ -5,19 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { USER_STATUS_LABELS, SPECIALIZATION_LABELS } from '@/lib/utils';
+import { USER_STATUS_LABELS, SPECIALIZATION_LABELS, getTimeSinceRegistration } from '@/lib/utils';
 
 export default function ProfilePage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
+    if (isHydrated && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, isHydrated]);
 
-  if (!user) {
+  if (!isHydrated || !user) {
     return null;
   }
 
@@ -39,7 +39,7 @@ export default function ProfilePage() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={goBack}>
               Назад
@@ -59,6 +59,26 @@ export default function ProfilePage() {
             {user.role === 'CUSTOMER' ? 'Заказчик' : 'Исполнитель'}
           </p>
         </div>
+
+        {/* Avatar + Name */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                {user.photo ? (
+                  <img src={user.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.photo}` : user.photo} alt="Аватар" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl text-gray-500">{user.fullName.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold">{user.fullName}</h3>
+                <p className="text-muted-foreground">{user.role === 'CUSTOMER' ? 'Заказчик' : 'Исполнитель'}</p>
+                <p className="text-sm text-muted-foreground mt-1">На сайте: {getTimeSinceRegistration(user.createdAt)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Basic Info */}
         <Card className="mb-6">
@@ -90,6 +110,10 @@ export default function ProfilePage() {
               <div>
                 <p className="text-sm text-muted-foreground">Статус</p>
                 <p className="font-medium">{USER_STATUS_LABELS[user.status]}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">На сайте</p>
+                <p className="font-medium">{getTimeSinceRegistration(user.createdAt)}</p>
               </div>
             </div>
 
@@ -145,6 +169,17 @@ export default function ProfilePage() {
                 <p className="font-medium">
                   {user.executorProfile.fullDescription || 'Не указано'}
                 </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Самозанятый</p>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  user.executorProfile.isSelfEmployed 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {user.executorProfile.isSelfEmployed ? '✅ Да' : '❌ Нет'}
+                </span>
               </div>
 
               <Button 

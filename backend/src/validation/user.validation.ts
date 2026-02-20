@@ -36,5 +36,6 @@ export const updateExecutorProfileSchema = Joi.object({
     }),
   shortDescription: Joi.string().max(500).optional().allow(''),
   fullDescription: Joi.string().max(3000).optional().allow(''),
+  isSelfEmployed: Joi.boolean().optional(),
 });
 

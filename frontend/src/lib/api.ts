@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export const api = axios.create({
   baseURL: `${API_URL}/api`,
@@ -38,9 +38,19 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Токен истёк или неверен
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      const url = error.config?.url || '';
+      // Не редиректим, если это запрос на логин/регистрацию — 
+      // пусть ошибка отобразится пользователю на странице
+      const isAuthRequest = url.includes('/auth/login') || url.includes('/auth/register');
+      
+      if (!isAuthRequest) {
+        // Токен истёк — очищаем и редиректим на логин
+        localStorage.removeItem('token');
+        // Не перезагружаем, если уже на странице логина
+        if (!window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
     }
     return Promise.reject(error);
   }

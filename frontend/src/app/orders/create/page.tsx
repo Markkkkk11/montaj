@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,8 @@ export default function CreateOrderPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Partial<CreateOrderData>>({
     budgetType: 'fixed',
@@ -59,8 +61,8 @@ export default function CreateOrderPage() {
       return;
     }
 
-    if (!formData.budget || formData.budget < 5000) {
-      setError('Минимальная цена заказа - 5000₽');
+    if (!formData.budget || formData.budget < 3000) {
+      setError('Минимальная цена заказа — 3000₽');
       return;
     }
 
@@ -93,6 +95,16 @@ export default function CreateOrderPage() {
       const result = await ordersApi.createOrder(formData as CreateOrderData);
       console.log('✅ Заказ создан:', result);
       
+      // Загрузка приложенных файлов
+      if (files.length > 0 && result.order?.id) {
+        try {
+          await ordersApi.uploadFiles(result.order.id, files);
+          console.log('✅ Файлы загружены');
+        } catch (fileErr) {
+          console.error('⚠️ Ошибка загрузки файлов:', fileErr);
+        }
+      }
+
       router.push('/customer/dashboard');
     } catch (err: any) {
       console.error('❌ Ошибка создания заказа:', err);
@@ -270,16 +282,16 @@ export default function CreateOrderPage() {
                     id="budget"
                     type="number"
                     required
-                    min={5000}
-                    placeholder="5000"
+                    min={3000}
+                    placeholder="3000"
                     value={formData.budget || ''}
                     onChange={(e) => {
                       const value = Number(e.target.value);
                       setFormData({ ...formData, budget: value });
                       
                       // Проверяем минимальную цену
-                      if (value > 0 && value < 5000) {
-                        setBudgetError('Цена не может быть ниже 5000₽');
+                      if (value > 0 && value < 3000) {
+                        setBudgetError('Цена не может быть ниже 3000₽');
                       } else {
                         setBudgetError('');
                       }
@@ -292,7 +304,7 @@ export default function CreateOrderPage() {
                     </p>
                   ) : (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Минимум 5000₽
+                      Минимум 3000₽
                     </p>
                   )}
                 </div>
@@ -326,6 +338,52 @@ export default function CreateOrderPage() {
                   <option value="CARD">Перевод на карту</option>
                   <option value="BANK">Безналичный расчёт</option>
                 </select>
+              </div>
+
+              {/* Файлы */}
+              <div>
+                <Label>Прикрепить файлы (фото, чертежи, документы)</Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx,.dwg,.dxf"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <div className="mt-2 space-y-2">
+                  {files.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {files.map((file, idx) => (
+                        <div key={idx} className="flex items-center gap-1 bg-gray-100 rounded-lg px-3 py-1 text-sm">
+                          <span className="truncate max-w-[200px]">{file.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({(file.size / 1024 / 1024).toFixed(1)} МБ)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setFiles(files.filter((_, i) => i !== idx))}
+                            className="text-red-500 hover:text-red-700 ml-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    📎 Добавить файл
+                  </Button>
+                </div>
               </div>
 
               {error && (

@@ -10,7 +10,14 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   
-  // SMSC.ru
+  // GreenSMS
+  greenSms: {
+    token: process.env.GREENSMS_TOKEN || '',
+    enabled: process.env.GREENSMS_ENABLED === 'true',
+    baseUrl: 'https://api.greensms.ru',
+  },
+
+  // SMSC.ru (legacy)
   smsc: {
     login: process.env.SMSC_LOGIN || '',
     password: process.env.SMSC_PASSWORD || '',

@@ -6,16 +6,32 @@ import smsService from './sms.service';
 
 export class AuthService {
   /**
+   * Нормализация телефона (оставляем только цифры)
+   */
+  private normalizePhone(phone: string): string {
+    return phone.replace(/\D/g, '');
+  }
+
+  /**
    * Регистрация нового пользователя
    */
-  async register(data: RegisterData): Promise<{ user: User; requiresVerification: boolean }> {
+  async register(data: RegisterData): Promise<{ user: any; requiresVerification: boolean }> {
+    const normalizedPhone = this.normalizePhone(data.phone);
+
     // Проверяем, существует ли пользователь
     const existingUser = await prisma.user.findUnique({
-      where: { phone: data.phone },
+      where: { phone: normalizedPhone },
     });
 
     if (existingUser) {
-      throw new Error('Пользователь с таким номером телефона уже зарегистрирован');
+      // Если пользователь не верифицирован — разрешаем повторную регистрацию
+      if (!existingUser.isPhoneVerified) {
+        console.log(`♻️ Повторная регистрация для неверифицированного пользователя: ${normalizedPhone}`);
+        // Удаляем старого неверифицированного пользователя
+        await prisma.user.delete({ where: { id: existingUser.id } }).catch(() => {});
+      } else {
+        throw new Error('Пользователь с таким номером телефона уже зарегистрирован');
+      }
     }
 
     // Хэшируем пароль
@@ -25,14 +41,14 @@ export class AuthService {
     const user = await prisma.user.create({
       data: {
         role: data.role,
-        phone: data.phone,
-        email: data.email,
+        phone: normalizedPhone,
+        email: data.email || null,
         password: hashedPassword,
         fullName: data.fullName,
         organization: data.organization,
         city: data.city,
         address: data.address,
-        messengers: data.messengers as Prisma.JsonObject,
+        messengers: (data.messengers || {}) as any,
         inn: data.inn,
         ogrn: data.ogrn,
       },
@@ -43,8 +59,13 @@ export class AuthService {
       await this.initializeExecutorData(user.id);
     }
 
-    // Отправляем SMS-код
-    await smsService.sendVerificationCode(data.phone);
+    // Отправляем код верификации (звонок или SMS через GreenSMS)
+    try {
+      await smsService.sendVerificationCode(normalizedPhone);
+    } catch (err: any) {
+      console.error('❌ Ошибка отправки кода верификации:', err.message);
+      // Не блокируем регистрацию если SMS не отправилось
+    }
 
     return { user, requiresVerification: true };
   }
@@ -84,17 +105,19 @@ export class AuthService {
   }
 
   /**
-   * Верификация телефона по SMS-коду
+   * Верификация телефона по SMS/звонку коду
    */
   async verifyPhone(phone: string, code: string): Promise<boolean> {
-    const isValid = await smsService.verifyCode(phone, code);
+    const normalizedPhone = this.normalizePhone(phone);
+    const isValid = await smsService.verifyCode(normalizedPhone, code);
 
     if (isValid) {
       // Обновляем статус пользователя
       await prisma.user.updateMany({
-        where: { phone },
+        where: { phone: normalizedPhone },
         data: { isPhoneVerified: true },
       });
+      console.log(`✅ Телефон ${normalizedPhone} подтверждён`);
     }
 
     return isValid;
@@ -103,10 +126,12 @@ export class AuthService {
   /**
    * Вход в систему
    */
-  async login(data: LoginData): Promise<{ user: User; token: string }> {
+  async login(data: LoginData): Promise<{ user: any; token: string }> {
+    const normalizedPhone = this.normalizePhone(data.phone);
+
     // Находим пользователя
     const user = await prisma.user.findUnique({
-      where: { phone: data.phone },
+      where: { phone: normalizedPhone },
       include: {
         executorProfile: true,
         balance: true,
@@ -163,11 +188,63 @@ export class AuthService {
   }
 
   /**
-   * Повторная отправка SMS-кода
+   * Запрос сброса пароля — отправляет код на телефон
+   */
+  async requestPasswordReset(phone: string): Promise<void> {
+    const normalizedPhone = this.normalizePhone(phone);
+
+    const user = await prisma.user.findUnique({
+      where: { phone: normalizedPhone },
+    });
+
+    if (!user) {
+      throw new Error('Пользователь с таким номером не найден');
+    }
+
+    if (!user.isPhoneVerified) {
+      throw new Error('Телефон не подтверждён');
+    }
+
+    await smsService.sendVerificationCode(normalizedPhone);
+  }
+
+  /**
+   * Подтверждение кода и установка нового пароля
+   */
+  async resetPassword(phone: string, code: string, newPassword: string): Promise<void> {
+    const normalizedPhone = this.normalizePhone(phone);
+
+    const isValid = await smsService.verifyCode(normalizedPhone, code);
+    if (!isValid) {
+      throw new Error('Неверный код подтверждения');
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { phone: normalizedPhone },
+    });
+
+    if (!user) {
+      throw new Error('Пользователь не найден');
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    console.log(`✅ Пароль сброшен для: ${normalizedPhone}`);
+  }
+
+  /**
+   * Повторная отправка кода верификации
    */
   async resendVerificationCode(phone: string): Promise<void> {
+    const normalizedPhone = this.normalizePhone(phone);
+
     const user = await prisma.user.findUnique({
-      where: { phone },
+      where: { phone: normalizedPhone },
     });
 
     if (!user) {
@@ -178,7 +255,7 @@ export class AuthService {
       throw new Error('Телефон уже подтверждён');
     }
 
-    await smsService.sendVerificationCode(phone);
+    await smsService.sendVerificationCode(normalizedPhone);
   }
 }
 

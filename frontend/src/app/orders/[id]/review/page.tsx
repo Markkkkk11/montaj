@@ -10,7 +10,7 @@ import { reviewsApi } from '@/lib/api/reviews';
 import { Order } from '@/lib/types';
 
 export default function CreateReviewPage() {
-  const { user } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   const orderId = params.id as string;
@@ -25,12 +25,13 @@ export default function CreateReviewPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
     }
     loadData();
-  }, [user, orderId]);
+  }, [user, orderId, isHydrated]);
 
   const loadData = async () => {
     try {
@@ -82,10 +83,23 @@ export default function CreateReviewPage() {
 
   if (!canLeave.canLeave) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{canLeave.reason}</p>
-          <Button onClick={() => router.push(`/orders/${orderId}`)}>К заказу</Button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+            <span className="text-3xl">✅</span>
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Отзыв уже оставлен</h2>
+          <p className="text-muted-foreground mb-6">{canLeave.reason}</p>
+          <div className="flex flex-col gap-3">
+            <Button onClick={() => router.push(`/orders/${orderId}`)} className="w-full">
+              К заказу
+            </Button>
+            <Button variant="outline" onClick={() => router.push(
+              user?.role === 'CUSTOMER' ? '/customer/dashboard' : '/executor/dashboard'
+            )} className="w-full">
+              На главную
+            </Button>
+          </div>
         </div>
       </div>
     );

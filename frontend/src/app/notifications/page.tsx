@@ -12,7 +12,7 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export default function NotificationsPage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [total, setTotal] = useState(0);
@@ -20,12 +20,13 @@ export default function NotificationsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
     }
     loadNotifications();
-  }, [user, page]);
+  }, [user, page, isHydrated]);
 
   const loadNotifications = async () => {
     try {
@@ -89,6 +90,7 @@ export default function NotificationsPage() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case 'ORDER_NEW':
       case 'NEW_ORDER':
         return '📦';
       case 'NEW_RESPONSE':
@@ -97,13 +99,24 @@ export default function NotificationsPage() {
       case 'RESPONSE_ACCEPTED':
       case 'ORDER_SELECTED':
         return '✅';
+      case 'ORDER_STARTED':
+        return '🚀';
       case 'RESPONSE_REJECTED':
+      case 'ORDER_CANCELLED':
         return '❌';
       case 'ORDER_COMPLETED':
         return '🎉';
+      case 'REVIEW_NEW':
+      case 'REVIEW_APPROVED':
+        return '⭐';
       case 'NEW_MESSAGE':
         return '💬';
+      case 'BALANCE_LOW':
+        return '💰';
+      case 'USER_APPROVED':
+        return '👤';
       case 'ADMIN_MESSAGE':
+      case 'SYSTEM':
         return '⚙️';
       default:
         return '🔔';
@@ -112,6 +125,7 @@ export default function NotificationsPage() {
 
   const getNotificationTypeLabel = (type: string) => {
     switch (type) {
+      case 'ORDER_NEW':
       case 'NEW_ORDER':
         return 'Новый заказ';
       case 'NEW_RESPONSE':
@@ -120,14 +134,27 @@ export default function NotificationsPage() {
       case 'RESPONSE_ACCEPTED':
       case 'ORDER_SELECTED':
         return 'Вас выбрали';
+      case 'ORDER_STARTED':
+        return 'Исполнитель приступил к работе';
       case 'RESPONSE_REJECTED':
         return 'Отклик отклонён';
+      case 'ORDER_CANCELLED':
+        return 'Заказ отменён';
       case 'ORDER_COMPLETED':
         return 'Заказ завершён';
+      case 'REVIEW_NEW':
+        return 'Новый отзыв';
+      case 'REVIEW_APPROVED':
+        return 'Отзыв опубликован';
       case 'NEW_MESSAGE':
         return 'Новое сообщение';
+      case 'BALANCE_LOW':
+        return 'Низкий баланс';
+      case 'USER_APPROVED':
+        return 'Профиль одобрен';
       case 'ADMIN_MESSAGE':
-        return 'Сообщение от администрации';
+      case 'SYSTEM':
+        return 'Системное';
       default:
         return 'Уведомление';
     }
@@ -144,7 +171,7 @@ export default function NotificationsPage() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
           <div className="flex items-center gap-4">
             <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>

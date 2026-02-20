@@ -252,11 +252,11 @@ export class NotificationService {
       where: { id: executorId },
     });
 
-    if (!user || !user.email) return;
+    if (!user) return;
 
     const orderLink = `${config.frontendUrl}/orders/${orderId}`;
 
-    // In-App уведомление
+    // Всегда создаём IN_APP уведомление
     await this.createNotification({
       userId: executorId,
       type: 'ORDER_NEW',
@@ -265,8 +265,10 @@ export class NotificationService {
       data: { orderId, orderTitle },
     });
 
-    // Email
-    await emailService.sendNewOrderEmail(user.email, orderTitle, orderLink);
+    // Email отправляем только если указан
+    if (user.email) {
+      await emailService.sendNewOrderEmail(user.email, orderTitle, orderLink);
+    }
   }
 
   /**
@@ -326,8 +328,8 @@ export class NotificationService {
     await this.createNotification({
       userId: executorId,
       type: 'ORDER_SELECTED',
-      title: 'Вас выбрали!',
-      message: `Вас выбрали для выполнения заказа: ${orderTitle}`,
+      title: 'Получен ответ на ваш отклик',
+      message: `Заказчик ${customerName} выбрал вас для выполнения заказа "${orderTitle}". Вы можете приступить к работе или отказаться.`,
       data: { orderId, customerName, customerPhone },
     });
     console.log(`✅ Уведомление о выборе создано для ${user.fullName}`);
@@ -359,10 +361,11 @@ export class NotificationService {
       where: { id: userId },
     });
 
-    if (!user || !user.email) return;
+    if (!user) return;
 
     const reviewLink = `${config.frontendUrl}/orders/${orderId}`;
 
+    // Всегда создаём IN_APP уведомление
     await this.createNotification({
       userId,
       type: 'ORDER_COMPLETED',
@@ -371,7 +374,9 @@ export class NotificationService {
       data: { orderId },
     });
 
-    await emailService.sendOrderCompletedEmail(user.email, orderTitle, reviewLink);
+    if (user.email) {
+      await emailService.sendOrderCompletedEmail(user.email, orderTitle, reviewLink);
+    }
   }
 
   /**
@@ -437,19 +442,17 @@ export class NotificationService {
 
     await this.createNotification({
       userId: customerId,
-      type: 'ORDER_STATUS',
+      type: 'ORDER_STARTED',
       title: 'Исполнитель приступил к работе',
       message: `${executorName} приступил к выполнению заказа "${orderTitle}"`,
       data: { orderId, orderTitle, executorName },
     });
 
     if (user.email) {
-      // await emailService.sendOrderStatusEmail(
-      //   user.email,
-      //   orderTitle,
-      //   'Исполнитель приступил к работе',
-      //   `${executorName} начал выполнение вашего заказа.`
-      // );
+      const orderLink = `${config.frontendUrl}/orders/${orderId}`;
+      await emailService.sendWorkStartedEmail(user.email, orderTitle, executorName, orderLink).catch(err =>
+        console.error('❌ Email sendWorkStarted failed:', err.message)
+      );
     }
   }
 
@@ -474,19 +477,17 @@ export class NotificationService {
 
     await this.createNotification({
       userId: customerId,
-      type: 'ORDER_STATUS',
+      type: 'ORDER_CANCELLED',
       title: 'Исполнитель отказался от заказа',
       message,
       data: { orderId, orderTitle, reason },
     });
 
     if (user.email) {
-      // await emailService.sendOrderStatusEmail(
-      //   user.email,
-      //   orderTitle,
-      //   'Исполнитель отказался от заказа',
-      //   `Заказ снова доступен для откликов других исполнителей.${reason ? ` Причина отказа: ${reason}` : ''}`
-      // );
+      const orderLink = `${config.frontendUrl}/orders/${orderId}`;
+      await emailService.sendExecutorCancelledEmail(user.email, orderTitle, reason, orderLink).catch(err =>
+        console.error('❌ Email sendExecutorCancelled failed:', err.message)
+      );
     }
   }
 
@@ -544,6 +545,10 @@ export class NotificationService {
    * Уведомление о новом сообщении в чате
    */
   async notifyNewMessage(recipientId: string, senderName: string, orderId: string, orderTitle: string, messagePreview: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: recipientId },
+    });
+
     await this.createNotification({
       userId: recipientId,
       type: 'NEW_MESSAGE',
@@ -551,6 +556,134 @@ export class NotificationService {
       message: messagePreview.length > 50 ? messagePreview.substring(0, 50) + '...' : messagePreview,
       data: { orderId, orderTitle },
     });
+
+    if (user?.email) {
+      const orderLink = `${config.frontendUrl}/orders/${orderId}`;
+      const preview = messagePreview.length > 100 ? messagePreview.substring(0, 100) + '...' : messagePreview;
+      await emailService.sendNewMessageEmail(user.email, senderName, orderTitle, preview, orderLink).catch(err =>
+        console.error('❌ Email sendNewMessage failed:', err.message)
+      );
+    }
+  }
+
+  /**
+   * Уведомление заказчику об отмене заказа (возврат средств исполнителям)
+   * Для исполнителей, которые откликались — заказ отменён заказчиком
+   */
+  async notifyOrderCancelledByCustomer(
+    executorIds: string[],
+    orderId: string,
+    orderTitle: string
+  ) {
+    const ordersLink = `${config.frontendUrl}/orders`;
+
+    for (const executorId of executorIds) {
+      const user = await prisma.user.findUnique({
+        where: { id: executorId },
+      });
+
+      await this.createNotification({
+        userId: executorId,
+        type: 'ORDER_CANCELLED',
+        title: 'Заказ отменён',
+        message: `Заказчик отменил заказ "${orderTitle}". Комиссия за отклик возвращена.`,
+        data: { orderId, orderTitle },
+      });
+
+      if (user?.email) {
+        await emailService.sendOrderCancelledEmail(user.email, orderTitle, ordersLink).catch(err =>
+          console.error('❌ Email sendOrderCancelled failed:', err.message)
+        );
+      }
+    }
+  }
+
+  /**
+   * Уведомление отклонённым исполнителям (при выборе другого)
+   */
+  async notifyResponseRejected(
+    executorId: string,
+    orderId: string,
+    orderTitle: string
+  ) {
+    const user = await prisma.user.findUnique({
+      where: { id: executorId },
+    });
+
+    await this.createNotification({
+      userId: executorId,
+      type: 'ORDER_CANCELLED',
+      title: 'Отклик отклонён',
+      message: `Заказчик выбрал другого исполнителя для заказа "${orderTitle}"`,
+      data: { orderId, orderTitle },
+    });
+
+    if (user?.email) {
+      const ordersLink = `${config.frontendUrl}/orders`;
+      await emailService.sendResponseRejectedEmail(user.email, orderTitle, ordersLink).catch(err =>
+        console.error('❌ Email sendResponseRejected failed:', err.message)
+      );
+    }
+  }
+
+  /**
+   * Уведомление о получении нового отзыва
+   */
+  async notifyReviewReceived(
+    revieweeId: string,
+    reviewerName: string,
+    rating: number,
+    orderId: string,
+    orderTitle: string
+  ) {
+    const user = await prisma.user.findUnique({
+      where: { id: revieweeId },
+    });
+
+    const stars = '⭐'.repeat(rating);
+
+    await this.createNotification({
+      userId: revieweeId,
+      type: 'REVIEW_NEW',
+      title: 'Новый отзыв',
+      message: `${reviewerName} оставил отзыв ${stars} по заказу "${orderTitle}"`,
+      data: { orderId, orderTitle, rating, reviewerName },
+    });
+
+    if (user?.email) {
+      await emailService.sendNewReviewEmail(user.email, rating, `Отзыв по заказу "${orderTitle}"`, reviewerName).catch(err =>
+        console.error('❌ Email sendNewReview failed:', err.message)
+      );
+    }
+  }
+
+  /**
+   * Уведомление о публикации отзыва (одобрен модератором)
+   */
+  async notifyReviewApproved(
+    revieweeId: string,
+    rating: number,
+    reviewerName: string
+  ) {
+    const user = await prisma.user.findUnique({
+      where: { id: revieweeId },
+    });
+
+    const stars = '⭐'.repeat(rating);
+
+    await this.createNotification({
+      userId: revieweeId,
+      type: 'REVIEW_NEW',
+      title: 'Отзыв опубликован',
+      message: `Отзыв от ${reviewerName} (${stars}) прошёл модерацию и опубликован`,
+      data: { rating, reviewerName },
+    });
+
+    if (user?.email) {
+      await emailService.sendReviewApprovedEmail(user.email, rating, reviewerName).catch(err =>
+        console.error('❌ Email sendReviewApproved failed:', err.message)
+      );
+    }
   }
 }
 

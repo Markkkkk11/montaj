@@ -57,6 +57,44 @@ export const authenticate = async (
 };
 
 /**
+ * Опциональная аутентификация — если токен есть, парсим user, если нет — пропускаем
+ */
+export const optionalAuth = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const payload = verifyToken(token);
+        const user = await prisma.user.findUnique({
+          where: { id: payload.userId },
+          include: {
+            executorProfile: true,
+            balance: true,
+            subscription: true,
+          },
+        });
+
+        if (user && user.status !== 'BLOCKED') {
+          req.user = user;
+        }
+      } catch {
+        // Невалидный токен — не ставим user, но не блокируем
+      }
+    }
+
+    next();
+  } catch {
+    next();
+  }
+};
+
+/**
  * Middleware проверки роли
  */
 export const requireRole = (...roles: string[]) => {

@@ -12,7 +12,7 @@ import { Order, OrderFilters as Filters } from '@/lib/types';
 import { List, Map } from 'lucide-react';
 
 export default function OrdersPage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
@@ -22,6 +22,7 @@ export default function OrdersPage() {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
@@ -32,7 +33,7 @@ export default function OrdersPage() {
       return;
     }
     loadOrders();
-  }, [user, filters, page]);
+  }, [user, filters, page, isHydrated]);
 
   const loadOrders = async () => {
     try {
@@ -72,7 +73,7 @@ export default function OrdersPage() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Монтаж</h1>
+          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={goBack}>
               Назад

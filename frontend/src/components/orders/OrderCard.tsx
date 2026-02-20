@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Order } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { SPECIALIZATION_LABELS } from '@/lib/utils';
+import { SPECIALIZATION_LABELS, SPECIALIZATION_COLORS } from '@/lib/utils';
 import { Calendar, MapPin, Wallet, Users } from 'lucide-react';
 
 interface OrderCardProps {
@@ -33,18 +33,29 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+              <span 
+                className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                style={{ backgroundColor: SPECIALIZATION_COLORS[order.category] || '#6b7280' }}
+              >
                 {SPECIALIZATION_LABELS[order.category]}
               </span>
               {order.status !== 'PUBLISHED' && (
-                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                  {order.status === 'IN_PROGRESS' && 'В работе'}
+                <span className={`px-3 py-1 rounded-full text-sm ${
+                  order.status === 'IN_PROGRESS' && !order.workStartedAt ? 'bg-yellow-100 text-yellow-700' :
+                  order.status === 'IN_PROGRESS' && order.workStartedAt ? 'bg-green-100 text-green-700' :
+                  order.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {order.status === 'IN_PROGRESS' && !order.workStartedAt && 'Исполнитель выбран'}
+                  {order.status === 'IN_PROGRESS' && order.workStartedAt && 'В работе'}
                   {order.status === 'COMPLETED' && 'Завершён'}
                   {order.status === 'CANCELLED' && 'Отменён'}
                 </span>
               )}
             </div>
-            <CardTitle className="text-xl mb-2">{order.title}</CardTitle>
+            <CardTitle className="text-xl mb-2">
+              {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
+            </CardTitle>
             <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
           </div>
         </div>

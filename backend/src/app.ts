@@ -1,7 +1,8 @@
-import express, { Application } from 'express';
+import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import multer from 'multer';
 import { config } from './config/env';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
@@ -18,12 +19,16 @@ import adminRoutes from './routes/admin.routes';
 import notificationRoutes from './routes/notification.routes';
 import chatRoutes from './routes/chat.routes';
 import geocodingRoutes from './routes/geocoding.routes';
+import contactRoutes from './routes/contact.routes';
 
 // Инициализация приложения
 const app: Application = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware (разрешаем кросс-доменные ресурсы для фронтенда)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false,
+}));
 
 // CORS
 app.use(
@@ -36,7 +41,7 @@ app.use(
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 минут
-  max: 100, // Максимум 100 запросов с одного IP
+  max: 1000, // Максимум 1000 запросов с одного IP
   message: 'Слишком много запросов с этого IP, попробуйте позже',
 });
 
@@ -70,10 +75,28 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/geocoding', geocodingRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Обработка ошибок Multer (файл слишком большой, неверный тип)
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      res.status(400).json({ error: 'Файл слишком большой. Максимум 10 МБ.' });
+      return;
+    }
+    res.status(400).json({ error: `Ошибка загрузки: ${err.message}` });
+    return;
+  }
+  if (err && err.message && err.message.includes('Разрешены только изображения')) {
+    res.status(400).json({ error: err.message });
+    return;
+  }
+  next(err);
 });
 
 // 404 handler

@@ -272,6 +272,219 @@ export class EmailService {
   }
 
   /**
+   * Форма обратной связи — отправка на почту администратора
+   */
+  async sendContactForm(
+    senderName: string,
+    senderEmail: string,
+    senderPhone: string,
+    topic: string,
+    message: string
+  ): Promise<boolean> {
+    const topicLabels: Record<string, string> = {
+      'site_questions': 'Вопросы по работе сайта',
+      'cooperation': 'Вопросы по сотрудничеству',
+      'commercial': 'Коммерческие предложения',
+    };
+
+    const topicLabel = topicLabels[topic] || topic;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>📩 Новое сообщение с формы обратной связи</h2>
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p><strong>Тема:</strong> ${topicLabel}</p>
+          <p><strong>ФИО:</strong> ${senderName}</p>
+          <p><strong>Email:</strong> ${senderEmail || 'Не указан'}</p>
+          <p><strong>Телефон:</strong> ${senderPhone || 'Не указан'}</p>
+        </div>
+        <div style="background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin: 20px 0;">
+          <p><strong>Сообщение:</strong></p>
+          <p style="white-space: pre-wrap;">${message}</p>
+        </div>
+      </div>
+    `;
+
+    // Send to admin email
+    try {
+      await transporter.sendMail({
+        from: `"Montaj Platform" <${config.emailFrom}>`,
+        to: 'SVMontaj24@yandex.ru',
+        subject: `📩 [${topicLabel}] Сообщение от ${senderName}`,
+        html,
+        replyTo: senderEmail || undefined,
+      });
+      console.log('✅ Contact form email sent to admin');
+      return true;
+    } catch (error: any) {
+      console.error('❌ Contact form email failed:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Исполнитель приступил к работе (для заказчика)
+   */
+  async sendWorkStartedEmail(to: string, orderTitle: string, executorName: string, orderLink: string) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>🔨 Исполнитель приступил к работе!</h2>
+        <p>Исполнитель <strong>${executorName}</strong> начал выполнение вашего заказа:</p>
+        <div style="background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #17a2b8;">
+          <strong>${orderTitle}</strong>
+        </div>
+        <p>
+          <a href="${orderLink}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+            Перейти к заказу
+          </a>
+        </p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to,
+      subject: '🔨 Исполнитель приступил к работе - Montaj',
+      html,
+    });
+  }
+
+  /**
+   * Исполнитель отказался от заказа (для заказчика)
+   */
+  async sendExecutorCancelledEmail(to: string, orderTitle: string, reason: string | undefined, orderLink: string) {
+    const reasonText = reason ? `<p><strong>Причина:</strong> ${reason}</p>` : '';
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>❌ Исполнитель отказался от заказа</h2>
+        <p>К сожалению, исполнитель отказался от выполнения заказа:</p>
+        <div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #dc3545;">
+          <strong>${orderTitle}</strong>
+          ${reasonText}
+        </div>
+        <p>Заказ снова доступен для откликов других исполнителей.</p>
+        <p>
+          <a href="${orderLink}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+            Перейти к заказу
+          </a>
+        </p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to,
+      subject: '❌ Исполнитель отказался от заказа - Montaj',
+      html,
+    });
+  }
+
+  /**
+   * Новое сообщение в чате (для получателя)
+   */
+  async sendNewMessageEmail(to: string, senderName: string, orderTitle: string, messagePreview: string, orderLink: string) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>💬 Новое сообщение</h2>
+        <p><strong>${senderName}</strong> написал вам по заказу:</p>
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="font-size: 12px; color: #666; margin: 0 0 5px;">Заказ: ${orderTitle}</p>
+          <p style="margin: 0;">${messagePreview}</p>
+        </div>
+        <p>
+          <a href="${orderLink}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+            Ответить в чате
+          </a>
+        </p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to,
+      subject: `💬 Новое сообщение от ${senderName} - Montaj`,
+      html,
+    });
+  }
+
+  /**
+   * Заказ отменён заказчиком (для исполнителей)
+   */
+  async sendOrderCancelledEmail(to: string, orderTitle: string, orderLink: string) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>🚫 Заказ отменён</h2>
+        <p>Заказчик отменил заказ, на который вы откликнулись:</p>
+        <div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #dc3545;">
+          <strong>${orderTitle}</strong>
+        </div>
+        <p>Комиссия за отклик была возвращена на ваш баланс.</p>
+        <p>
+          <a href="${orderLink}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+            Посмотреть доступные заказы
+          </a>
+        </p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to,
+      subject: '🚫 Заказ отменён - Montaj',
+      html,
+    });
+  }
+
+  /**
+   * Отклик отклонён — выбран другой исполнитель
+   */
+  async sendResponseRejectedEmail(to: string, orderTitle: string, ordersLink: string) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>📋 Выбран другой исполнитель</h2>
+        <p>К сожалению, заказчик выбрал другого исполнителя для заказа:</p>
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;">
+          <strong>${orderTitle}</strong>
+        </div>
+        <p>Не расстраивайтесь! Откликайтесь на другие заказы.</p>
+        <p>
+          <a href="${ordersLink}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+            Смотреть заказы
+          </a>
+        </p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to,
+      subject: '📋 Выбран другой исполнитель - Montaj',
+      html,
+    });
+  }
+
+  /**
+   * Отзыв одобрен модератором
+   */
+  async sendReviewApprovedEmail(to: string, rating: number, reviewerName: string) {
+    const stars = '⭐'.repeat(rating);
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>✅ Отзыв опубликован!</h2>
+        <p>Отзыв от <strong>${reviewerName}</strong> прошёл модерацию и опубликован на вашем профиле.</p>
+        <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #28a745;">
+          <p style="font-size: 24px; margin: 0 0 5px;">${stars}</p>
+          <p style="margin: 0;">Ваш рейтинг был обновлён.</p>
+        </div>
+        <p style="color: #666; font-size: 14px;">
+          Хорошие отзывы помогают получать больше заказов!
+        </p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to,
+      subject: '✅ Новый отзыв опубликован - Montaj',
+      html,
+    });
+  }
+
+  /**
    * Низкий баланс
    */
   async sendLowBalanceEmail(to: string, balance: number, topUpLink: string) {

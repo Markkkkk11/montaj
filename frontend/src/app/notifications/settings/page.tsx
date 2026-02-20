@@ -13,19 +13,20 @@ import {
 
 export default function NotificationSettingsPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const [settings, setSettings] = useState<NotifSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
     }
 
     loadSettings();
-  }, [user]);
+  }, [user, isHydrated]);
 
   const loadSettings = async () => {
     try {

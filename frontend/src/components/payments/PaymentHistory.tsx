@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { getPaymentHistory, Payment } from '@/lib/api/payments';
 
 const STATUS_LABELS: Record<string, string> = {

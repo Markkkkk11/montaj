@@ -84,6 +84,7 @@ export class UserService {
     }
     if (data.shortDescription !== undefined) updateData.shortDescription = data.shortDescription;
     if (data.fullDescription !== undefined) updateData.fullDescription = data.fullDescription;
+    if (data.isSelfEmployed !== undefined) updateData.isSelfEmployed = data.isSelfEmployed;
 
     return prisma.executorProfile.update({
       where: { userId },

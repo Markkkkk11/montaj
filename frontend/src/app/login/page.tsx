@@ -93,6 +93,12 @@ export default function LoginPage() {
               {isLoading ? 'Вход...' : 'Войти'}
             </Button>
 
+            <div className="text-center">
+              <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                Забыли пароль?
+              </Link>
+            </div>
+
             <div className="text-center text-sm">
               <p className="text-muted-foreground">
                 Нет аккаунта?{' '}

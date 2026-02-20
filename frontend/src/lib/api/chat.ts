@@ -66,5 +66,18 @@ export const chatApi = {
     const response = await api.get(`/chat/${orderId}/unread-count`);
     return response.data.count;
   },
+
+  /**
+   * Загрузить файл в чат
+   */
+  uploadFile: async (orderId: string, file: File, content?: string): Promise<Message> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (content) formData.append('content', content);
+    const response = await api.post(`/chat/${orderId}/upload-file`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.message;
+  },
 };
 

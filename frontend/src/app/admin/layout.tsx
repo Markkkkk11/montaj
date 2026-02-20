@@ -9,6 +9,7 @@ import {
   LayoutDashboard, 
   Users, 
   FileText, 
+  MessageSquare,
   Settings, 
   LogOut,
   Menu
@@ -17,12 +18,13 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
+    if (!isHydrated) return;
     if (!user) {
       router.push('/login');
       return;
@@ -31,9 +33,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.push('/');
       return;
     }
-  }, [user, router]);
+  }, [user, router, isHydrated]);
 
-  if (!user || user.role !== 'ADMIN') {
+  if (!isHydrated || !user || user.role !== 'ADMIN') {
     return null;
   }
 
@@ -46,6 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin', icon: LayoutDashboard, label: 'Дашборд', exact: true },
     { href: '/admin/users', icon: Users, label: 'Пользователи' },
     { href: '/admin/orders', icon: FileText, label: 'Заказы' },
+    { href: '/admin/reviews', icon: MessageSquare, label: 'Отзывы' },
     { href: '/admin/settings', icon: Settings, label: 'Настройки' },
   ];
 

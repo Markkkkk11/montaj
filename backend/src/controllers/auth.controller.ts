@@ -61,6 +61,38 @@ export class AuthController {
   }
 
   /**
+   * POST /api/auth/request-reset
+   * Запрос сброса пароля — отправляет код на телефон
+   */
+  async requestPasswordReset(req: Request, res: Response): Promise<void> {
+    try {
+      const { phone } = req.body;
+      await authService.requestPasswordReset(phone);
+      res.json({ message: 'Код подтверждения отправлен' });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/auth/reset-password
+   * Подтверждение кода и установка нового пароля
+   */
+  async resetPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { phone, code, newPassword } = req.body;
+      if (!newPassword || newPassword.length < 6) {
+        res.status(400).json({ error: 'Пароль должен содержать минимум 6 символов' });
+        return;
+      }
+      await authService.resetPassword(phone, code, newPassword);
+      res.json({ message: 'Пароль успешно изменён' });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  /**
    * POST /api/auth/login
    * Вход в систему
    */

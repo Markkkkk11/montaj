@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Loader2, CheckCheck, Check } from 'lucide-react';
+import { Send, Loader2, CheckCheck, Check, Paperclip } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -23,6 +23,7 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     connected,
@@ -109,6 +110,26 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Максимальный размер файла — 10 МБ');
+      return;
+    }
+
+    try {
+      setSending(true);
+      await chatApi.uploadFile(orderId, file);
+    } catch (error) {
+      console.error('Failed to upload file:', error);
+    } finally {
+      setSending(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   if (loading) {
     return (
       <Card className="p-8 flex items-center justify-center">
@@ -172,16 +193,26 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                  {message.fileUrl && (
-                    <a
-                      href={message.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs underline mt-1 block"
-                    >
-                      Файл
-                    </a>
-                  )}
+                  {message.fileUrl && (() => {
+                    const fileUrl = message.fileUrl.startsWith('/') 
+                      ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${message.fileUrl}` 
+                      : message.fileUrl;
+                    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(message.fileUrl);
+                    return isImage ? (
+                      <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="block mt-2">
+                        <img src={fileUrl} alt="Фото" className="max-w-[250px] max-h-[200px] rounded-md" />
+                      </a>
+                    ) : (
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs underline mt-1 flex items-center gap-1"
+                      >
+                        📎 Скачать файл
+                      </a>
+                    );
+                  })()}
                 </div>
                 <div className="flex items-center gap-1 mt-1">
                   <span className="text-xs text-muted-foreground">
@@ -223,6 +254,22 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
       {/* Поле ввода */}
       <div className="p-4 border-t">
         <div className="flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.pdf,.doc,.docx,.dwg"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending}
+            title="Прикрепить файл"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
           <Input
             ref={inputRef}
             value={inputValue}

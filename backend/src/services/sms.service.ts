@@ -1,45 +1,188 @@
 import prisma from '../config/database';
 import { config } from '../config/env';
 
+interface GreenSMSResponse {
+  error?: string;
+  code?: string | number;
+  request_id?: string;
+  balance?: string;
+  status?: string;
+}
+
 export class SMSService {
+  private baseUrl = config.greenSms.baseUrl;
+  private token = config.greenSms.token;
+  private enabled = config.greenSms.enabled;
+
   /**
-   * Отправка SMS-кода верификации
+   * Отправка кода верификации через GreenSMS (звонок — дешевле)
+   * Метод call/send — звонит на номер, код = последние 4 цифры вызывающего номера
    */
   async sendVerificationCode(phone: string): Promise<void> {
-    // 🔧 ВРЕМЕННАЯ ЗАГЛУШКА: всегда используем код 123456
-    const code = '123456';
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 час для удобства тестирования
+    // Нормализуем телефон: оставляем только цифры, убираем +
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    let code: string;
+    let method: 'call' | 'sms' = 'call';
 
-    // Сохраняем в БД
+    if (this.enabled && this.token) {
+      try {
+        // Сначала пробуем звонок (бесплатно/дёшево)
+        const callResult = await this.sendCallVerification(cleanPhone);
+        code = callResult.code;
+        method = 'call';
+        console.log(`📞 Верификация звонком отправлена на ${cleanPhone}`);
+      } catch (callError: any) {
+        console.warn(`⚠️ Звонок не удался: ${callError.message}, пробуем SMS...`);
+        
+        try {
+          // Фоллбэк на SMS
+          code = this.generateCode();
+          await this.sendSMSVerification(cleanPhone, code);
+          method = 'sms';
+          console.log(`📱 SMS верификация отправлена на ${cleanPhone}`);
+        } catch (smsError: any) {
+          console.error(`❌ SMS тоже не удалось: ${smsError.message}`);
+          // Фоллбэк на заглушку в dev
+          code = this.generateCode();
+          method = 'sms';
+          console.log(`🔧 DEV: Используем сгенерированный код: ${code}`);
+        }
+      }
+    } else {
+      // Режим разработки без GreenSMS
+      code = '123456';
+      console.log(`\n🔧 =======================================`);
+      console.log(`📱 SMS КОД ДЛЯ ТЕСТИРОВАНИЯ (GreenSMS отключен)`);
+      console.log(`📞 Телефон: ${cleanPhone}`);
+      console.log(`🔑 КОД: ${code}`);
+      console.log(`🔧 =======================================\n`);
+    }
+
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 минут
+
+    // Удаляем старые неиспользованные коды для этого номера
+    await prisma.sMSVerification.updateMany({
+      where: {
+        phone: cleanPhone,
+        verified: false,
+      },
+      data: {
+        expiresAt: new Date(0), // Помечаем как истёкшие
+      },
+    });
+
+    // Сохраняем новый код в БД
     await prisma.sMSVerification.create({
       data: {
-        phone,
+        phone: cleanPhone,
         code,
         expiresAt,
       },
     });
 
-    // Режим разработки - выводим код в консоль
-    console.log(`\n🔧 =======================================`);
-    console.log(`📱 SMS КОД ДЛЯ ТЕСТИРОВАНИЯ`);
-    console.log(`📞 Телефон: ${phone}`);
-    console.log(`🔑 КОД: ${code}`);
-    console.log(`⏰ Действителен до: ${expiresAt.toLocaleString('ru-RU')}`);
-    console.log(`🔧 =======================================\n`);
+    console.log(`✅ Код верификации сохранён. Метод: ${method}. Телефон: ${cleanPhone}. Истекает: ${expiresAt.toLocaleString('ru-RU')}`);
+  }
 
-    // Реальная отправка SMS отключена
-    // if (config.smsc.enabled) {
-    //   await this.sendSMSViaSMSC(phone, `Ваш код подтверждения: ${code}`);
-    // }
+  /**
+   * Верификация через звонок GreenSMS
+   * Возвращает код (последние 4 цифры вызывающего номера)
+   */
+  private async sendCallVerification(phone: string): Promise<{ code: string; requestId: string }> {
+    const response = await fetch(`${this.baseUrl}/call/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ to: phone }),
+    });
+
+    const data: GreenSMSResponse = await response.json();
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error || `GreenSMS call error: HTTP ${response.status}`);
+    }
+
+    if (!data.code) {
+      throw new Error('GreenSMS call: код не получен в ответе');
+    }
+
+    return {
+      code: String(data.code),
+      requestId: data.request_id || '',
+    };
+  }
+
+  /**
+   * Верификация через SMS GreenSMS
+   */
+  private async sendSMSVerification(phone: string, code: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/sms/send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: phone,
+        txt: `Ваш код подтверждения: ${code}. Монтаж.рф`,
+      }),
+    });
+
+    const data: GreenSMSResponse = await response.json();
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error || `GreenSMS SMS error: HTTP ${response.status}`);
+    }
+  }
+
+  /**
+   * Отправка произвольного SMS через GreenSMS (для уведомлений)
+   */
+  async sendSMS(phone: string, message: string): Promise<void> {
+    if (!this.enabled || !this.token) {
+      console.log(`📱 SMS (dev): ${phone} → ${message}`);
+      return;
+    }
+
+    const cleanPhone = phone.replace(/\D/g, '');
+
+    try {
+      const response = await fetch(`${this.baseUrl}/sms/send`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: cleanPhone,
+          txt: message,
+        }),
+      });
+
+      const data: GreenSMSResponse = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || `GreenSMS error: HTTP ${response.status}`);
+      }
+
+      console.log(`✅ SMS отправлено на ${cleanPhone}`);
+    } catch (error: any) {
+      console.error(`❌ Ошибка отправки SMS на ${cleanPhone}:`, error.message);
+      throw new Error('Не удалось отправить SMS');
+    }
   }
 
   /**
    * Проверка SMS-кода
    */
   async verifyCode(phone: string, code: string): Promise<boolean> {
+    const cleanPhone = phone.replace(/\D/g, '');
+
     const verification = await prisma.sMSVerification.findFirst({
       where: {
-        phone,
+        phone: cleanPhone,
         code,
         verified: false,
         expiresAt: {
@@ -65,45 +208,53 @@ export class SMSService {
   }
 
   /**
-   * Отправка SMS через SMSC.ru API
+   * Генерация 4-значного кода (для SMS метода)
    */
-  private async sendSMSViaSMSC(phone: string, message: string): Promise<void> {
-    try {
-      const params = new URLSearchParams({
-        login: config.smsc.login,
-        psw: config.smsc.password,
-        phones: phone,
-        mes: message,
-        charset: 'utf-8',
-      });
-
-      const response = await fetch(`https://smsc.ru/sys/send.php?${params.toString()}`);
-      const data = await response.text();
-
-      if (!response.ok) {
-        throw new Error(`SMSC API error: ${data}`);
-      }
-
-      console.log('✅ SMS отправлено через SMSC.ru:', phone);
-    } catch (error) {
-      console.error('❌ Ошибка отправки SMS:', error);
-      throw new Error('Не удалось отправить SMS');
-    }
+  private generateCode(): string {
+    return Math.floor(1000 + Math.random() * 9000).toString();
   }
 
   /**
    * Очистка старых кодов верификации (можно запускать по cron)
    */
   async cleanupExpiredCodes(): Promise<void> {
-    await prisma.sMSVerification.deleteMany({
+    const deleted = await prisma.sMSVerification.deleteMany({
       where: {
-        expiresAt: {
-          lt: new Date(),
-        },
+        OR: [
+          { expiresAt: { lt: new Date() } },
+          { verified: true, createdAt: { lt: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+        ],
       },
     });
+    console.log(`🧹 Очищено ${deleted.count} устаревших кодов верификации`);
+  }
+
+  /**
+   * Проверка баланса GreenSMS
+   */
+  async checkBalance(): Promise<{ balance: string } | null> {
+    if (!this.enabled || !this.token) return null;
+
+    try {
+      const response = await fetch(`${this.baseUrl}/account/balance`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data: GreenSMSResponse = await response.json();
+      if (data.balance) {
+        console.log(`💰 GreenSMS баланс: ${data.balance} руб.`);
+        return { balance: data.balance };
+      }
+      return null;
+    } catch (error) {
+      console.error('❌ Ошибка проверки баланса GreenSMS:', error);
+      return null;
+    }
   }
 }
 
 export default new SMSService();
-
