@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { OrderCard } from '@/components/orders/OrderCard';
 import { ordersApi } from '@/lib/api/orders';
 import { Order } from '@/lib/types';
-import { Plus, FileText, User } from 'lucide-react';
+import { Plus, FileText, User, MessageSquare } from 'lucide-react';
+import Link from 'next/link';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export default function CustomerDashboard() {
@@ -63,8 +64,14 @@ export default function CustomerDashboard() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/customer/dashboard')}>
+            <img src="/logo.jpg" alt="Монтаж" className="h-12 w-12 rounded-lg object-cover shadow-sm" />
+            <span className="text-xl font-bold text-primary hidden sm:inline">Монтаж</span>
+          </div>
           <div className="flex items-center gap-4">
+            <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors hidden sm:inline">
+              Обратная связь
+            </Link>
             <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>
             <Button variant="outline" onClick={handleLogout}>

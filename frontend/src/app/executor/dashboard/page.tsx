@@ -11,7 +11,8 @@ import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TARIFF_LABELS, isExecutorProfileComplete } from '@/lib/utils';
-import { Wallet, FileText, User, Star, Search } from 'lucide-react';
+import { Wallet, FileText, User, Star, Search, MessageSquare } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ExecutorDashboard() {
   const { user, logout, isHydrated } = useAuthStore();
@@ -120,8 +121,14 @@ export default function ExecutorDashboard() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/executor/dashboard')}>
+            <img src="/logo.jpg" alt="Монтаж" className="h-12 w-12 rounded-lg object-cover shadow-sm" />
+            <span className="text-xl font-bold text-primary hidden sm:inline">Монтаж</span>
+          </div>
           <div className="flex items-center gap-4">
+            <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors hidden sm:inline">
+              Обратная связь
+            </Link>
             <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>
             <Button variant="outline" onClick={handleLogout}>
