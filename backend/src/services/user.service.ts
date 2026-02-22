@@ -30,6 +30,8 @@ export class UserService {
     if (data.messengers) updateData.messengers = data.messengers as any;
     if (data.inn !== undefined) updateData.inn = data.inn;
     if (data.ogrn !== undefined) updateData.ogrn = data.ogrn;
+    if (data.aboutDescription !== undefined) updateData.aboutDescription = data.aboutDescription;
+    if (data.website !== undefined) updateData.website = data.website;
 
     return prisma.user.update({
       where: { id: userId },

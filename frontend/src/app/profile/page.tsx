@@ -83,6 +83,18 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
+        {/* About Section */}
+        {user.aboutDescription && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>О {user.role === 'CUSTOMER' ? 'заказчике' : 'себе'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground whitespace-pre-wrap">{user.aboutDescription}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Basic Info */}
         <Card className="mb-6">
           <CardHeader>
@@ -110,6 +122,14 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground">Организация</p>
                 <p className="font-medium">{user.organization || 'Не указана'}</p>
               </div>
+              {user.website && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Сайт</p>
+                  <a href={user.website} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+                    {user.website}
+                  </a>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">Статус</p>
                 <p className="font-medium">{USER_STATUS_LABELS[user.status]}</p>

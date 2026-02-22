@@ -65,6 +65,8 @@ model User {
   photo             String?
   inn               String?
   ogrn              String?
+  aboutDescription  String?     @db.Text  // Коротко о себе / описание компании
+  website           String?     // Сайт компании
   rating            Float       @default(0)
   completedOrders   Int         @default(0)
   status            UserStatus  @default(ACTIVE)

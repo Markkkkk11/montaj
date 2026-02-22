@@ -248,17 +248,26 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-start space-x-2">
                 <input
                   type="checkbox"
                   id="agreeToTerms"
                   required
                   checked={formData.agreeToTerms || false}
                   onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
-                  className="rounded"
+                  className="rounded mt-1"
                 />
-                <Label htmlFor="agreeToTerms" className="font-normal">
-                  Я согласен с условиями сервиса *
+                <Label htmlFor="agreeToTerms" className="font-normal text-sm leading-relaxed">
+                  Я ознакомился и согласен с{' '}
+                  <a
+                    href="/rules"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline font-medium"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    правилами работы сайта
+                  </a>{' '}*
                 </Label>
               </div>
 

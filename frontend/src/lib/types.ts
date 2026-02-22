@@ -24,6 +24,8 @@ export interface User {
   photo?: string;
   inn?: string;
   ogrn?: string;
+  aboutDescription?: string;
+  website?: string;
   rating: number;
   completedOrders: number;
   status: UserStatus;

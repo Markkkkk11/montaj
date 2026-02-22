@@ -44,6 +44,8 @@ export interface UpdateProfileData {
   };
   inn?: string;
   ogrn?: string;
+  aboutDescription?: string;
+  website?: string;
 }
 
 export interface UpdateExecutorProfileData {
