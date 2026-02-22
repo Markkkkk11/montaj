@@ -10,9 +10,10 @@ import { responsesApi } from '@/lib/api/responses';
 import { reviewsApi } from '@/lib/api/reviews';
 import { Order, Response } from '@/lib/types';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
-import { Calendar, MapPin, Wallet, User, Phone, Mail, MessageCircle, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Wallet, User, Phone, Mail, MessageCircle, CheckCircle, Eye, Star } from 'lucide-react';
 import { ChatBox } from '@/components/chat/ChatBox';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 export default function OrderDetailPage() {
   const { user, isHydrated } = useAuthStore();
@@ -28,6 +29,7 @@ export default function OrderDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [hasResponded, setHasResponded] = useState(false);
   const [canReview, setCanReview] = useState(false);
+  const [viewingExecutor, setViewingExecutor] = useState<any>(null);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -586,14 +588,38 @@ export default function OrderDetailPage() {
                   <div key={response.id} className="p-4 border rounded-lg">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
-                        <h4 className="font-semibold">{response.executor?.fullName}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          ⭐ {response.executor?.rating.toFixed(1)} • {response.executor?.completedOrders} заказов
-                        </p>
-                        {response.executor?.executorProfile?.bio && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {response.executor.executorProfile.bio}
+                        <div className="flex items-center gap-3">
+                          {response.executor?.photo ? (
+                            <img
+                              src={response.executor.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${response.executor.photo}` : response.executor.photo}
+                              alt=""
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-lg text-gray-500">{response.executor?.fullName?.charAt(0)}</span>
+                            </div>
+                          )}
+                          <div>
+                            <h4 className="font-semibold">{response.executor?.fullName}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              ⭐ {response.executor?.rating.toFixed(1)} • {response.executor?.completedOrders} заказов
+                            </p>
+                          </div>
+                        </div>
+                        {response.executor?.executorProfile?.shortDescription && (
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                            {response.executor.executorProfile.shortDescription}
                           </p>
+                        )}
+                        {response.executor?.executorProfile?.specializations && response.executor.executorProfile.specializations.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {response.executor.executorProfile.specializations.map((spec: string) => (
+                              <span key={spec} className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
+                                {SPECIALIZATION_LABELS[spec]}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -602,29 +628,148 @@ export default function OrderDetailPage() {
                       Откликнулся: {new Date(response.createdAt).toLocaleString('ru-RU')}
                     </div>
 
-                    {order.status === 'PUBLISHED' && response.status === 'PENDING' && (
+                    <div className="flex gap-2 flex-wrap">
                       <Button
-                        onClick={() => handleSelectExecutor(response.executorId)}
-                        disabled={actionLoading}
+                        variant="outline"
                         size="sm"
+                        onClick={() => setViewingExecutor(response.executor)}
                       >
-                        Выбрать исполнителя
+                        <Eye className="h-4 w-4 mr-1" />
+                        Посмотреть профиль
                       </Button>
-                    )}
 
-                    {response.status === 'ACCEPTED' && (
-                      <span className="text-sm text-green-600 font-medium">✓ Выбран</span>
-                    )}
+                      {order.status === 'PUBLISHED' && response.status === 'PENDING' && (
+                        <Button
+                          onClick={() => handleSelectExecutor(response.executorId)}
+                          disabled={actionLoading}
+                          size="sm"
+                        >
+                          Выбрать исполнителя
+                        </Button>
+                      )}
 
-                    {response.status === 'REJECTED' && (
-                      <span className="text-sm text-gray-500">Отклонён</span>
-                    )}
+                      {response.status === 'ACCEPTED' && (
+                        <span className="text-sm text-green-600 font-medium flex items-center">✓ Выбран</span>
+                      )}
+
+                      {response.status === 'REJECTED' && (
+                        <span className="text-sm text-gray-500 flex items-center">Отклонён</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Executor Profile Dialog (without contact info) */}
+        <Dialog open={!!viewingExecutor} onOpenChange={(open) => !open && setViewingExecutor(null)}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            {viewingExecutor && (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center gap-4">
+                    {viewingExecutor.photo ? (
+                      <img
+                        src={viewingExecutor.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${viewingExecutor.photo}` : viewingExecutor.photo}
+                        alt=""
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-2xl text-gray-500">{viewingExecutor.fullName?.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div>
+                      <DialogTitle className="text-xl">{viewingExecutor.fullName}</DialogTitle>
+                      <DialogDescription className="flex items-center gap-2 mt-1">
+                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                        <span className="font-medium">{viewingExecutor.rating?.toFixed(1)}</span>
+                        <span>•</span>
+                        <span>{viewingExecutor.completedOrders} заказов выполнено</span>
+                      </DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-4 mt-4">
+                  {viewingExecutor.executorProfile?.region && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Регион работы</p>
+                      <p>{viewingExecutor.executorProfile.region}</p>
+                    </div>
+                  )}
+
+                  {viewingExecutor.executorProfile?.specializations?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Специализации</p>
+                      <div className="flex flex-wrap gap-2">
+                        {viewingExecutor.executorProfile.specializations.map((spec: string) => (
+                          <span key={spec} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                            {SPECIALIZATION_LABELS[spec]}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {viewingExecutor.executorProfile?.shortDescription && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">О себе</p>
+                      <p className="text-sm whitespace-pre-wrap">{viewingExecutor.executorProfile.shortDescription}</p>
+                    </div>
+                  )}
+
+                  {viewingExecutor.executorProfile?.fullDescription && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Подробное описание</p>
+                      <p className="text-sm whitespace-pre-wrap">{viewingExecutor.executorProfile.fullDescription}</p>
+                    </div>
+                  )}
+
+                  {viewingExecutor.executorProfile?.workPhotos?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Фото работ</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {viewingExecutor.executorProfile.workPhotos.map((photo: string, idx: number) => (
+                          <a
+                            key={idx}
+                            href={photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${photo}` : photo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <img
+                              src={photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${photo}` : photo}
+                              alt={`Работа ${idx + 1}`}
+                              className="w-full h-24 object-cover rounded-lg hover:opacity-80 transition-opacity"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-800">
+                        Контактная информация исполнителя откроется после того, как вы выберете его для выполнения заказа.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => router.push(`/profile/${viewingExecutor.id}/reviews`)}
+                  >
+                    Посмотреть отзывы
+                  </Button>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {isCustomer && responses.length === 0 && order.status === 'PUBLISHED' && (
           <Card>

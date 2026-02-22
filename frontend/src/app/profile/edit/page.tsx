@@ -31,6 +31,8 @@ export default function EditProfilePage() {
   const [telegram, setTelegram] = useState('');
   const [inn, setInn] = useState('');
   const [ogrn, setOgrn] = useState('');
+  const [aboutDescription, setAboutDescription] = useState('');
+  const [website, setWebsite] = useState('');
 
   // Executor profile fields
   const [region, setRegion] = useState('');
@@ -95,6 +97,8 @@ export default function EditProfilePage() {
     setTelegram(user.messengers?.telegram || '');
     setInn(user.inn || '');
     setOgrn(user.ogrn || '');
+    setAboutDescription(user.aboutDescription || '');
+    setWebsite(user.website || '');
 
     if (user.role === 'EXECUTOR' && user.executorProfile) {
       setRegion(user.executorProfile.region || '');
@@ -120,6 +124,8 @@ export default function EditProfilePage() {
         },
         inn: inn || undefined,
         ogrn: ogrn || undefined,
+        aboutDescription: aboutDescription || undefined,
+        website: website || undefined,
       });
 
       toast({
@@ -208,7 +214,10 @@ export default function EditProfilePage() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
+          <div className="flex items-center gap-3">
+            <img src="/logo.jpg" alt="Монтаж" className="h-12 w-12 rounded-lg object-cover shadow-sm" />
+            <span className="text-xl font-bold text-primary hidden sm:inline">Монтаж</span>
+          </div>
           <Button variant="ghost" onClick={() => router.push('/profile')}>
             ← Назад к профилю
           </Button>
@@ -332,6 +341,32 @@ export default function EditProfilePage() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="г. Москва, ул. Примерная, д. 1"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="aboutDescription">О себе / О компании</Label>
+                <Textarea
+                  id="aboutDescription"
+                  value={aboutDescription}
+                  onChange={(e) => setAboutDescription(e.target.value)}
+                  placeholder="Расскажите коротко о себе или чем занимается ваша компания..."
+                  maxLength={1000}
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {aboutDescription.length} / 1000
+                </p>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="website">Сайт</Label>
+                <Input
+                  id="website"
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://example.com"
                 />
               </div>
 

@@ -11,7 +11,8 @@ import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TARIFF_LABELS, isExecutorProfileComplete } from '@/lib/utils';
-import { Wallet, FileText, User, Star, Search } from 'lucide-react';
+import { Wallet, FileText, User, Star, Search, MessageSquare } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ExecutorDashboard() {
   const { user, logout, isHydrated } = useAuthStore();
@@ -120,8 +121,14 @@ export default function ExecutorDashboard() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/executor/dashboard')}>
+            <img src="/logo.jpg" alt="Монтаж" className="h-12 w-12 rounded-lg object-cover shadow-sm" />
+            <span className="text-xl font-bold text-primary hidden sm:inline">Монтаж</span>
+          </div>
           <div className="flex items-center gap-4">
+            <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors hidden sm:inline">
+              Обратная связь
+            </Link>
             <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>
             <Button variant="outline" onClick={handleLogout}>
@@ -210,15 +217,25 @@ export default function ExecutorDashboard() {
 
         {/* Stats Grid */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/profile/balance')}>
             <CardHeader>
               <CardTitle className="text-lg">Баланс</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{totalBalance} ₽</p>
-              <p className="text-sm text-muted-foreground">
-                Бонусы: {balance?.bonusAmount || '0.00'} ₽
-              </p>
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm text-muted-foreground">Деньги:</span>
+                  <span className="text-xl font-bold">{parseFloat(balance?.amount?.toString() || '0').toFixed(2)} ₽</span>
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm text-muted-foreground">Бонусы:</span>
+                  <span className="text-xl font-bold text-green-600">{parseFloat(balance?.bonusAmount?.toString() || '0').toFixed(2)} ₽</span>
+                </div>
+                <div className="border-t pt-2 flex items-baseline justify-between">
+                  <span className="text-sm font-medium">Всего:</span>
+                  <span className="text-lg font-bold text-primary">{totalBalance} ₽</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -248,13 +265,14 @@ export default function ExecutorDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
             <CardHeader>
-              <CardTitle className="text-lg">Рейтинг</CardTitle>
+              <CardTitle className="text-lg">Рейтинг и отзывы</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{user.rating.toFixed(1)}</p>
               <p className="text-sm text-muted-foreground">из 5.0</p>
+              <p className="text-xs text-primary mt-2 hover:underline">Посмотреть отзывы →</p>
             </CardContent>
           </Card>
 
@@ -270,7 +288,7 @@ export default function ExecutorDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/orders')}>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -301,7 +319,22 @@ export default function ExecutorDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-primary" />
+                <CardTitle>Мои отзывы</CardTitle>
+              </div>
+              <CardDescription>Посмотреть все отзывы о вас</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                Перейти к отзывам
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/profile/balance')}>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Wallet className="h-5 w-5 text-primary" />
@@ -310,8 +343,8 @@ export default function ExecutorDashboard() {
               <CardDescription>Пополните баланс для откликов</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Пополнить (скоро)
+              <Button variant="outline" className="w-full">
+                Пополнить баланс
               </Button>
             </CardContent>
           </Card>
@@ -448,6 +481,48 @@ export default function ExecutorDashboard() {
           </CardContent>
         </Card>
 
+        {/* My Responses - moved up for visibility */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl">Мои отклики ({pendingResponses.length})</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Ожидают решения заказчика
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {pendingResponses.length === 0 ? (
+              <div className="py-4 text-center">
+                <p className="text-muted-foreground">Нет активных откликов</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Откликнитесь на заказы, чтобы они появились здесь
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingResponses.map((response) => (
+                  <div key={response.id} className="flex justify-between items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-1">{response.order?.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Откликнулись: {new Date(response.createdAt).toLocaleDateString('ru-RU')}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/orders/${response.orderId}`)}
+                    >
+                      Открыть
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Active Orders */}
         <div className="space-y-6">
           <div>
@@ -501,41 +576,6 @@ export default function ExecutorDashboard() {
               <div className="grid md:grid-cols-2 gap-4">
                 {completedOrders.map((order) => (
                   <OrderCard key={order.id} order={order} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-2xl font-bold mb-4">Мои отклики ({pendingResponses.length})</h3>
-            {pendingResponses.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground">Нет активных откликов</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {pendingResponses.map((response) => (
-                  <Card key={response.id}>
-                    <CardContent className="pt-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-semibold mb-1">{response.order?.title}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Откликнулись: {new Date(response.createdAt).toLocaleDateString('ru-RU')}
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/orders/${response.orderId}`)}
-                        >
-                          Открыть
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
                 ))}
               </div>
             )}

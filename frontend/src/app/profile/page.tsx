@@ -39,7 +39,10 @@ export default function ProfilePage() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => goBack()}>
+            <img src="/logo.jpg" alt="Монтаж" className="h-12 w-12 rounded-lg object-cover shadow-sm" />
+            <span className="text-xl font-bold text-primary hidden sm:inline">Монтаж</span>
+          </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={goBack}>
               Назад
@@ -80,6 +83,18 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
+        {/* About Section */}
+        {user.aboutDescription && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>О {user.role === 'CUSTOMER' ? 'заказчике' : 'себе'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground whitespace-pre-wrap">{user.aboutDescription}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Basic Info */}
         <Card className="mb-6">
           <CardHeader>
@@ -107,6 +122,14 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground">Организация</p>
                 <p className="font-medium">{user.organization || 'Не указана'}</p>
               </div>
+              {user.website && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Сайт</p>
+                  <a href={user.website} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+                    {user.website}
+                  </a>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">Статус</p>
                 <p className="font-medium">{USER_STATUS_LABELS[user.status]}</p>
@@ -208,6 +231,13 @@ export default function ProfilePage() {
                 <p className="text-2xl font-bold">{user.completedOrders}</p>
               </div>
             </div>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/profile/${user.id}/reviews`)}
+              className="w-full"
+            >
+              Посмотреть все отзывы
+            </Button>
           </CardContent>
         </Card>
       </main>

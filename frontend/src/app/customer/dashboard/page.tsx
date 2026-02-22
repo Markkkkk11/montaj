@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { OrderCard } from '@/components/orders/OrderCard';
 import { ordersApi } from '@/lib/api/orders';
 import { Order } from '@/lib/types';
-import { Plus, FileText, User } from 'lucide-react';
+import { Plus, FileText, User, MessageSquare, Star } from 'lucide-react';
+import Link from 'next/link';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export default function CustomerDashboard() {
@@ -63,8 +64,14 @@ export default function CustomerDashboard() {
       {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/customer/dashboard')}>
+            <img src="/logo.jpg" alt="Монтаж" className="h-12 w-12 rounded-lg object-cover shadow-sm" />
+            <span className="text-xl font-bold text-primary hidden sm:inline">Монтаж</span>
+          </div>
           <div className="flex items-center gap-4">
+            <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors hidden sm:inline">
+              Обратная связь
+            </Link>
             <NotificationBell />
             <span className="text-sm text-muted-foreground">{user.fullName}</span>
             <Button variant="outline" onClick={handleLogout}>
@@ -117,19 +124,20 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
             <CardHeader>
-              <CardTitle className="text-lg">Рейтинг</CardTitle>
+              <CardTitle className="text-lg">Рейтинг и отзывы</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{user.rating.toFixed(1)}</p>
               <p className="text-sm text-muted-foreground">Средняя оценка</p>
+              <p className="text-xs text-primary mt-2 hover:underline">Посмотреть отзывы →</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/orders/create')}>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -160,6 +168,23 @@ export default function CustomerDashboard() {
             <CardContent>
               <Button variant="outline" className="w-full">
                 Перейти в профиль
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-primary" />
+                <CardTitle>Мои отзывы</CardTitle>
+              </div>
+              <CardDescription>
+                Посмотреть отзывы о вас
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                Перейти к отзывам
               </Button>
             </CardContent>
           </Card>
