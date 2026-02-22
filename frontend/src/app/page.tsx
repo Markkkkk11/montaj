@@ -256,12 +256,12 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto stagger-children">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {SPECIALIZATIONS.map((spec) => (
               <div
                 key={spec.name}
                 onClick={() => setSelectedSpec(spec)}
-                className={`relative p-6 bg-white rounded-2xl border-2 ${spec.border} hover:shadow-soft-lg transition-all duration-300 cursor-pointer group hover:-translate-y-1 overflow-hidden`}
+                className={`relative p-6 bg-white rounded-2xl border-2 ${spec.border} hover:shadow-soft-lg transition-shadow duration-300 cursor-pointer group hover:-translate-y-1 overflow-hidden`}
               >
                 <div className={`absolute inset-0 ${spec.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                 <div className="relative">
@@ -283,11 +283,11 @@ export default function Home() {
       {/* Specialization Detail Modal */}
       {selectedSpec && (
         <div 
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
           onClick={() => setSelectedSpec(null)}
         >
           <div 
-            className="bg-white rounded-3xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl animate-scale-in"
+            className="bg-white rounded-3xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl transform scale-100"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-8">
