@@ -61,9 +61,9 @@ function LoginContent() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-hero" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-80 h-80 bg-violet-200/20 rounded-full blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-80 h-80 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative animate-fade-in-up">
         {/* Back button */}

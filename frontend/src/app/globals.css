@@ -138,8 +138,7 @@
 
 /* Stagger children animations */
 .stagger-children > * {
-  opacity: 0;
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.5s ease-out both;
 }
 .stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
 .stagger-children > *:nth-child(2) { animation-delay: 0.1s; }

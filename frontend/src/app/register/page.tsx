@@ -127,9 +127,9 @@ function RegisterContent() {
   if (step === 'role') {
     return (
       <div className="min-h-screen relative flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="absolute top-20 right-10 w-72 h-72 bg-violet-200/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-80 h-80 bg-blue-200/20 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
+        <div className="absolute top-20 right-10 w-72 h-72 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-20 left-10 w-80 h-80 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="w-full max-w-2xl relative animate-fade-in-up">
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-gray-900 mb-6 transition-colors group">
@@ -197,8 +197,8 @@ function RegisterContent() {
   if (step === 'info') {
     return (
       <div className="min-h-screen relative flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="absolute top-20 right-10 w-72 h-72 bg-violet-200/20 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
+        <div className="absolute top-20 right-10 w-72 h-72 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="w-full max-w-md relative animate-fade-in-up">
           <button
@@ -339,8 +339,8 @@ function RegisterContent() {
   // Шаг 3: Верификация телефона
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-gradient-hero" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative animate-fade-in-up">
         <Card className="border-0 shadow-soft-xl">
