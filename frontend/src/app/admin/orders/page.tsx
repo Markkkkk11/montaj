@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation';
 
 interface Order {
   id: string;
+  orderNumber?: number;
   title: string;
   category: string;
   region: string;
@@ -84,7 +85,8 @@ export default function AdminOrdersPage() {
     return (
       order.title.toLowerCase().includes(query) ||
       order.customer.fullName.toLowerCase().includes(query) ||
-      order.region.toLowerCase().includes(query)
+      order.region.toLowerCase().includes(query) ||
+      (order.orderNumber && order.orderNumber.toString().includes(query))
     );
   });
 
@@ -164,6 +166,7 @@ export default function AdminOrdersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>№</TableHead>
                   <TableHead>Название</TableHead>
                   <TableHead>Категория</TableHead>
                   <TableHead>Регион</TableHead>
@@ -178,6 +181,9 @@ export default function AdminOrdersPage() {
               <TableBody>
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
+                    <TableCell className="font-mono text-sm font-bold text-primary">
+                      {order.orderNumber ? `#${order.orderNumber}` : '—'}
+                    </TableCell>
                     <TableCell className="font-medium">{order.title}</TableCell>
                     <TableCell>{order.category}</TableCell>
                     <TableCell>{order.region}</TableCell>

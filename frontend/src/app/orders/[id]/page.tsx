@@ -28,6 +28,7 @@ export default function OrderDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [hasResponded, setHasResponded] = useState(false);
+  const [responseCancelled, setResponseCancelled] = useState(false);
   const [canReview, setCanReview] = useState(false);
 
   useEffect(() => {
@@ -53,10 +54,11 @@ export default function OrderDetailPage() {
       setOrder(orderData);
 
       if (user?.role === 'EXECUTOR' && orderData.responses) {
-        const hasResponse = orderData.responses.some(
+        const myResponse = orderData.responses.find(
           (response: Response) => response.executorId === user.id
         );
-        setHasResponded(hasResponse);
+        setHasResponded(!!myResponse);
+        setResponseCancelled(myResponse?.status === 'CANCELLED');
       }
 
       const promises: Promise<any>[] = [];
@@ -417,7 +419,7 @@ export default function OrderDetailPage() {
                 </Button>
               )}
               
-              {hasResponded && !isAssignedExecutor && (
+              {hasResponded && !isAssignedExecutor && !responseCancelled && (
                 <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-4">
                   <CheckCircle className="h-8 w-8 text-emerald-500 flex-shrink-0" />
                   <div className="flex-1">
@@ -426,6 +428,19 @@ export default function OrderDetailPage() {
                   </div>
                   <Button variant="outline" size="sm" onClick={() => router.push('/executor/dashboard')} className="border-emerald-200 hover:bg-emerald-100">
                     Мои отклики
+                  </Button>
+                </div>
+              )}
+
+              {responseCancelled && !isAssignedExecutor && (
+                <div className="flex-1 bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-center gap-4">
+                  <XCircle className="h-8 w-8 text-orange-500 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-orange-900">Вы отказались от этого заказа</p>
+                    <p className="text-sm text-orange-700">Заказ снова доступен другим исполнителям</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => router.push('/executor/dashboard')} className="border-orange-200 hover:bg-orange-100">
+                    К заказам
                   </Button>
                 </div>
               )}

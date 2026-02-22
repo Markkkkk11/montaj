@@ -344,7 +344,7 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/register?role=executor">
-              <Button size="xl" variant="outline" className="w-full sm:w-auto border-2 border-white/40 text-white hover:bg-white/10 hover:border-white/60">
+              <Button size="xl" className="w-full sm:w-auto bg-white/20 backdrop-blur-sm border-2 border-white/40 text-white hover:bg-white/30 hover:border-white/60 shadow-xl">
                 Я исполнитель
               </Button>
             </Link>
