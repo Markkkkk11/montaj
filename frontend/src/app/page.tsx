@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { X, Mail, Phone, MessageCircle, ChevronRight, Shield, Clock, Star, Zap, ArrowRight } from 'lucide-react';
+import { X, Mail, Phone, MessageCircle, ChevronRight, ChevronDown, Shield, Clock, Star, Zap, ArrowRight, HelpCircle } from 'lucide-react';
 
 const SPECIALIZATIONS = [
   {
@@ -89,10 +89,54 @@ const FEATURES = [
   },
 ];
 
+const FAQ_ITEMS = [
+  {
+    question: 'Svmontaj.ru платный?',
+    answer: 'Нет, регистрация и создание заявки в сервисе Svmontaj.ru является бесплатной.',
+  },
+  {
+    question: 'По каким видам работ можно создавать/выполнять заказы?',
+    answer: 'На данный момент на сайте Svmontaj.ru возможно размещать и выполнять работы по 6 специализациям:\n\n1. ОКНА — монтаж, регулировка, ремонт всех видов светопрозрачных конструкций.\n2. ДВЕРИ — монтаж, регулировка, ремонт всех видов дверей (входные, межкомнатные и т.п.)\n3. ПОТОЛКИ — монтаж, регулировка, ремонт всех видов потолков (натяжные, подвесные и т.п.)\n4. КОНДИЦИОНЕРЫ — монтаж, регулировка, ремонт систем кондиционирования воздуха, вентиляции и т.п.\n5. РОЛЬСТАВНИ — монтаж, регулировка, ремонт рольставней, жалюзи, роллеты и т.п.\n6. МЕБЕЛЬ — сборка мебели, регулировка, ремонт.',
+  },
+  {
+    question: 'Как стать Исполнителем?',
+    answer: 'В меню выберите кнопку «Для Исполнителя», зарегистрируйтесь как исполнитель — организация, ИП или физическое лицо (самозанятый), заполните все необходимые данные. После модерации вы получите доступ в личный кабинет, где сможете видеть заказы и выбирать их по своим специализациям в выбранном регионе.',
+  },
+  {
+    question: 'Как стать Заказчиком?',
+    answer: 'В меню выберите кнопку «Для Заказчика», зарегистрируйтесь как заказчик — ООО, ИП или физическое лицо (самозанятый), заполните все необходимые данные. После модерации вы получите доступ в личный кабинет, где сможете создавать заказы по выбранной специализации.',
+  },
+  {
+    question: 'Как быстро откликаются на Заказ?',
+    answer: 'Время отклика на заказ зависит от нескольких факторов: время размещения заявки, количество свободных специалистов, стоимость работ.',
+  },
+  {
+    question: 'Что сделать, чтобы на Заказы откликалось больше специалистов?',
+    answer: 'Опишите подробно, какие работы необходимо выполнить, сроки выполнения, приложите необходимые чертежи/схемы/фото, укажите реалистичную стоимость и адрес.',
+  },
+  {
+    question: 'Как выбрать специалиста?',
+    answer: 'При выборе специалиста изучите анкету исполнителя, какой у него опыт в данной специализации. Обратите внимание на отзывы по выполненным работам. Данная информация поможет вам определиться, подходит вам специалист или нет.',
+  },
+  {
+    question: 'Для чего нужны отзывы о специалистах?',
+    answer: 'Отзывы на специалистов помогают улучшить качество монтажных работ. При проявлении грубых нарушений со стороны специалистов сервис Svmontaj.ru предусматривает меры, вплоть до блокировки анкеты специалиста. Также отзывы помогают создать большую базу хороших специалистов по монтажным работам, которая будет полезна вам при заказах.',
+  },
+  {
+    question: 'Для чего нужны отзывы о Заказчиках?',
+    answer: 'Отзывы на заказчиков помогают исполнителям понять о серьёзном отношении к поставленным задачам, насколько ответственный заказчик, защита от мошенников и недобросовестных заказчиков, а также для создания репутации профессионального заказчика. При проявлении грубых нарушений со стороны заказчика сервис Svmontaj.ru предусматривает меры, вплоть до блокировки анкеты заказчика.',
+  },
+  {
+    question: 'Какие есть бонусные программы?',
+    answer: 'Бонусы для Исполнителей:\n• При первой регистрации на сайте вы бесплатно подключаетесь к Премиум тарифу на 30 дней.\n• При первом пополнении баланса на сумму 150 рублей в течение 30 дней после регистрации вам начисляется 1000 бонусных рублей, которые можно использовать для оплаты услуг на сайте.\n\nБонусы для Заказчиков:\n• При первой регистрации вы можете бесплатно размещать неограниченное количество заявок в течение года.',
+  },
+];
+
 export default function Home() {
   const { user } = useAuthStore();
   const router = useRouter();
   const [selectedSpec, setSelectedSpec] = useState<typeof SPECIALIZATIONS[0] | null>(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -348,6 +392,53 @@ export default function Home() {
                 Я исполнитель
               </Button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-blue-50 rounded-full px-4 py-2 mb-6">
+              <HelpCircle className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700">Ответы на вопросы</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Популярные вопросы</h2>
+            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+              Всё, что нужно знать о работе с платформой
+            </p>
+          </div>
+
+          <div className="max-w-3xl mx-auto space-y-3">
+            {FAQ_ITEMS.map((item, index) => (
+              <div
+                key={index}
+                className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-soft"
+              >
+                <button
+                  onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                  className="w-full flex items-center justify-between p-5 text-left gap-4"
+                >
+                  <span className="font-semibold text-gray-900 text-[15px] leading-snug">{item.question}</span>
+                  <ChevronDown
+                    className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform duration-300 ${
+                      openFaqIndex === index ? 'rotate-180 text-blue-600' : ''
+                    }`}
+                  />
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    openFaqIndex === index ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div className="px-5 pb-5 pt-0">
+                    <div className="w-full h-px bg-gray-200 mb-4" />
+                    <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{item.answer}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
