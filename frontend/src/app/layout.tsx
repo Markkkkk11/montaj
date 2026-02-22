@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata: Metadata = {
-  title: 'Монтаж - Платформа заказа монтажных услуг',
+  title: 'SVM - Платформа заказа монтажных услуг',
   description: 'Найдите специалиста по монтажным работам: окна, двери, потолки, кондиционеры',
 };
 

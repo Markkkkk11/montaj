@@ -12,7 +12,7 @@ export default function TermsPage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/">
-            <img src="/logo.jpg" alt="Монтаж" className="h-14 w-14 rounded-full object-cover" />
+            <img src="/logo.jpg" alt="SVM" className="h-14 w-14 rounded-full object-cover" />
           </Link>
           <Link href="/">
             <Button variant="ghost">
@@ -26,13 +26,13 @@ export default function TermsPage() {
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Правила работы на платформе «Монтаж»</CardTitle>
+            <CardTitle className="text-2xl">Правила работы на платформе «SVM»</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none space-y-6">
             <section>
               <h3 className="text-lg font-semibold mb-2">1. Общие положения</h3>
               <p className="text-muted-foreground">
-                Платформа «Монтаж» — это сервис, который помогает заказчикам найти проверенных специалистов по монтажным работам,
+                Платформа «SVM» — это сервис, который помогает заказчикам найти проверенных специалистов по монтажным работам,
                 а исполнителям — получать заказы. Регистрируясь на платформе, вы соглашаетесь с настоящими правилами.
               </p>
             </section>

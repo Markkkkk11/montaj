@@ -19,7 +19,7 @@ export default function AdminSettingsPage() {
 
   // Настройки платформы (локальные, для отображения)
   const [platformSettings, setPlatformSettings] = useState({
-    platformName: 'Монтаж',
+    platformName: 'SVM',
     supportEmail: 'support@montaj.ru',
     supportPhone: '+7 (800) 123-45-67',
     maxFileSize: '5',
