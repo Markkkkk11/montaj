@@ -40,22 +40,23 @@ export function ReviewCard({ review, showOrder = false }: ReviewCardProps) {
           {/* Avatar */}
           <div className="flex-shrink-0">
             {review.reviewer?.photo ? (
-              <img
-                src={getPhotoUrl(review.reviewer.photo)!}
-                alt={review.reviewer.fullName}
-                className="h-12 w-12 rounded-full object-cover border-2 border-gray-100"
-                onError={(e) => {
-                  // Fallback to initials on image load error
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 hidden items-center justify-center">
-                <span className="text-white font-bold text-sm">
-                  {getInitials(review.reviewer?.fullName)}
-                </span>
-              </div>
+              <>
+                <img
+                  src={getPhotoUrl(review.reviewer.photo)!}
+                  alt={review.reviewer.fullName}
+                  className="h-12 w-12 rounded-full object-cover border-2 border-gray-100"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 hidden items-center justify-center">
+                  <span className="text-white font-bold text-sm">
+                    {getInitials(review.reviewer?.fullName)}
+                  </span>
+                </div>
+              </>
             ) : (
               <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">

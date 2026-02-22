@@ -168,7 +168,7 @@ export class OrderService {
           },
           _count: {
             select: {
-              responses: true,
+              responses: { where: { status: { not: 'CANCELLED' } } },
             },
           },
           // Включаем информацию о просмотрах для текущего пользователя
@@ -296,7 +296,7 @@ export class OrderService {
         },
         _count: {
           select: {
-            responses: true,
+            responses: { where: { status: { not: 'CANCELLED' } } },
           },
         },
       },
