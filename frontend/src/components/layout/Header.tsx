@@ -63,14 +63,22 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
 
         <div className="flex items-center gap-3">
           <NotificationBell />
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl">
-            <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-violet-500 rounded-lg flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
-            </div>
+          <Link href="/profile" className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+            {user?.photo ? (
+              <img
+                src={user.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.photo}` : user.photo}
+                alt={user.fullName}
+                className="w-7 h-7 rounded-lg object-cover"
+              />
+            ) : (
+              <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-violet-500 rounded-lg flex items-center justify-center">
+                <User className="h-4 w-4 text-white" />
+              </div>
+            )}
             <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">
               {user?.fullName?.split(' ')[0]}
             </span>
-          </div>
+          </Link>
           <Button 
             variant="ghost" 
             size="icon" 
