@@ -362,9 +362,14 @@ export class OrderController {
         return;
       }
 
+      const { id } = req.params;
+
       const fileUrls = (req.files as Express.Multer.File[]).map(
         (file) => `/uploads/${file.filename}`
       );
+
+      // Update the order's files field in the database
+      await orderService.addFiles(id, fileUrls);
 
       res.json({
         message: 'Файлы загружены успешно',

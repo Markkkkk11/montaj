@@ -775,6 +775,27 @@ export class OrderService {
 
     return expiredOrders.length;
   }
+
+  /**
+   * Добавить файлы к заказу
+   */
+  async addFiles(orderId: string, fileUrls: string[]): Promise<any> {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new Error('Заказ не найден');
+    }
+
+    // Merge new files with existing ones
+    const updatedFiles = [...(order.files || []), ...fileUrls];
+
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { files: updatedFiles },
+    });
+  }
 }
 
 export default new OrderService();

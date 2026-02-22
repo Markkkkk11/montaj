@@ -153,7 +153,10 @@ export class ResponseService {
     }
 
     const responses = await prisma.response.findMany({
-      where: { orderId },
+      where: { 
+        orderId,
+        status: { not: 'CANCELLED' },
+      },
       include: {
         executor: {
           select: {

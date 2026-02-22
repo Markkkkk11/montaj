@@ -1,6 +1,8 @@
 import { Review } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star } from 'lucide-react';
+import { Star, User } from 'lucide-react';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 interface ReviewCardProps {
   review: Review;
@@ -19,6 +21,18 @@ export function ReviewCard({ review, showOrder = false }: ReviewCardProps) {
     ));
   };
 
+  const getPhotoUrl = (photo?: string) => {
+    if (!photo) return null;
+    return photo.startsWith('/') ? `${API_URL}${photo}` : photo;
+  };
+
+  const getInitials = (name?: string) => {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -27,14 +41,25 @@ export function ReviewCard({ review, showOrder = false }: ReviewCardProps) {
           <div className="flex-shrink-0">
             {review.reviewer?.photo ? (
               <img
-                src={review.reviewer.photo}
+                src={getPhotoUrl(review.reviewer.photo)!}
                 alt={review.reviewer.fullName}
-                className="h-12 w-12 rounded-full object-cover"
+                className="h-12 w-12 rounded-full object-cover border-2 border-gray-100"
+                onError={(e) => {
+                  // Fallback to initials on image load error
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
               />
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 hidden items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {getInitials(review.reviewer?.fullName)}
+                </span>
+              </div>
             ) : (
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-lg font-semibold text-primary">
-                  {review.reviewer?.fullName?.charAt(0) || '?'}
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {getInitials(review.reviewer?.fullName)}
                 </span>
               </div>
             )}
