@@ -211,6 +211,13 @@ export default function ProfilePage() {
                 <p className="text-2xl font-bold">{user.completedOrders}</p>
               </div>
             </div>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/profile/${user.id}/reviews`)}
+              className="w-full"
+            >
+              Посмотреть все отзывы
+            </Button>
           </CardContent>
         </Card>
       </main>
