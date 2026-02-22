@@ -163,7 +163,7 @@ export class AdminService {
 
     // Отправить уведомление пользователю при одобрении
     if (action === 'APPROVE') {
-      await notificationService.notifyUserApproved(userId)
+      notificationService.notifyUserApproved(userId)
         .catch(err => console.error('Notification error:', err));
     }
 

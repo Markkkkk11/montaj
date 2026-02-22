@@ -38,6 +38,8 @@ export interface UpdateProfileData {
   city?: string;
   address?: string;
   email?: string;
+  about?: string;
+  website?: string;
   messengers?: {
     whatsapp?: string;
     telegram?: string;

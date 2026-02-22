@@ -39,7 +39,7 @@ export const SPECIALIZATION_LABELS: Record<string, string> = {
   DOORS: 'Двери',
   CEILINGS: 'Потолки',
   CONDITIONERS: 'Кондиционеры',
-  BLINDS: 'Жалюзи',
+  BLINDS: 'Рольставни',
   FURNITURE: 'Мебель',
 };
 
@@ -64,7 +64,7 @@ export const SPECIALIZATION_COLORS: Record<string, string> = {
   DOORS: '#9333ea',         // Двери - фиолетовый
   CEILINGS: '#16a34a',      // Потолки - зелёный
   CONDITIONERS: '#ea580c',  // Кондиционеры - оранжевый
-  BLINDS: '#dc2626',        // Жалюзи - красный
+  BLINDS: '#dc2626',        // Рольставни - красный
   FURNITURE: '#6b7280',     // Мебель - серый
 };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,14 @@ import { processPaymentSuccess } from '@/lib/api/payments';
 import { Wallet, TrendingUp, Gift } from 'lucide-react';
 
 export default function BalancePage() {
+  return (
+    <Suspense fallback={null}>
+      <BalanceContent />
+    </Suspense>
+  );
+}
+
+function BalanceContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [balance, setBalance] = useState<any>(null);

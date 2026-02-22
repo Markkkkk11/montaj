@@ -6,12 +6,12 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { OrderCard } from '@/components/orders/OrderCard';
+import { Header } from '@/components/layout/Header';
 import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TARIFF_LABELS, isExecutorProfileComplete } from '@/lib/utils';
-import { Wallet, FileText, User, Star, Search } from 'lucide-react';
+import { Wallet, FileText, User, Star, Search, Mail, MessageCircle, ArrowRight, TrendingUp, Zap, Package, ChevronRight, Gift, X } from 'lucide-react';
 
 export default function ExecutorDashboard() {
   const { user, logout, isHydrated } = useAuthStore();
@@ -32,7 +32,6 @@ export default function ExecutorDashboard() {
       return;
     }
     
-    // Загрузить состояние баннера из localStorage
     const closedBanners = localStorage.getItem('closedBanners');
     if (closedBanners) {
       try {
@@ -53,8 +52,6 @@ export default function ExecutorDashboard() {
         ordersApi.getMyOrders(),
         responsesApi.getMyResponses(),
       ]);
-      console.log('📊 Loaded orders:', orders);
-      console.log('📊 Loaded responses:', responses);
       setMyOrders(orders);
       setMyResponses(responses);
     } catch (error) {
@@ -66,8 +63,6 @@ export default function ExecutorDashboard() {
 
   const handleCloseBonusBanner = () => {
     setBonusBannerClosed(true);
-    
-    // Сохранить в localStorage
     const closedBanners = localStorage.getItem('closedBanners');
     let banners = {};
     if (closedBanners) {
@@ -85,7 +80,6 @@ export default function ExecutorDashboard() {
     return null;
   }
 
-  // Проверка роли - только для исполнителей
   if (user.role === 'ADMIN') {
     router.push('/admin');
     return null;
@@ -94,11 +88,6 @@ export default function ExecutorDashboard() {
     router.push('/customer/dashboard');
     return null;
   }
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
 
   const balance = user.balance;
   const subscription = user.subscription;
@@ -111,368 +100,374 @@ export default function ExecutorDashboard() {
   const activeOrders = myOrders.filter(o => o.status === 'IN_PROGRESS');
   const completedOrders = myOrders.filter(o => o.status === 'COMPLETED');
   const pendingResponses = myResponses.filter(r => r.status === 'PENDING');
-  
-  console.log('📊 Active orders:', activeOrders);
-  console.log('📊 All my orders:', myOrders);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            <span className="text-sm text-muted-foreground">{user.fullName}</span>
-            <Button variant="outline" onClick={handleLogout}>
-              Выйти
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50/50">
+      <Header />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 page-enter">
+        {/* Welcome */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Личный кабинет исполнителя</h2>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
+            Добро пожаловать, {user.fullName?.split(' ')[0]}! 🔧
+          </h1>
           <p className="text-muted-foreground">
-            Добро пожаловать, {user.fullName}!
+            Находите заказы и зарабатывайте
           </p>
         </div>
 
         {/* Status Warnings */}
         {user.status === 'PENDING' && (
-          <Card className="mb-6 bg-yellow-50 border-yellow-200">
-            <CardHeader>
-              <CardTitle>Профиль на модерации</CardTitle>
-              <CardDescription>
-                Ваш профиль проверяется администратором. После активации вы сможете откликаться на
-                заказы.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => router.push('/profile')}>
+          <div className="mb-6 p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl animate-fade-in flex items-start gap-4">
+            <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl">⏳</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-amber-900">Профиль на модерации</h3>
+              <p className="text-sm text-amber-700 mt-1">
+                После активации вы сможете откликаться на заказы.
+              </p>
+              <Button onClick={() => router.push('/profile')} size="sm" className="mt-3">
                 Заполнить профиль
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {!isExecutorProfileComplete(user) && user.status === 'ACTIVE' && (
-          <Card className="mb-6 bg-blue-50 border-blue-200">
-            <CardHeader>
-              <CardTitle>Заполните профиль исполнителя</CardTitle>
-              <CardDescription>
-                Укажите регион работы, специализации и краткое описание, чтобы получать подходящие заказы
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => router.push('/profile/edit')}>
-                Заполнить профиль
+          <div className="mb-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl animate-fade-in flex items-start gap-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl">📝</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-blue-900">Заполните профиль</h3>
+              <p className="text-sm text-blue-700 mt-1">
+                Укажите регион работы, специализации и описание
+              </p>
+              <Button onClick={() => router.push('/profile/edit')} size="sm" className="mt-3">
+                Заполнить
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Welcome Bonus */}
-        {!bonusBannerClosed && 
-         balance && 
-         balance.bonusAmount !== undefined && 
-         parseFloat(balance.bonusAmount.toString()) > 0 && (
-          <Card className="mb-6 bg-green-50 border-green-200">
-            <CardHeader className="relative">
-              <button
-                onClick={handleCloseBonusBanner}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-                aria-label="Закрыть"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              <CardTitle>🎁 Приветственный бонус</CardTitle>
-              <CardDescription>
-                На ваш счёт зачислено {balance.bonusAmount} ₽ бонусов! Используйте их для первых
-                откликов на заказы.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+        {!bonusBannerClosed && balance && balance.bonusAmount !== undefined && parseFloat(balance.bonusAmount.toString()) > 0 && (
+          <div className="mb-6 p-5 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl animate-fade-in flex items-start gap-4 relative">
+            <button
+              onClick={handleCloseBonusBanner}
+              className="absolute top-4 right-4 p-1 hover:bg-emerald-100 rounded-lg transition-colors"
+            >
+              <X className="h-4 w-4 text-emerald-500" />
+            </button>
+            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Gift className="h-6 w-6 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-emerald-900">Приветственный бонус</h3>
+              <p className="text-sm text-emerald-700 mt-1">
+                На ваш счёт зачислено <strong>{balance.bonusAmount} ₽</strong> бонусов!
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Баланс</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{totalBalance} ₽</p>
-              <p className="text-sm text-muted-foreground">
-                Бонусы: {balance?.bonusAmount || '0.00'} ₽
-              </p>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 stagger-children">
+          <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Баланс</p>
+                  <p className="text-lg font-extrabold text-gray-900">{balance?.amount || '0'} ₽</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Текущий тариф</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}
-              </p>
-              {subscription && subscription.expiresAt && (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    Действует до {new Date(subscription.expiresAt).toLocaleDateString('ru-RU')}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Специализаций: {subscription.specializationCount}
-                  </p>
-                </>
-              )}
-              {!subscription && (
-                <p className="text-sm text-muted-foreground">
-                  Базовый тариф
-                </p>
-              )}
+          <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <Gift className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-emerald-600">Бонусы</p>
+                  <p className="text-lg font-extrabold text-emerald-700">{balance?.bonusAmount || '0'} ₽</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Рейтинг</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{user.rating.toFixed(1)}</p>
-              <p className="text-sm text-muted-foreground">из 5.0</p>
+          <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-violet-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Тариф</p>
+                  <p className="text-lg font-extrabold text-gray-900">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Выполнено</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{user.completedOrders}</p>
-              <p className="text-sm text-muted-foreground">заказов</p>
+          <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                  <Star className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Рейтинг</p>
+                  <p className="text-lg font-extrabold text-gray-900">{user.rating.toFixed(1)}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
+
+          <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-sky-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Выполнено</p>
+                  <p className="text-lg font-extrabold text-gray-900">{user.completedOrders}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Feedback */}
+        <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center">
+              <MessageCircle className="h-5 w-5 text-gray-400" />
+            </div>
+            <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
+          </div>
+          <div className="flex gap-4">
+            <a href="mailto:SVMontaj24@yandex.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+              <Mail className="h-4 w-4" /> Email
+            </a>
+            <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
+              <MessageCircle className="h-4 w-4" /> Telegram
+            </a>
+          </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/orders')}>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Search className="h-5 w-5 text-primary" />
-                <CardTitle>Доступные заказы</CardTitle>
+        <div className="grid md:grid-cols-4 gap-4 mb-8 stagger-children">
+          <Card
+            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-blue-200"
+            onClick={() => router.push('/orders')}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Search className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Заказы</CardTitle>
+                  <CardDescription className="text-xs">Найти работу</CardDescription>
+                </div>
               </div>
-              <CardDescription>Просмотрите заказы и откликнитесь</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">
-                Смотреть заказы
+              <Button className="w-full gap-2" size="sm">
+                Смотреть <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/profile')}>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                <CardTitle>Мой профиль</CardTitle>
+          <Card
+            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-violet-200"
+            onClick={() => router.push('/profile')}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-violet-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <User className="h-6 w-6 text-violet-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Профиль</CardTitle>
+                  <CardDescription className="text-xs">Редактировать</CardDescription>
+                </div>
               </div>
-              <CardDescription>Заполните профиль для модерации</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
-                Перейти в профиль
-              </Button>
+              <Button variant="outline" className="w-full" size="sm">Перейти</Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Wallet className="h-5 w-5 text-primary" />
-                <CardTitle>Пополнить баланс</CardTitle>
+          <Card
+            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-amber-200"
+            onClick={() => router.push('/executor/tariffs')}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileText className="h-6 w-6 text-amber-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Тарифы</CardTitle>
+                  <CardDescription className="text-xs">Подробности</CardDescription>
+                </div>
               </div>
-              <CardDescription>Пополните баланс для откликов</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Пополнить (скоро)
-              </Button>
+              <Button variant="outline" className="w-full" size="sm">Подробнее</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center">
+                  <Wallet className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Баланс</CardTitle>
+                  <CardDescription className="text-xs">Пополнить</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full" size="sm" disabled>Скоро</Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Subscription Details */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Управление тарифом</CardTitle>
-            <CardDescription>
-              Ваш текущий тариф и доступные возможности
-            </CardDescription>
+        {/* Tariff Management */}
+        <Card className="mb-8 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Управление тарифом</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* Current Tariff Info */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                  <Zap className="h-5 w-5 text-violet-600" />
+                </div>
                 <div>
-                  <h3 className="font-semibold text-lg">
-                    {subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}
-                  </h3>
-                  {subscription && subscription.expiresAt && (
-                    <p className="text-sm text-muted-foreground">
-                      Активен до {new Date(subscription.expiresAt).toLocaleDateString('ru-RU', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
+                  <h3 className="font-bold">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</h3>
+                  {subscription?.expiresAt && (
+                    <p className="text-xs text-muted-foreground">
+                      до {new Date(subscription.expiresAt).toLocaleDateString('ru-RU')}
                     </p>
                   )}
                 </div>
-                <Button onClick={() => router.push('/executor/tariffs')} variant="outline">
-                  Изменить тариф
-                </Button>
               </div>
+              <Button onClick={() => router.push('/executor/tariffs')} variant="outline" size="sm" className="gap-1">
+                Изменить <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
 
-              {/* Tariff Features */}
-              <div className="grid md:grid-cols-3 gap-4">
-                {subscription?.tariffType === 'STANDARD' && (
-                  <>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Стоимость отклика</p>
-                      <p className="text-2xl font-bold text-primary">150 ₽</p>
-                      <p className="text-xs text-muted-foreground">за каждый отклик</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Специализации</p>
-                      <p className="text-2xl font-bold">1</p>
-                      <p className="text-xs text-muted-foreground">доступна</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Переключение</p>
-                      <p className="text-sm">✅ Да</p>
-                      <p className="text-xs text-muted-foreground">между специализациями</p>
-                    </div>
-                  </>
-                )}
-
-                {subscription?.tariffType === 'COMFORT' && (
-                  <>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Оплата</p>
-                      <p className="text-2xl font-bold text-primary">500 ₽</p>
-                      <p className="text-xs text-muted-foreground">только за взятый заказ</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Специализации</p>
-                      <p className="text-2xl font-bold">1</p>
-                      <p className="text-xs text-muted-foreground">доступна</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Возврат средств</p>
-                      <p className="text-sm">✅ Да</p>
-                      <p className="text-xs text-muted-foreground">при отмене заказчиком</p>
-                    </div>
-                  </>
-                )}
-
-                {subscription?.tariffType === 'PREMIUM' && (
-                  <>
-                    <div className="p-4 border rounded-lg bg-yellow-50 border-yellow-200">
-                      <p className="text-sm font-medium">Стоимость</p>
-                      <p className="text-2xl font-bold text-primary">5000 ₽</p>
-                      <p className="text-xs text-muted-foreground">за 30 дней</p>
-                    </div>
-                    <div className="p-4 border rounded-lg bg-yellow-50 border-yellow-200">
-                      <p className="text-sm font-medium">Специализации</p>
-                      <p className="text-2xl font-bold">до {subscription.specializationCount}</p>
-                      <p className="text-xs text-muted-foreground">одновременно</p>
-                    </div>
-                    <div className="p-4 border rounded-lg bg-yellow-50 border-yellow-200">
-                      <p className="text-sm font-medium">Отклики</p>
-                      <p className="text-2xl font-bold">∞</p>
-                      <p className="text-xs text-muted-foreground">безлимитные</p>
-                    </div>
-                  </>
-                )}
-
-                {!subscription && (
-                  <>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Стоимость отклика</p>
-                      <p className="text-2xl font-bold text-primary">150 ₽</p>
-                      <p className="text-xs text-muted-foreground">за каждый отклик</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Специализации</p>
-                      <p className="text-2xl font-bold">1</p>
-                      <p className="text-xs text-muted-foreground">доступна</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <p className="text-sm font-medium">Возможности</p>
-                      <p className="text-sm">Базовые</p>
-                      <p className="text-xs text-muted-foreground">функции платформы</p>
-                    </div>
-                  </>
-                )}
+            <div className="grid md:grid-cols-3 gap-3">
+              <div className="p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Стоимость отклика</p>
+                <p className="text-xl font-extrabold text-blue-600">
+                  {subscription?.tariffType === 'COMFORT' ? '500' : subscription?.tariffType === 'PREMIUM' ? '0' : '150'} ₽
+                </p>
               </div>
-
-              {/* Premium Bonus Info */}
-              {subscription?.tariffType === 'PREMIUM' && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm font-medium text-green-800">
-                    🎉 Приветственный бонус при первой регистрации:
-                  </p>
-                  <ul className="text-sm text-green-700 mt-2 space-y-1">
-                    <li>• 1000 бонусных рублей на счёт</li>
-                    <li>• Тариф "Премиум" на 1 месяц бесплатно</li>
-                    <li>• Стартовый рейтинг 3.0/5.0</li>
-                  </ul>
-                </div>
-              )}
+              <div className="p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Специализации</p>
+                <p className="text-xl font-extrabold text-violet-600">
+                  {subscription?.tariffType === 'PREMIUM' ? `до ${subscription.specializationCount}` : '1'}
+                </p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Отклики</p>
+                <p className="text-xl font-extrabold text-emerald-600">
+                  {subscription?.tariffType === 'PREMIUM' ? '∞' : 'Платные'}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Active Orders */}
-        <div className="space-y-6">
+        {/* My Responses */}
+        <div className="space-y-8">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold">Активные заказы ({activeOrders.length})</h3>
-              <p className="text-sm text-muted-foreground">
-                Заказы, которые вы выполняете
-              </p>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="section-title flex items-center gap-2">
+                  <span>📩</span> Мои отклики
+                </h2>
+                <p className="section-subtitle">{pendingResponses.length} ожидают</p>
+              </div>
             </div>
             {isLoading ? (
-              <p className="text-muted-foreground">Загрузка...</p>
-            ) : activeOrders.length === 0 ? (
-              <Card>
+              <div className="space-y-3">
+                {[1, 2].map(i => <div key={i} className="h-20 skeleton rounded-2xl" />)}
+              </div>
+            ) : pendingResponses.length === 0 ? (
+              <Card className="border-dashed border-2">
                 <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground mb-2">У вас пока нет активных заказов</p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Активные заказы появятся здесь после того, как заказчик выберет вас исполнителем
-                  </p>
-                  <Button onClick={() => router.push('/orders')}>
-                    Найти заказы
+                  <p className="text-muted-foreground mb-3">Нет активных откликов</p>
+                  <Button variant="outline" onClick={() => router.push('/orders')} className="gap-2">
+                    <Search className="h-4 w-4" /> Найти заказы
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-3 stagger-children">
+                {pendingResponses.map((response) => (
+                  <Card key={response.id} className="hover:shadow-soft-lg transition-all duration-300">
+                    <CardContent className="pt-5 pb-5">
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 truncate">{response.order?.title}</h4>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(response.createdAt).toLocaleDateString('ru-RU')}
+                            </span>
+                            <span className="badge-warning">Ожидание</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/orders/${response.orderId}`)}
+                          className="gap-1 ml-3"
+                        >
+                          Открыть <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Active Orders */}
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="section-title">Активные заказы</h2>
+                <p className="section-subtitle">{activeOrders.length} в работе</p>
+              </div>
+            </div>
+            {activeOrders.length === 0 ? (
+              <Card className="border-dashed border-2">
+                <CardContent className="py-8 text-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Package className="h-8 w-8 text-gray-300" />
+                  </div>
+                  <p className="text-muted-foreground">Активные заказы появятся после того, как вас выберут</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4 stagger-children">
                 {activeOrders.map((order) => (
                   <OrderCard key={order.id} order={order} />
                 ))}
@@ -482,60 +477,22 @@ export default function ExecutorDashboard() {
 
           {/* Completed Orders */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold">Завершённые заказы ({completedOrders.length})</h3>
-              <p className="text-sm text-muted-foreground">
-                Ваша история выполненных работ
-              </p>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="section-title">Завершённые заказы</h2>
+                <p className="section-subtitle">{completedOrders.length} выполнено</p>
+              </div>
             </div>
             {completedOrders.length === 0 ? (
-              <Card>
+              <Card className="border-dashed border-2">
                 <CardContent className="py-8 text-center">
                   <p className="text-muted-foreground">Нет завершённых заказов</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Здесь будут отображаться все ваши выполненные заказы
-                  </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4 stagger-children">
                 {completedOrders.map((order) => (
                   <OrderCard key={order.id} order={order} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-2xl font-bold mb-4">Мои отклики ({pendingResponses.length})</h3>
-            {pendingResponses.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground">Нет активных откликов</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {pendingResponses.map((response) => (
-                  <Card key={response.id}>
-                    <CardContent className="pt-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-semibold mb-1">{response.order?.title}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Откликнулись: {new Date(response.createdAt).toLocaleDateString('ru-RU')}
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/orders/${response.orderId}`)}
-                        >
-                          Открыть
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
                 ))}
               </div>
             )}

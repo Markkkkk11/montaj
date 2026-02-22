@@ -3,7 +3,7 @@ import { Order } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SPECIALIZATION_LABELS, SPECIALIZATION_COLORS } from '@/lib/utils';
-import { Calendar, MapPin, Wallet, Users } from 'lucide-react';
+import { Calendar, MapPin, Wallet, Users, ChevronRight } from 'lucide-react';
 
 interface OrderCardProps {
   order: Order;
@@ -20,31 +20,30 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
 
   const startDate = new Date(order.startDate).toLocaleDateString('ru-RU');
 
-  // Определяем стиль карточки в зависимости от того, просмотрен ли заказ
   const cardClassName = order.hasViewed 
-    ? "hover:shadow-lg transition-shadow opacity-50" 
-    : "hover:shadow-lg transition-shadow";
+    ? "hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 opacity-60" 
+    : "hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5";
 
   const responsesCount = order._count?.responses || 0;
 
   return (
     <Card className={cardClassName}>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span 
-                className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                className="px-3 py-1 rounded-xl text-xs font-bold text-white shadow-sm"
                 style={{ backgroundColor: SPECIALIZATION_COLORS[order.category] || '#6b7280' }}
               >
                 {SPECIALIZATION_LABELS[order.category]}
               </span>
               {order.status !== 'PUBLISHED' && (
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  order.status === 'IN_PROGRESS' && !order.workStartedAt ? 'bg-yellow-100 text-yellow-700' :
-                  order.status === 'IN_PROGRESS' && order.workStartedAt ? 'bg-green-100 text-green-700' :
-                  order.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
-                  'bg-red-100 text-red-700'
+                <span className={`px-3 py-1 rounded-xl text-xs font-semibold ${
+                  order.status === 'IN_PROGRESS' && !order.workStartedAt ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                  order.status === 'IN_PROGRESS' && order.workStartedAt ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                  order.status === 'COMPLETED' ? 'bg-gray-50 text-gray-600 border border-gray-100' :
+                  'bg-red-50 text-red-700 border border-red-100'
                 }`}>
                   {order.status === 'IN_PROGRESS' && !order.workStartedAt && 'Исполнитель выбран'}
                   {order.status === 'IN_PROGRESS' && order.workStartedAt && 'В работе'}
@@ -53,47 +52,48 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
                 </span>
               )}
             </div>
-            <CardTitle className="text-xl mb-2">
+            <CardTitle className="text-lg mb-1.5 truncate">
               {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
             </CardTitle>
-            <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{order.description}</p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent>
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-            <span>
-              {order.region}, {order.address}
-            </span>
+          <div className="flex items-center gap-4 flex-wrap text-sm">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" />
+              <span className="truncate max-w-[200px]">{order.region}, {order.address}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>{startDate}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>Начало: {startDate}</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <Wallet className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-primary">{budget}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-xl">
+              <Wallet className="h-4 w-4 text-blue-600" />
+              <span className="font-bold text-blue-700 text-sm">{budget}</span>
+            </div>
           </div>
 
           {/* Отклики для заказчика */}
           {isCustomer && order.status === 'PUBLISHED' && (
-            <div className={`p-3 rounded-lg border ${responsesCount > 0 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`p-3 rounded-xl border ${responsesCount > 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Users className={`h-4 w-4 ${responsesCount > 0 ? 'text-green-600' : 'text-gray-400'}`} />
-                  <span className={`font-medium ${responsesCount > 0 ? 'text-green-900' : 'text-gray-600'}`}>
+                  <Users className={`h-4 w-4 ${responsesCount > 0 ? 'text-emerald-600' : 'text-gray-400'}`} />
+                  <span className={`text-sm font-semibold ${responsesCount > 0 ? 'text-emerald-800' : 'text-gray-600'}`}>
                     {responsesCount === 0 ? 'Нет откликов' : `${responsesCount} ${responsesCount === 1 ? 'отклик' : responsesCount < 5 ? 'отклика' : 'откликов'}`}
                   </span>
                 </div>
                 {responsesCount > 0 && (
                   <Link href={`/orders/${order.id}`}>
-                    <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-100">
-                      Смотреть
+                    <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-100 gap-1 h-8">
+                      Смотреть <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                   </Link>
                 )}
@@ -104,24 +104,24 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
           {/* Просто счётчик для исполнителя */}
           {!isCustomer && responsesCount > 0 && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
+              <Users className="h-3.5 w-3.5" />
               <span>{responsesCount} откликов</span>
             </div>
           )}
 
           {order.customer && (
-            <div className="pt-2 border-t">
-              <p className="text-sm text-muted-foreground">
-                Заказчик: <span className="font-medium">{order.customer.fullName}</span>
+            <div className="pt-3 border-t border-gray-50">
+              <p className="text-xs text-muted-foreground">
+                Заказчик: <span className="font-semibold text-gray-700">{order.customer.fullName}</span>
                 {order.customer.organization && ` (${order.customer.organization})`}
               </p>
             </div>
           )}
 
           {order.executor && (
-            <div className="pt-2 border-t">
-              <p className="text-sm text-muted-foreground">
-                Исполнитель: <span className="font-medium">{order.executor.fullName}</span>
+            <div className="pt-3 border-t border-gray-50">
+              <p className="text-xs text-muted-foreground">
+                Исполнитель: <span className="font-semibold text-gray-700">{order.executor.fullName}</span>
                 <span className="ml-2">⭐ {order.executor.rating.toFixed(1)}</span>
               </p>
             </div>
@@ -129,12 +129,12 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
 
           <div className="flex gap-2 pt-2">
             <Link href={`/orders/${order.id}`} className="flex-1">
-              <Button variant="outline" className="w-full">
-                Подробнее
+              <Button variant="outline" className="w-full gap-1" size="sm">
+                Подробнее <ChevronRight className="h-4 w-4" />
               </Button>
             </Link>
             {showActions && onSelect && (
-              <Button onClick={() => onSelect(order.id)} className="flex-1">
+              <Button onClick={() => onSelect(order.id)} className="flex-1" size="sm">
                 Откликнуться
               </Button>
             )}
@@ -144,4 +144,3 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
     </Card>
   );
 }
-

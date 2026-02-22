@@ -105,8 +105,8 @@ export class ReviewService {
       },
     });
 
-    // Уведомление о новом отзыве
-    await notificationService.notifyReviewReceived(
+    // Уведомление о новом отзыве (fire-and-forget)
+    notificationService.notifyReviewReceived(
       revieweeId,
       review.reviewer.fullName,
       rating,
@@ -245,8 +245,8 @@ export class ReviewService {
     // Пересчитать рейтинг пользователя
     await this.recalculateUserRating(review.revieweeId);
 
-    // Уведомление о публикации отзыва
-    await notificationService.notifyReviewApproved(
+    // Уведомление о публикации отзыва (fire-and-forget)
+    notificationService.notifyReviewApproved(
       review.revieweeId,
       review.rating,
       review.reviewer.fullName

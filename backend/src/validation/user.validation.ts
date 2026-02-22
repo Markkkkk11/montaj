@@ -6,6 +6,8 @@ export const updateProfileSchema = Joi.object({
   city: Joi.string().optional(),
   address: Joi.string().optional().allow(''),
   email: Joi.string().email().optional().allow(''),
+  about: Joi.string().max(1000).optional().allow(''),
+  website: Joi.string().max(255).optional().allow(''),
   messengers: Joi.object({
     whatsapp: Joi.string().optional().allow(''),
     telegram: Joi.string().optional().allow(''),

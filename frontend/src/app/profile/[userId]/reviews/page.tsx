@@ -3,15 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Header } from '@/components/layout/Header';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
 import { ReviewStats } from '@/components/reviews/ReviewStats';
 import { reviewsApi } from '@/lib/api/reviews';
 import { Review, ReviewStats as Stats } from '@/lib/types';
+import { Star } from 'lucide-react';
 
 export default function UserReviewsPage() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   const userId = params.userId as string;
@@ -41,68 +42,46 @@ export default function UserReviewsPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => router.back()}>
-              Назад
-            </Button>
-            {user && (
-              <>
-                <span className="text-sm text-muted-foreground">{user.fullName}</span>
-                <Button variant="outline" onClick={handleLogout}>
-                  Выйти
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50/50">
+      <Header showBack />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 page-enter">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Отзывы</h2>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-3">
+            <Star className="h-7 w-7 text-amber-500" /> Отзывы
+          </h1>
         </div>
 
         {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Загрузка отзывов...</p>
+          <div className="space-y-4">
+            <div className="h-48 skeleton rounded-2xl" />
+            <div className="h-32 skeleton rounded-2xl" />
           </div>
         ) : error ? (
           <Card>
             <CardContent className="py-8 text-center">
-              <p className="text-red-600">{error}</p>
+              <p className="text-red-600 font-semibold">{error}</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Stats Sidebar */}
             {stats && (
               <div className="lg:col-span-1">
                 <ReviewStats stats={stats} />
               </div>
             )}
-
-            {/* Reviews List */}
             <div className="lg:col-span-2">
               {reviews.length === 0 ? (
-                <Card>
-                  <CardContent className="py-12 text-center">
-                    <p className="text-muted-foreground">Пока нет отзывов</p>
-                  </CardContent>
-                </Card>
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Star className="h-10 w-10 text-gray-300" />
+                  </div>
+                  <p className="text-lg font-semibold text-gray-900 mb-1">Пока нет отзывов</p>
+                  <p className="text-muted-foreground">Здесь появятся отзывы после завершения заказов</p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 stagger-children">
                   {reviews.map((review) => (
                     <ReviewCard key={review.id} review={review} showOrder={true} />
                   ))}
@@ -115,4 +94,3 @@ export default function UserReviewsPage() {
     </div>
   );
 }
-

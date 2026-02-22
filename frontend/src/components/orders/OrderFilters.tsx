@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Specialization, OrderFilters as Filters } from '@/lib/types';
 import { useAuthStore } from '@/stores/authStore';
+import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 
-// Список доступных регионов (совпадает с координатами в OrdersMap)
 const AVAILABLE_REGIONS = [
   'Москва',
   'Санкт-Петербург',
@@ -45,22 +45,24 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
     onApply({});
   };
 
-  // Исполнитель видит заказы только по своим специализациям
   const isExecutor = user?.role === 'EXECUTOR';
 
+  const selectClassName = "w-full mt-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all duration-200";
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Фильтры</CardTitle>
+    <Card className="sticky top-20">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4" /> Фильтры
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Фильтр категорий только для заказчиков и админов */}
         {!isExecutor && (
           <div>
-            <Label htmlFor="category">Специализация</Label>
+            <Label htmlFor="category" className="text-xs">Специализация</Label>
             <select
               id="category"
-              className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className={selectClassName}
               value={filters.category || ''}
               onChange={(e) =>
                 setFilters({ ...filters, category: e.target.value as Specialization || undefined })
@@ -76,40 +78,36 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
           </div>
         )}
 
-        {/* Информация о специализациях для исполнителей */}
         {isExecutor && user.executorProfile && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-blue-900 mb-2">Ваши специализации:</p>
+          <div className="p-4 bg-blue-50/80 rounded-2xl border border-blue-100">
+            <p className="text-xs font-bold text-blue-900 mb-2">Ваши специализации</p>
             {user.executorProfile.specializations.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {user.executorProfile.specializations.map((spec) => (
-                  <span
-                    key={spec}
-                    className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium"
-                  >
+                  <span key={spec} className="badge-primary">
                     {SPECIALIZATION_LABELS[spec]}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-blue-700">Не указаны. Заполните профиль!</p>
+              <p className="text-xs text-blue-700">Не указаны. Заполните профиль!</p>
             )}
             <Button
               variant="link"
               size="sm"
-              className="mt-2 p-0 h-auto text-blue-600"
+              className="mt-2 p-0 h-auto text-blue-600 text-xs"
               onClick={() => window.location.href = '/profile/specializations'}
             >
-              Изменить специализации →
+              Изменить →
             </Button>
           </div>
         )}
 
         <div>
-          <Label htmlFor="region">Регион</Label>
+          <Label htmlFor="region" className="text-xs">Регион</Label>
           <select
             id="region"
-            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className={selectClassName}
             value={filters.region || ''}
             onChange={(e) => setFilters({ ...filters, region: e.target.value || undefined })}
           >
@@ -123,10 +121,10 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
         </div>
 
         <div>
-          <Label htmlFor="sortBy">Сортировка</Label>
+          <Label htmlFor="sortBy" className="text-xs">Сортировка</Label>
           <select
             id="sortBy"
-            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className={selectClassName}
             value={filters.sortBy || 'createdAt'}
             onChange={(e) =>
               setFilters({ ...filters, sortBy: (e.target.value as 'createdAt' | 'startDate') || undefined })
@@ -138,10 +136,10 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
         </div>
 
         <div>
-          <Label htmlFor="sortOrder">Порядок</Label>
+          <Label htmlFor="sortOrder" className="text-xs">Порядок</Label>
           <select
             id="sortOrder"
-            className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className={selectClassName}
             value={filters.sortOrder || 'desc'}
             onChange={(e) =>
               setFilters({ ...filters, sortOrder: (e.target.value as 'asc' | 'desc') || undefined })
@@ -152,16 +150,15 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
           </select>
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <Button onClick={handleApply} className="flex-1">
+        <div className="flex gap-2 pt-3">
+          <Button onClick={handleApply} className="flex-1" size="sm">
             Применить
           </Button>
-          <Button onClick={handleReset} variant="outline" className="flex-1">
-            Сбросить
+          <Button onClick={handleReset} variant="outline" size="sm" className="gap-1">
+            <RotateCcw className="h-3.5 w-3.5" /> Сброс
           </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
-

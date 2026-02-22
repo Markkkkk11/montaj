@@ -22,6 +22,8 @@ export interface User {
     telegram?: string;
   };
   photo?: string;
+  about?: string;
+  website?: string;
   inn?: string;
   ogrn?: string;
   rating: number;

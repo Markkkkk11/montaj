@@ -7,7 +7,10 @@ import { upload } from '../config/multer';
 
 const router = Router();
 
-// Все маршруты требуют аутентификации
+// Публичный профиль (без авторизации)
+router.get('/:id/public', userController.getPublicProfile);
+
+// Все маршруты ниже требуют аутентификации
 router.use(authenticate);
 
 // Профиль пользователя

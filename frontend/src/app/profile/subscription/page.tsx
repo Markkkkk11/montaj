@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CurrentSubscription from '@/components/subscriptions/CurrentSubscription';
 import TariffCard from '@/components/subscriptions/TariffCard';
@@ -13,6 +13,14 @@ import {
 import { createPremiumSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
 
 export default function SubscriptionPage() {
+  return (
+    <Suspense fallback={null}>
+      <SubscriptionContent />
+    </Suspense>
+  );
+}
+
+function SubscriptionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tariffs, setTariffs] = useState<Record<string, TariffInfo>>({});

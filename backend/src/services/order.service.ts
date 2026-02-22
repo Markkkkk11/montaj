@@ -391,7 +391,7 @@ export class OrderService {
 
     // Уведомление всем исполнителям, которые откликнулись
     if (executorIds.length > 0) {
-      await notificationService.notifyOrderCancelledByCustomer(
+      notificationService.notifyOrderCancelledByCustomer(
         executorIds,
         orderId,
         order.title
@@ -495,8 +495,8 @@ export class OrderService {
       },
     });
 
-    // Уведомление исполнителю о выборе
-    await notificationService.notifyExecutorSelected(
+    // Уведомление исполнителю о выборе (fire-and-forget, не блокируем ответ)
+    notificationService.notifyExecutorSelected(
       executorId,
       orderId,
       updatedOrder.title,
@@ -515,8 +515,8 @@ export class OrderService {
         },
       });
 
-      // Уведомление отклонённому исполнителю
-      await notificationService.notifyResponseRejected(
+      // Уведомление отклонённому исполнителю (fire-and-forget)
+      notificationService.notifyResponseRejected(
         otherResponse.executorId,
         orderId,
         updatedOrder.title
@@ -561,8 +561,8 @@ export class OrderService {
       },
     });
 
-    // Уведомление заказчику о начале работы
-    await notificationService.notifyWorkStarted(
+    // Уведомление заказчику о начале работы (fire-and-forget)
+    notificationService.notifyWorkStarted(
       order.customerId,
       orderId,
       order.title,
@@ -633,8 +633,8 @@ export class OrderService {
       },
     });
 
-    // Уведомление заказчику об отказе
-    await notificationService.notifyExecutorCancelled(
+    // Уведомление заказчику об отказе (fire-and-forget)
+    notificationService.notifyExecutorCancelled(
       order.customerId,
       orderId,
       order.title,
@@ -696,15 +696,15 @@ export class OrderService {
       }),
     ]);
 
-    // Уведомление заказчику о завершении заказа
-    await notificationService.notifyOrderCompleted(
+    // Уведомление заказчику о завершении заказа (fire-and-forget)
+    notificationService.notifyOrderCompleted(
       order.customerId,
       orderId,
       order.title
     ).catch(err => console.error('Notification error:', err));
 
-    // Уведомление исполнителю о завершении заказа
-    await notificationService.notifyOrderCompleted(
+    // Уведомление исполнителю о завершении заказа (fire-and-forget)
+    notificationService.notifyOrderCompleted(
       executorId,
       orderId,
       order.title
@@ -726,20 +726,19 @@ export class OrderService {
       throw new Error('Заказ не найден');
     }
 
-    // Записываем просмотр (если уже есть - игнорируем, благодаря unique constraint)
-    try {
-      await prisma.orderView.create({
-        data: {
-          orderId,
-          executorId,
-        },
-      });
-    } catch (error: any) {
-      // Если запись уже существует (unique constraint violation) - игнорируем
-      if (error.code !== 'P2002') {
-        throw error;
-      }
-    }
+    // Записываем просмотр (upsert чтобы не дублировать)
+    await prisma.orderView.upsert({
+      where: {
+        orderId_executorId: { orderId, executorId },
+      },
+      update: {
+        viewedAt: new Date(),
+      },
+      create: {
+        orderId,
+        executorId,
+      },
+    });
   }
 
   /**

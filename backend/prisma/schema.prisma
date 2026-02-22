@@ -27,7 +27,7 @@ enum Specialization {
   DOORS          // Двери
   CEILINGS       // Потолки
   CONDITIONERS   // Кондиционеры
-  BLINDS         // Жалюзи
+  BLINDS         // Рольставни
   FURNITURE      // Мебель
 }
 
@@ -63,6 +63,8 @@ model User {
   address           String?
   messengers        Json?       // {whatsapp: string, telegram: string}
   photo             String?
+  about             String?     @db.Text // Коротко о себе / о фирме
+  website           String?     // Сайт компании
   inn               String?
   ogrn              String?
   rating            Float       @default(0)

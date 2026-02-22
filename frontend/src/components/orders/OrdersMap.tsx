@@ -41,7 +41,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   'WINDOWS': '#2563eb',      // Окна - синий
   'DOORS': '#9333ea',        // Двери - фиолетовый
   'CEILINGS': '#16a34a',     // Потолки - зелёный
-  'BLINDS': '#dc2626',       // Жалюзи - красный
+  'BLINDS': '#dc2626',       // Рольставни - красный
   'CONDITIONERS': '#ea580c', // Кондиционеры - оранжевый
   'FURNITURE': '#6b7280',    // Мебель - серый
 };

@@ -33,6 +33,53 @@ export class UserController {
   }
 
   /**
+   * GET /api/users/:id/public
+   * Получить публичный профиль пользователя (без контактной информации)
+   */
+  async getPublicProfile(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const profile = await userService.getProfile(id);
+
+      if (!profile) {
+        res.status(404).json({ error: 'Пользователь не найден' });
+        return;
+      }
+
+      // Возвращаем только публичную информацию — без контактов
+      const publicProfile: any = {
+        id: profile.id,
+        fullName: profile.fullName,
+        photo: profile.photo,
+        city: profile.city,
+        organization: profile.organization,
+        about: profile.about,
+        website: profile.website,
+        rating: profile.rating,
+        completedOrders: profile.completedOrders,
+        role: profile.role,
+        createdAt: profile.createdAt,
+      };
+
+      // Если это исполнитель, добавляем данные профиля
+      if (profile.executorProfile) {
+        publicProfile.executorProfile = {
+          region: profile.executorProfile.region,
+          specializations: profile.executorProfile.specializations,
+          shortDescription: profile.executorProfile.shortDescription,
+          fullDescription: profile.executorProfile.fullDescription,
+          workPhotos: profile.executorProfile.workPhotos,
+          isSelfEmployed: profile.executorProfile.isSelfEmployed,
+        };
+      }
+
+      res.json({ profile: publicProfile });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
    * PUT /api/users/profile
    * Обновить профиль
    */

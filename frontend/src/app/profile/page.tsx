@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Header } from '@/components/layout/Header';
 import { USER_STATUS_LABELS, SPECIALIZATION_LABELS, getTimeSinceRegistration } from '@/lib/utils';
+import Link from 'next/link';
+import { Star, Edit, Phone, Mail, MapPin, Building2, Clock, ChevronRight, Shield, Briefcase } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { user, logout, isHydrated } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,191 +24,171 @@ export default function ProfilePage() {
     return null;
   }
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
-  const goBack = () => {
-    if (user.role === 'CUSTOMER') {
-      router.push('/customer/dashboard');
-    } else {
-      router.push('/executor/dashboard');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={goBack}>
-              Назад
-            </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              Выйти
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50/50">
+      <Header showBack />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Мой профиль</h2>
-          <p className="text-muted-foreground">
-            {user.role === 'CUSTOMER' ? 'Заказчик' : 'Исполнитель'}
-          </p>
-        </div>
-
-        {/* Avatar + Name */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+      <main className="container mx-auto px-4 py-8 max-w-3xl page-enter">
+        {/* Profile Header */}
+        <Card className="mb-6 overflow-hidden">
+          <div className="h-24 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500" />
+          <CardContent className="relative pt-0 pb-6">
+            <div className="flex items-end gap-5 -mt-12">
+              <div className="w-24 h-24 rounded-2xl bg-white flex items-center justify-center overflow-hidden border-4 border-white shadow-soft-lg flex-shrink-0">
                 {user.photo ? (
                   <img src={user.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.photo}` : user.photo} alt="Аватар" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl text-gray-500">{user.fullName.charAt(0).toUpperCase()}</span>
+                  <span className="text-4xl font-bold text-gray-300">{user.fullName.charAt(0).toUpperCase()}</span>
                 )}
               </div>
-              <div>
-                <h3 className="text-2xl font-bold">{user.fullName}</h3>
-                <p className="text-muted-foreground">{user.role === 'CUSTOMER' ? 'Заказчик' : 'Исполнитель'}</p>
-                <p className="text-sm text-muted-foreground mt-1">На сайте: {getTimeSinceRegistration(user.createdAt)}</p>
+              <div className="pb-1 flex-1 min-w-0">
+                <h2 className="text-2xl font-extrabold text-gray-900 truncate">{user.fullName}</h2>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className={`badge-${user.role === 'CUSTOMER' ? 'primary' : 'success'}`}>
+                    {user.role === 'CUSTOMER' ? 'Заказчик' : 'Исполнитель'}
+                  </span>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {getTimeSinceRegistration(user.createdAt)}
+                  </span>
+                </div>
               </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => router.push('/profile/edit')} className="gap-2">
+                <Edit className="h-4 w-4" /> Редактировать
+              </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Basic Info */}
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Основная информация</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Основная информация</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">ФИО</p>
-                <p className="font-medium">{user.fullName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Телефон</p>
-                <p className="font-medium">{user.phone}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{user.email || 'Не указан'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Город</p>
-                <p className="font-medium">{user.city}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Организация</p>
-                <p className="font-medium">{user.organization || 'Не указана'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Статус</p>
-                <p className="font-medium">{USER_STATUS_LABELS[user.status]}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">На сайте</p>
-                <p className="font-medium">{getTimeSinceRegistration(user.createdAt)}</p>
-              </div>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { icon: Phone, label: 'Телефон', value: user.phone, color: 'text-blue-600 bg-blue-50' },
+                { icon: Mail, label: 'Email', value: user.email || 'Не указан', color: 'text-violet-600 bg-violet-50' },
+                { icon: MapPin, label: 'Город', value: user.city, color: 'text-emerald-600 bg-emerald-50' },
+                { icon: Building2, label: 'Организация', value: user.organization || 'Не указана', color: 'text-amber-600 bg-amber-50' },
+                { icon: Shield, label: 'Статус', value: USER_STATUS_LABELS[user.status], color: 'text-sky-600 bg-sky-50' },
+                { icon: Clock, label: 'На сайте', value: getTimeSinceRegistration(user.createdAt), color: 'text-gray-600 bg-gray-50' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-3 p-3 bg-gray-50/80 rounded-xl">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.color.split(' ')[1]}`}>
+                    <item.icon className={`h-4 w-4 ${item.color.split(' ')[0]}`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">{item.label}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{item.value}</p>
+                  </div>
+                </div>
+              ))}
             </div>
+          </CardContent>
+        </Card>
 
-            <Button 
-              variant="outline" 
-              onClick={() => router.push('/profile/edit')}
-            >
-              Редактировать профиль
-            </Button>
+        {/* Reviews Link */}
+        <Card className="mb-6 hover:shadow-soft-lg transition-all duration-300 cursor-pointer hover:-translate-y-0.5" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
+                  <Star className="h-6 w-6 text-amber-500" />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">Мои отзывы</p>
+                  <p className="text-sm text-muted-foreground">Рейтинг: {user.rating.toFixed(1)} / 5.0</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-gray-300" />
+            </div>
           </CardContent>
         </Card>
 
         {/* Executor Profile */}
         {user.role === 'EXECUTOR' && user.executorProfile && (
           <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Профиль исполнителя</CardTitle>
-              <CardDescription>Информация для заказчиков</CardDescription>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Профиль исполнителя</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => router.push('/profile/edit')} className="gap-1 text-muted-foreground">
+                  <Edit className="h-3.5 w-3.5" /> Изменить
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Регион работы</p>
-                <p className="font-medium">{user.executorProfile.region || 'Не указан'}</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Регион работы</p>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-blue-500" />
+                  <p className="font-semibold text-gray-900">{user.executorProfile.region || 'Не указан'}</p>
+                </div>
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Специализации</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Специализации</p>
                 {user.executorProfile.specializations.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {user.executorProfile.specializations.map((spec) => (
                       <span
                         key={spec}
-                        className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                        className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-violet-50 text-blue-700 rounded-xl text-sm font-semibold border border-blue-100"
                       >
                         {SPECIALIZATION_LABELS[spec]}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="font-medium">Не указаны</p>
+                  <p className="text-sm text-muted-foreground">Не указаны</p>
                 )}
               </div>
 
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Краткое описание</p>
-                <p className="font-medium">
-                  {user.executorProfile.shortDescription || 'Не указано'}
-                </p>
-              </div>
+              {user.executorProfile.shortDescription && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Краткое описание</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{user.executorProfile.shortDescription}</p>
+                </div>
+              )}
+
+              {user.executorProfile.fullDescription && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Подробное описание</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{user.executorProfile.fullDescription}</p>
+                </div>
+              )}
 
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Подробное описание</p>
-                <p className="font-medium">
-                  {user.executorProfile.fullDescription || 'Не указано'}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Самозанятый</p>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                <p className="text-xs font-medium text-muted-foreground mb-2">Самозанятый</p>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold ${
                   user.executorProfile.isSelfEmployed 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-gray-100 text-gray-600'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+                    : 'bg-gray-50 text-gray-600 border border-gray-100'
                 }`}>
                   {user.executorProfile.isSelfEmployed ? '✅ Да' : '❌ Нет'}
                 </span>
               </div>
-
-              <Button 
-                variant="outline" 
-                onClick={() => router.push('/profile/edit')}
-              >
-                Редактировать профиль исполнителя
-              </Button>
             </CardContent>
           </Card>
         )}
 
         {/* Stats */}
         <Card>
-          <CardHeader>
-            <CardTitle>Статистика</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Статистика</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Рейтинг</p>
-                <p className="text-2xl font-bold">{user.rating.toFixed(1)} / 5.0</p>
+              <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl text-center">
+                <p className="text-3xl font-extrabold text-amber-600">{user.rating.toFixed(1)}</p>
+                <p className="text-xs font-medium text-amber-700 mt-1">Рейтинг из 5.0</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Выполнено заказов</p>
-                <p className="text-2xl font-bold">{user.completedOrders}</p>
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl text-center">
+                <p className="text-3xl font-extrabold text-blue-600">{user.completedOrders}</p>
+                <p className="text-xs font-medium text-blue-700 mt-1">Выполнено заказов</p>
               </div>
             </div>
           </CardContent>
@@ -214,4 +197,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

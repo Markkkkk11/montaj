@@ -5,12 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Header } from '@/components/layout/Header';
 import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
 import { reviewsApi } from '@/lib/api/reviews';
 import { Order, Response } from '@/lib/types';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
-import { Calendar, MapPin, Wallet, User, Phone, Mail, MessageCircle, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Wallet, User, Phone, Mail, MessageCircle, CheckCircle, Star, ChevronRight, Paperclip, Play, XCircle, ArrowLeft } from 'lucide-react';
 import { ChatBox } from '@/components/chat/ChatBox';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,13 +39,19 @@ export default function OrderDetailPage() {
     loadOrderDetails();
   }, [user, orderId, isHydrated]);
 
-  const loadOrderDetails = async () => {
+  const loadOrderDetails = async (silent = false) => {
     try {
-      setIsLoading(true);
-      const orderData = await ordersApi.getOrderById(orderId);
+      if (!silent) setIsLoading(true);
+      
+      const [orderData] = await Promise.all([
+        ordersApi.getOrderById(orderId),
+        user?.role === 'EXECUTOR' 
+          ? ordersApi.recordView(orderId).catch(() => {}) 
+          : Promise.resolve(),
+      ]);
+      
       setOrder(orderData);
 
-      // Проверить, откликался ли уже текущий исполнитель
       if (user?.role === 'EXECUTOR' && orderData.responses) {
         const hasResponse = orderData.responses.some(
           (response: Response) => response.executorId === user.id
@@ -52,36 +59,28 @@ export default function OrderDetailPage() {
         setHasResponded(hasResponse);
       }
 
-      // Записать просмотр, если это исполнитель
-      if (user?.role === 'EXECUTOR') {
-        try {
-          await ordersApi.recordView(orderId);
-        } catch (err) {
-          // Игнорируем ошибки записи просмотра (не критично)
-          console.error('Ошибка записи просмотра:', err);
-        }
-      }
-
-      // Загрузить отклики (если это заказчик или сам исполнитель)
+      const promises: Promise<any>[] = [];
+      
       if (user?.role === 'CUSTOMER' && orderData.customerId === user.id) {
-        const responsesData = await responsesApi.getOrderResponses(orderId);
-        setResponses(responsesData);
+        promises.push(
+          responsesApi.getOrderResponses(orderId).then(data => setResponses(data))
+        );
       }
 
-      // Проверить, может ли пользователь оставить отзыв
       if (orderData.status === 'COMPLETED' && 
           (orderData.customerId === user?.id || orderData.executorId === user?.id)) {
-        try {
-          const canLeaveData = await reviewsApi.canLeaveReview(orderId);
-          setCanReview(canLeaveData.canLeave);
-        } catch {
-          setCanReview(false);
-        }
+        promises.push(
+          reviewsApi.canLeaveReview(orderId)
+            .then(data => setCanReview(data.canLeave))
+            .catch(() => setCanReview(false))
+        );
       }
+      
+      await Promise.all(promises);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Ошибка загрузки заказа');
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -90,158 +89,84 @@ export default function OrderDetailPage() {
       setActionLoading(true);
       setError(null);
       await responsesApi.createResponse(orderId);
-      
-      // Показать успешное уведомление
-      toast({
-        variant: 'success',
-        title: '✅ Отклик отправлен!',
-        description: 'Заказчик получит уведомление о вашем отклике. Вы можете отслеживать статус в разделе "Мои отклики".',
-      });
-      
-      // Установить флаг, что откликнулись
+      toast({ variant: 'success', title: '✅ Отклик отправлен!', description: 'Заказчик получит уведомление.' });
       setHasResponded(true);
-      
-      // Обновить данные заказа
-      setTimeout(() => {
-        loadOrderDetails();
-      }, 500);
+      loadOrderDetails(true);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Ошибка отправки отклика';
-      setError(errorMessage);
-      
-      toast({
-        variant: 'destructive',
-        title: '❌ Ошибка',
-        description: errorMessage,
-      });
+      const msg = err.response?.data?.error || 'Ошибка отправки отклика';
+      setError(msg);
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: msg });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleSelectExecutor = async (executorId: string) => {
-    if (!confirm('Вы уверены, что хотите выбрать этого исполнителя?')) {
-      return;
-    }
-
+    if (!confirm('Вы уверены, что хотите выбрать этого исполнителя?')) return;
     try {
       setActionLoading(true);
       await ordersApi.selectExecutor(orderId, executorId);
-      
-      toast({
-        variant: 'success',
-        title: '✅ Исполнитель выбран!',
-        description: 'Исполнитель получит уведомление и сможет приступить к работе.',
-      });
-      
-      loadOrderDetails();
+      toast({ variant: 'success', title: '✅ Исполнитель выбран!', description: 'Исполнитель получит уведомление.' });
+      loadOrderDetails(true);
     } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: '❌ Ошибка',
-        description: err.response?.data?.error || 'Ошибка выбора исполнителя',
-      });
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: err.response?.data?.error || 'Ошибка выбора' });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleCompleteOrder = async () => {
-    if (!confirm('Подтвердите, что работа выполнена и оплата получена')) {
-      return;
-    }
-
+    if (!confirm('Подтвердите, что работа выполнена и оплата получена')) return;
     try {
       setActionLoading(true);
       await ordersApi.completeOrder(orderId);
-      toast({
-        variant: 'success',
-        title: '✅ Заказ завершён!',
-        description: 'Теперь заказчик может оставить отзыв.',
-      });
-      loadOrderDetails();
+      toast({ variant: 'success', title: '✅ Заказ завершён!' });
+      loadOrderDetails(true);
     } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: '❌ Ошибка',
-        description: err.response?.data?.error || 'Ошибка завершения заказа',
-      });
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: err.response?.data?.error || 'Ошибка' });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleCancelOrder = async () => {
-    if (!confirm('Вы уверены, что хотите отменить заказ? Средства будут возвращены исполнителям.')) {
-      return;
-    }
-
+    if (!confirm('Вы уверены? Средства будут возвращены исполнителям.')) return;
     try {
       setActionLoading(true);
       await ordersApi.cancelOrder(orderId);
-      toast({
-        variant: 'success',
-        title: 'Заказ отменён',
-        description: 'Средства возвращены исполнителям.',
-      });
+      toast({ variant: 'success', title: 'Заказ отменён' });
       router.push('/customer/dashboard');
     } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: '❌ Ошибка',
-        description: err.response?.data?.error || 'Ошибка отмены заказа',
-      });
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: err.response?.data?.error || 'Ошибка' });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleStartWork = async () => {
-    if (!confirm('Подтвердите, что вы приступаете к выполнению заказа')) {
-      return;
-    }
-
+    if (!confirm('Подтвердите, что приступаете к работе')) return;
     try {
       setActionLoading(true);
       await ordersApi.startWork(orderId);
-      toast({
-        variant: 'success',
-        title: '🔧 Вы приступили к работе!',
-        description: 'Заказчик получил уведомление. Чат доступен.',
-      });
-      loadOrderDetails();
+      toast({ variant: 'success', title: '🔧 Вы приступили к работе!' });
+      loadOrderDetails(true);
     } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: '❌ Ошибка',
-        description: err.response?.data?.error || 'Ошибка начала работы',
-      });
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: err.response?.data?.error || 'Ошибка' });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleCancelWork = async () => {
-    const reason = prompt('Укажите причину отказа от заказа (необязательно):');
-    if (reason === null) {
-      return; // Пользователь отменил
-    }
-
+    const reason = prompt('Укажите причину отказа (необязательно):');
+    if (reason === null) return;
     try {
       setActionLoading(true);
       await ordersApi.cancelWork(orderId, reason || undefined);
-      toast({
-        variant: 'success',
-        title: 'Вы отказались от заказа',
-        description: 'Заказ снова доступен для откликов других исполнителей.',
-      });
-      loadOrderDetails();
+      toast({ variant: 'success', title: 'Вы отказались от заказа' });
+      loadOrderDetails(true);
     } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: '❌ Ошибка',
-        description: err.response?.data?.error || 'Ошибка отказа от заказа',
-      });
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: err.response?.data?.error || 'Ошибка' });
     } finally {
       setActionLoading(false);
     }
@@ -251,18 +176,30 @@ export default function OrderDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-muted-foreground">Загрузка...</p>
+      <div className="min-h-screen bg-gray-50/50">
+        <Header showBack />
+        <div className="container mx-auto px-4 py-8 max-w-5xl">
+          <div className="space-y-4">
+            <div className="h-8 w-48 skeleton rounded-xl" />
+            <div className="h-64 skeleton rounded-2xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Заказ не найден'}</p>
-          <Button onClick={() => router.back()}>Вернуться назад</Button>
+      <div className="min-h-screen bg-gray-50/50">
+        <Header showBack />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <XCircle className="h-10 w-10 text-red-400" />
+            </div>
+            <p className="text-red-600 font-semibold mb-4">{error || 'Заказ не найден'}</p>
+            <Button onClick={() => router.back()} variant="outline">Вернуться назад</Button>
+          </div>
         </div>
       </div>
     );
@@ -272,33 +209,28 @@ export default function OrderDetailPage() {
   const isExecutor = user.role === 'EXECUTOR';
   const isAssignedExecutor = order.executorId === user.id;
   const canRespond = isExecutor && order.status === 'PUBLISHED' && !isAssignedExecutor;
-  const budget =
-    order.budgetType === 'negotiable'
-      ? 'Договорная'
-      : `${parseFloat(order.budget).toLocaleString()} ₽`;
+  const budget = order.budgetType === 'negotiable' ? 'Договорная' : `${parseFloat(order.budget).toLocaleString()} ₽`;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-          ← Назад
-        </Button>
+    <div className="min-h-screen bg-gray-50/50">
+      <Header showBack />
 
+      <main className="container mx-auto px-4 py-8 max-w-5xl page-enter">
         {/* Order Details Card */}
-        <Card className="mb-6">
-          <CardHeader>
+        <Card className="mb-6 overflow-hidden">
+          <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <span className="badge-primary">
                     {SPECIALIZATION_LABELS[order.category]}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    order.status === 'PUBLISHED' ? 'bg-blue-100 text-blue-700' :
-                    order.status === 'IN_PROGRESS' && !order.workStartedAt ? 'bg-yellow-100 text-yellow-700' :
-                    order.status === 'IN_PROGRESS' && order.workStartedAt ? 'bg-green-100 text-green-700' :
-                    order.status === 'COMPLETED' ? 'bg-gray-100 text-gray-700' :
-                    'bg-red-100 text-red-700'
+                  <span className={`px-3 py-1 rounded-xl text-xs font-semibold ${
+                    order.status === 'PUBLISHED' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                    order.status === 'IN_PROGRESS' && !order.workStartedAt ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                    order.status === 'IN_PROGRESS' && order.workStartedAt ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                    order.status === 'COMPLETED' ? 'bg-gray-50 text-gray-600 border border-gray-100' :
+                    'bg-red-50 text-red-700 border border-red-100'
                   }`}>
                     {order.status === 'PUBLISHED' && 'Опубликован'}
                     {order.status === 'IN_PROGRESS' && !order.workStartedAt && 'Исполнитель выбран'}
@@ -307,64 +239,63 @@ export default function OrderDetailPage() {
                     {order.status === 'CANCELLED' && 'Отменён'}
                   </span>
                 </div>
-                <CardTitle className="text-2xl mb-2">{order.title}</CardTitle>
+                <CardTitle className="text-2xl font-extrabold">{order.title}</CardTitle>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-semibold mb-2">Описание</h3>
-              <p className="text-muted-foreground whitespace-pre-wrap">{order.description}</p>
+          <CardContent className="space-y-5">
+            <div className="p-4 bg-gray-50 rounded-xl">
+              <h3 className="text-sm font-bold text-gray-900 mb-2">Описание</h3>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{order.description}</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4 pt-4 border-t">
-              <div className="flex items-start gap-2">
-                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+                <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <MapPin className="h-4 w-4 text-emerald-600" />
+                </div>
                 <div>
-                  <p className="font-medium">Местоположение</p>
-                  <p className="text-sm text-muted-foreground">
-                    {order.region}, {order.address}
-                  </p>
+                  <p className="text-xs font-medium text-muted-foreground">Местоположение</p>
+                  <p className="text-sm font-semibold text-gray-900">{order.region}, {order.address}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+                <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                </div>
                 <div>
-                  <p className="font-medium">Сроки</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs font-medium text-muted-foreground">Сроки</p>
+                  <p className="text-sm font-semibold text-gray-900">
                     Начало: {new Date(order.startDate).toLocaleDateString('ru-RU')}
-                    {order.endDate && (
-                      <>
-                        <br />
-                        Окончание: {new Date(order.endDate).toLocaleDateString('ru-RU')}
-                      </>
-                    )}
+                    {order.endDate && <span className="text-muted-foreground"> — {new Date(order.endDate).toLocaleDateString('ru-RU')}</span>}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <Wallet className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl">
+                <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Wallet className="h-4 w-4 text-blue-700" />
+                </div>
                 <div>
-                  <p className="font-medium">Бюджет</p>
-                  <p className="text-lg text-primary font-semibold">{budget}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Оплата: {order.paymentMethod === 'CASH' && 'Наличные'}
+                  <p className="text-xs font-medium text-blue-600">Бюджет</p>
+                  <p className="text-lg font-extrabold text-blue-700">{budget}</p>
+                  <p className="text-xs text-blue-500">
+                    {order.paymentMethod === 'CASH' && 'Наличные'}
                     {order.paymentMethod === 'CARD' && 'На карту'}
                     {order.paymentMethod === 'BANK' && 'Безналичный'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+                <div className="w-9 h-9 bg-violet-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <User className="h-4 w-4 text-violet-600" />
+                </div>
                 <div>
-                  <p className="font-medium">Заказчик</p>
-                  <p className="text-sm text-muted-foreground">
-                    {order.customer?.fullName || 'Неизвестно'}
-                  </p>
+                  <p className="text-xs font-medium text-muted-foreground">Заказчик</p>
+                  <p className="text-sm font-semibold text-gray-900">{order.customer?.fullName || 'Неизвестно'}</p>
                   {order.customer?.organization && (
                     <p className="text-xs text-muted-foreground">{order.customer.organization}</p>
                   )}
@@ -372,10 +303,12 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            {/* Приложенные файлы */}
+            {/* Files */}
             {order.files && order.files.length > 0 && (
-              <div className="pt-4 border-t">
-                <h3 className="font-semibold mb-3">📎 Приложенные файлы</h3>
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Paperclip className="h-4 w-4" /> Приложенные файлы
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {order.files.map((file, idx) => {
                     const filename = file.split('/').pop() || file;
@@ -387,7 +320,7 @@ export default function OrderDetailPage() {
                         href={fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-2 text-sm transition-colors"
+                        className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 rounded-xl px-3 py-2 text-sm transition-all duration-200 border border-gray-100 hover:border-gray-200"
                       >
                         {isImage ? '🖼️' : '📄'} {filename}
                       </a>
@@ -397,131 +330,101 @@ export default function OrderDetailPage() {
               </div>
             )}
 
-            {/* Контакты заказчика (видны только выбранному исполнителю) */}
+            {/* Contact sections */}
             {isAssignedExecutor && order.customer && (
-              <div className="pt-4 border-t bg-blue-50 -mx-6 px-6 py-4">
-                <h3 className="font-semibold mb-3">Контакты заказчика</h3>
-                <div className="space-y-2 text-sm">
+              <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+                <h3 className="font-bold text-blue-900 mb-3">Контакты заказчика</h3>
+                <div className="space-y-2">
                   {order.customer.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      <a href={`tel:${order.customer.phone}`} className="text-primary hover:underline">
-                        {order.customer.phone}
-                      </a>
-                    </div>
+                    <a href={`tel:${order.customer.phone}`} className="flex items-center gap-2 text-sm text-blue-700 hover:underline">
+                      <Phone className="h-4 w-4" /> {order.customer.phone}
+                    </a>
                   )}
                   {order.customer.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      <a href={`mailto:${order.customer.email}`} className="text-primary hover:underline">
-                        {order.customer.email}
-                      </a>
-                    </div>
+                    <a href={`mailto:${order.customer.email}`} className="flex items-center gap-2 text-sm text-blue-700 hover:underline">
+                      <Mail className="h-4 w-4" /> {order.customer.email}
+                    </a>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Контакты исполнителя (видны заказчику после выбора) */}
             {isCustomer && order.executor && (
-              <div className="pt-4 border-t bg-green-50 -mx-6 px-6 py-4">
-                <h3 className="font-semibold mb-3">Контакты исполнителя</h3>
-                <div className="space-y-2 text-sm">
-                  <p>
-                    <strong>{order.executor.fullName}</strong>
-                    <span className="ml-2 text-muted-foreground">
-                      ⭐ {order.executor.rating.toFixed(1)} ({order.executor.completedOrders} заказов)
-                    </span>
-                  </p>
+              <div className="p-5 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
+                <h3 className="font-bold text-emerald-900 mb-3">Контакты исполнителя</h3>
+                <p className="text-sm mb-2">
+                  <strong>{order.executor.fullName}</strong>
+                  <span className="ml-2 text-muted-foreground">⭐ {order.executor.rating.toFixed(1)} ({order.executor.completedOrders} заказов)</span>
+                </p>
+                <div className="space-y-2">
                   {order.executor.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      <a href={`tel:${order.executor.phone}`} className="text-primary hover:underline">
-                        {order.executor.phone}
-                      </a>
-                    </div>
+                    <a href={`tel:${order.executor.phone}`} className="flex items-center gap-2 text-sm text-emerald-700 hover:underline">
+                      <Phone className="h-4 w-4" /> {order.executor.phone}
+                    </a>
                   )}
                   {order.executor.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      <a href={`mailto:${order.executor.email}`} className="text-primary hover:underline">
-                        {order.executor.email}
-                      </a>
-                    </div>
+                    <a href={`mailto:${order.executor.email}`} className="flex items-center gap-2 text-sm text-emerald-700 hover:underline">
+                      <Mail className="h-4 w-4" /> {order.executor.email}
+                    </a>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Баннер: Исполнитель выбран, но не приступил к работе */}
+            {/* Status banners */}
             {isAssignedExecutor && order.status === 'IN_PROGRESS' && !order.workStartedAt && (
-              <div className="pt-4 border-t bg-yellow-50 -mx-6 px-6 py-4 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">🎉</span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-yellow-900">Заказчик выбрал вас!</p>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      Вы можете приступить к выполнению заказа или отказаться.
-                    </p>
-                  </div>
+              <div className="p-5 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl border border-amber-200 flex items-start gap-4">
+                <span className="text-3xl">🎉</span>
+                <div>
+                  <p className="font-bold text-amber-900">Заказчик выбрал вас!</p>
+                  <p className="text-sm text-amber-700 mt-1">Вы можете приступить к выполнению или отказаться.</p>
                 </div>
               </div>
             )}
 
-            {/* Баннер: Работа начата */}
             {isAssignedExecutor && order.status === 'IN_PROGRESS' && order.workStartedAt && (
-              <div className="pt-4 border-t bg-green-50 -mx-6 px-6 py-4 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">🔧</span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-green-900">Вы выполняете этот заказ</p>
-                    <p className="text-sm text-green-700 mt-1">
-                      Работа начата {new Date(order.workStartedAt).toLocaleDateString('ru-RU')}. 
-                      По завершению нажмите «Заказ выполнен».
-                    </p>
-                  </div>
+              <div className="p-5 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-200 flex items-start gap-4">
+                <span className="text-3xl">🔧</span>
+                <div>
+                  <p className="font-bold text-emerald-900">Вы выполняете этот заказ</p>
+                  <p className="text-sm text-emerald-700 mt-1">
+                    Работа начата {new Date(order.workStartedAt).toLocaleDateString('ru-RU')}.
+                  </p>
                 </div>
               </div>
             )}
 
-            {/* Баннер: Для заказчика — ожидание начала работы */}
             {isCustomer && order.status === 'IN_PROGRESS' && !order.workStartedAt && order.executor && (
-              <div className="pt-4 border-t bg-yellow-50 -mx-6 px-6 py-4 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">⏳</span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-yellow-900">Ожидание начала работы</p>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      Исполнитель {order.executor.fullName} ещё не приступил к выполнению заказа.
-                    </p>
-                  </div>
+              <div className="p-5 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl border border-amber-200 flex items-start gap-4">
+                <span className="text-3xl">⏳</span>
+                <div>
+                  <p className="font-bold text-amber-900">Ожидание начала работы</p>
+                  <p className="text-sm text-amber-700 mt-1">Исполнитель {order.executor.fullName} ещё не приступил.</p>
                 </div>
               </div>
             )}
 
             {/* Actions */}
-            <div className="flex gap-2 pt-4 flex-wrap">
+            <div className="flex gap-3 pt-2 flex-wrap">
               {canRespond && !hasResponded && (
-                <Button onClick={handleRespond} disabled={actionLoading} className="flex-1">
-                  {actionLoading ? 'Отправка...' : 'Откликнуться на заказ'}
+                <Button onClick={handleRespond} disabled={actionLoading} className="flex-1" size="lg">
+                  {actionLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Отправка...
+                    </div>
+                  ) : 'Откликнуться на заказ'}
                 </Button>
               )}
               
               {hasResponded && !isAssignedExecutor && (
-                <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
+                <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-4">
+                  <CheckCircle className="h-8 w-8 text-emerald-500 flex-shrink-0" />
                   <div className="flex-1">
-                    <p className="font-semibold text-green-900">Отклик отправлен!</p>
-                    <p className="text-sm text-green-700">
-                      Заказчик рассмотрит ваш отклик и свяжется с вами
-                    </p>
+                    <p className="font-bold text-emerald-900">Отклик отправлен!</p>
+                    <p className="text-sm text-emerald-700">Заказчик рассмотрит ваш отклик</p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => router.push('/executor/dashboard')}
-                    className="border-green-300 hover:bg-green-100"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => router.push('/executor/dashboard')} className="border-emerald-200 hover:bg-emerald-100">
                     Мои отклики
                   </Button>
                 </div>
@@ -529,8 +432,8 @@ export default function OrderDetailPage() {
 
               {isAssignedExecutor && order.status === 'IN_PROGRESS' && !order.workStartedAt && (
                 <>
-                  <Button onClick={handleStartWork} disabled={actionLoading} className="flex-1" size="lg">
-                    ▶ Приступить к работе
+                  <Button onClick={handleStartWork} disabled={actionLoading} className="flex-1 gap-2" size="lg" variant="success">
+                    <Play className="h-5 w-5" /> Приступить к работе
                   </Button>
                   <Button onClick={handleCancelWork} disabled={actionLoading} variant="destructive" size="lg">
                     Отказаться
@@ -540,85 +443,95 @@ export default function OrderDetailPage() {
 
               {isAssignedExecutor && order.status === 'IN_PROGRESS' && order.workStartedAt && (
                 <>
-                  <Button onClick={handleCompleteOrder} disabled={actionLoading} className="flex-1" size="lg">
-                    ✅ Заказ выполнен
+                  <Button onClick={handleCompleteOrder} disabled={actionLoading} className="flex-1 gap-2" size="lg" variant="success">
+                    <CheckCircle className="h-5 w-5" /> Заказ выполнен
                   </Button>
                   <Button onClick={handleCancelWork} disabled={actionLoading} variant="outline">
-                    Отказаться от заказа
+                    Отказаться
                   </Button>
                 </>
               )}
 
               {isCustomer && order.status === 'PUBLISHED' && (
-                <Button onClick={handleCancelOrder} disabled={actionLoading} variant="destructive">
+                <Button onClick={handleCancelOrder} disabled={actionLoading} variant="destructive" size="sm">
                   Отменить заказ
                 </Button>
               )}
 
-              {/* Кнопка оставить отзыв после завершения */}
               {order.status === 'COMPLETED' && (isCustomer || isAssignedExecutor) && canReview && (
-                <Button
-                  onClick={() => router.push(`/orders/${orderId}/review`)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  ⭐ Оставить отзыв
+                <Button onClick={() => router.push(`/orders/${orderId}/review`)} variant="outline" className="flex-1 gap-2">
+                  <Star className="h-4 w-4" /> Оставить отзыв
                 </Button>
               )}
               {order.status === 'COMPLETED' && (isCustomer || isAssignedExecutor) && !canReview && (
-                <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                  <p className="text-sm text-green-700">✅ Отзыв оставлен</p>
+                <div className="flex-1 bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
+                  <p className="text-sm text-emerald-700 font-medium">✅ Отзыв оставлен</p>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Responses Section (для заказчика) */}
+        {/* Responses Section */}
         {isCustomer && responses.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Отклики ({responses.length})</CardTitle>
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Отклики ({responses.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {responses.map((response) => (
-                  <div key={response.id} className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{response.executor?.fullName}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          ⭐ {response.executor?.rating.toFixed(1)} • {response.executor?.completedOrders} заказов
-                        </p>
-                        {response.executor?.executorProfile?.bio && (
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {response.executor.executorProfile.bio}
-                          </p>
+                  <div key={response.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-soft transition-all duration-200">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-3">
+                        {response.executor?.photo ? (
+                          <img
+                            src={response.executor.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${response.executor.photo}` : response.executor.photo}
+                            alt=""
+                            className="w-11 h-11 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-violet-500 rounded-xl flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">{response.executor?.fullName?.[0]}</span>
+                          </div>
                         )}
+                        <div>
+                          <h4 className="font-bold text-gray-900">{response.executor?.fullName}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            ⭐ {response.executor?.rating.toFixed(1)} • {response.executor?.completedOrders} заказов
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="text-xs text-muted-foreground mb-3">
-                      Откликнулся: {new Date(response.createdAt).toLocaleString('ru-RU')}
-                    </div>
+                    {response.executor?.executorProfile?.shortDescription && (
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{response.executor.executorProfile.shortDescription}</p>
+                    )}
 
-                    {order.status === 'PUBLISHED' && response.status === 'PENDING' && (
-                      <Button
-                        onClick={() => handleSelectExecutor(response.executorId)}
-                        disabled={actionLoading}
-                        size="sm"
-                      >
-                        Выбрать исполнителя
+                    {response.executor?.executorProfile?.specializations && response.executor.executorProfile.specializations.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {response.executor.executorProfile.specializations.map((spec: string) => (
+                          <span key={spec} className="badge-primary">{SPECIALIZATION_LABELS[spec] || spec}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <Button variant="outline" size="sm" onClick={() => router.push(`/profile/${response.executorId}`)}>
+                        Профиль
                       </Button>
-                    )}
-
-                    {response.status === 'ACCEPTED' && (
-                      <span className="text-sm text-green-600 font-medium">✓ Выбран</span>
-                    )}
-
-                    {response.status === 'REJECTED' && (
-                      <span className="text-sm text-gray-500">Отклонён</span>
-                    )}
+                      {order.status === 'PUBLISHED' && response.status === 'PENDING' && (
+                        <Button onClick={() => handleSelectExecutor(response.executorId)} disabled={actionLoading} size="sm">
+                          Выбрать исполнителя
+                        </Button>
+                      )}
+                      {response.status === 'ACCEPTED' && (
+                        <span className="badge-success">✓ Выбран</span>
+                      )}
+                      {response.status === 'REJECTED' && (
+                        <span className="badge-neutral">Отклонён</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -627,18 +540,18 @@ export default function OrderDetailPage() {
         )}
 
         {isCustomer && responses.length === 0 && order.status === 'PUBLISHED' && (
-          <Card>
-            <CardContent className="py-8 text-center">
+          <Card className="mb-6 border-dashed border-2">
+            <CardContent className="py-10 text-center">
               <p className="text-muted-foreground">Пока нет откликов на этот заказ</p>
             </CardContent>
           </Card>
         )}
 
-        {/* Чат - показывается только когда заказ в работе */}
+        {/* Chat */}
         {order.status === 'IN_PROGRESS' && (isCustomer || isAssignedExecutor) && (
           <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-blue-600" />
               Чат с {isCustomer ? 'исполнителем' : 'заказчиком'}
             </h2>
             <ChatBox 
@@ -648,20 +561,16 @@ export default function OrderDetailPage() {
           </div>
         )}
 
-        {/* Для завершённых заказов — чат закрыт */}
         {order.status === 'COMPLETED' && (isCustomer || isAssignedExecutor) && (
           <div className="mt-6">
-            <Card className="p-6 text-center bg-gray-50">
-              <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <Card className="p-6 text-center bg-gray-50/80 border-dashed border-2">
+              <MessageCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
               <p className="text-muted-foreground font-medium">Чат завершён</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Заказ выполнен. Переписка по этому заказу закрыта.
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">Переписка по этому заказу закрыта.</p>
             </Card>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
-

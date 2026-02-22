@@ -6,24 +6,21 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { OrderMap } from '@/components/orders/OrderMap';
 import { OrderFilters } from '@/components/orders/OrderFilters';
+import { Header } from '@/components/layout/Header';
 import { ordersApi } from '@/lib/api/orders';
 import { Order, OrderFilters as Filters } from '@/lib/types';
-import { Map, List } from 'lucide-react';
+import { Map, List, Info } from 'lucide-react';
 
 export default function OrdersMapPage() {
-  const { user, logout, isHydrated } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<Filters>({});
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
   useEffect(() => {
     if (!isHydrated) return;
-    if (!user) {
-      router.push('/login');
-      return;
-    }
+    if (!user) { router.push('/login'); return; }
     loadOrders();
   }, [user, filters, isHydrated]);
 
@@ -39,110 +36,51 @@ export default function OrdersMapPage() {
     }
   };
 
-  const handleApplyFilters = (newFilters: Filters) => {
-    setFilters(newFilters);
-  };
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
-  const goBack = () => {
-    if (user?.role === 'CUSTOMER') {
-      router.push('/customer/dashboard');
-    } else {
-      router.push('/executor/dashboard');
-    }
-  };
-
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="Монтаж" className="h-10 w-10 rounded-full object-cover" />
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={goBack}>
-              Назад
-            </Button>
-            <span className="text-sm text-muted-foreground">{user.fullName}</span>
-            <Button variant="outline" onClick={handleLogout}>
-              Выйти
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50/50">
+      <Header showBack />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex justify-between items-center">
+      <main className="container mx-auto px-4 py-8 page-enter">
+        <div className="mb-8 flex justify-between items-start">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Карта заказов</h2>
-            <p className="text-muted-foreground">
-              Найдено заказов: {orders.length}
-            </p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-1">Карта заказов</h1>
+            <p className="text-muted-foreground">Найдено: <strong>{orders.length}</strong></p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'outline'}
-              onClick={() => setViewMode('map')}
-            >
-              <Map className="h-4 w-4 mr-2" />
-              Карта
+          <div className="flex bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
+            <Button variant="default" size="sm" className="gap-2 rounded-lg">
+              <Map className="w-4 h-4" /> Карта
             </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              onClick={() => router.push('/orders')}
-            >
-              <List className="h-4 w-4 mr-2" />
-              Список
+            <Button variant="ghost" size="sm" onClick={() => router.push('/orders')} className="gap-2 rounded-lg">
+              <List className="w-4 h-4" /> Список
             </Button>
           </div>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <OrderFilters onApply={handleApplyFilters} initialFilters={filters} />
+            <OrderFilters onApply={(f) => setFilters(f)} initialFilters={filters} />
           </div>
-
-          {/* Map */}
           <div className="lg:col-span-3">
             {isLoading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Загрузка заказов...</p>
-              </div>
+              <div className="h-96 skeleton rounded-2xl" />
             ) : (
-              <OrderMap
-                orders={orders}
-                onOrderSelect={(orderId) => router.push(`/orders/${orderId}`)}
-              />
+              <OrderMap orders={orders} onOrderSelect={(orderId) => router.push(`/orders/${orderId}`)} />
             )}
           </div>
         </div>
 
-        {/* Info */}
-        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold mb-2">ℹ️ Информация</h3>
-          <p className="text-sm text-muted-foreground">
-            На карте отображаются заказы с указанными координатами. Для полной интеграции с
-            Яндекс.Картами необходимо получить API-ключ на{' '}
-            <a
-              href="https://developer.tech.yandex.ru/services/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              developer.tech.yandex.ru
-            </a>{' '}
-            и добавить его в конфигурацию приложения.
-          </p>
+        <div className="mt-8 p-5 bg-blue-50/80 border border-blue-100 rounded-2xl flex items-start gap-3">
+          <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-bold text-blue-900 text-sm mb-1">Информация</h3>
+            <p className="text-sm text-blue-700">
+              На карте отображаются заказы с указанными координатами.
+            </p>
+          </div>
         </div>
       </main>
     </div>
   );
 }
-

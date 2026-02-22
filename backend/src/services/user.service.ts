@@ -28,6 +28,8 @@ export class UserService {
     if (data.address !== undefined) updateData.address = data.address;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.messengers) updateData.messengers = data.messengers as any;
+    if (data.about !== undefined) updateData.about = data.about;
+    if (data.website !== undefined) updateData.website = data.website;
     if (data.inn !== undefined) updateData.inn = data.inn;
     if (data.ogrn !== undefined) updateData.ogrn = data.ogrn;
 

@@ -124,8 +124,8 @@ export class ResponseService {
       },
     });
 
-    // Отправить уведомление заказчику о новом отклике
-    await notificationService.notifyOrderResponse(
+    // Отправить уведомление заказчику о новом отклике (fire-and-forget)
+    notificationService.notifyOrderResponse(
       order.customerId,
       executor.fullName,
       orderId,
