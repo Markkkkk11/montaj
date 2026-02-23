@@ -1,5 +1,8 @@
 import prisma from '../config/database';
 import notificationService from './notification.service';
+import { config } from '../config/env';
+import fs from 'fs';
+import path from 'path';
 
 interface CreateOrderData {
   customerId: string;
@@ -710,7 +713,75 @@ export class OrderService {
       order.title
     ).catch(err => console.error('Notification error:', err));
 
+    // Удаляем файлы заказа и чата с диска (fire-and-forget)
+    this.cleanupOrderFiles(orderId, order.files || [])
+      .catch(err => console.error('File cleanup error:', err));
+
     return updatedOrder;
+  }
+
+  /**
+   * Удалить все файлы заказа и чата с диска после завершения
+   */
+  private async cleanupOrderFiles(orderId: string, orderFiles: string[]): Promise<void> {
+    const filesToDelete: string[] = [];
+
+    // 1. Файлы прикреплённые к заказу
+    for (const fileUrl of orderFiles) {
+      const filename = fileUrl.startsWith('/uploads/') ? fileUrl.replace('/uploads/', '') : path.basename(fileUrl);
+      const filePath = path.join(config.uploadDir, filename);
+      filesToDelete.push(filePath);
+    }
+
+    // 2. Файлы из чата по этому заказу
+    const chatMessages = await prisma.message.findMany({
+      where: {
+        orderId,
+        fileUrl: { not: null },
+      },
+      select: { fileUrl: true },
+    });
+
+    for (const msg of chatMessages) {
+      if (msg.fileUrl) {
+        const filename = msg.fileUrl.startsWith('/uploads/') ? msg.fileUrl.replace('/uploads/', '') : path.basename(msg.fileUrl);
+        const filePath = path.join(config.uploadDir, filename);
+        filesToDelete.push(filePath);
+      }
+    }
+
+    // 3. Удаляем файлы с диска
+    let deletedCount = 0;
+    for (const filePath of filesToDelete) {
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          deletedCount++;
+        }
+      } catch (err) {
+        console.error(`Failed to delete file: ${filePath}`, err);
+      }
+    }
+
+    // 4. Очищаем массив файлов в заказе (сами URL)
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { files: [] },
+    });
+
+    // 5. Очищаем ссылки на файлы в сообщениях чата
+    await prisma.message.updateMany({
+      where: {
+        orderId,
+        fileUrl: { not: null },
+      },
+      data: {
+        fileUrl: null,
+        fileName: null,
+      },
+    });
+
+    console.log(`🗑️ Order ${orderId}: deleted ${deletedCount} files from disk`);
   }
 
   /**
@@ -772,6 +843,12 @@ export class OrderService {
         closedAt: new Date(),
       },
     });
+
+    // Удаляем файлы закрытых заказов
+    for (const order of expiredOrders) {
+      this.cleanupOrderFiles(order.id, order.files || [])
+        .catch(err => console.error('File cleanup error (auto-close):', err));
+    }
 
     return expiredOrders.length;
   }
