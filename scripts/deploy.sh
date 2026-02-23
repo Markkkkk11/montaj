@@ -26,7 +26,7 @@ mkdir -p "$UPLOAD_DIR"
 # 3. Бэкенд
 echo "📦 Обновление бэкенда..."
 cd "$APP_DIR/backend"
-npm install --production=false
+npm install
 npx prisma generate
 npx prisma db push --accept-data-loss
 npm run build

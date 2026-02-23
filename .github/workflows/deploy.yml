@@ -19,4 +19,3 @@ jobs:
           script: |
             cd /var/www/svmontaj
             bash scripts/deploy.sh
-# CI/CD test Mon Feb 23 07:21:42 PM MSK 2026
