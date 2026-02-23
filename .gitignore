@@ -52,3 +52,4 @@ backend/prisma/dev.db-journal
 
 # Docker
 docker-compose.override.yml
+*.env.backup
