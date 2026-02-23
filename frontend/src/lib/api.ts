@@ -45,10 +45,10 @@ api.interceptors.response.use(
       
       if (!isAuthRequest) {
         // Токен истёк — очищаем и редиректим на логин
-        localStorage.removeItem('token');
+      localStorage.removeItem('token');
         // Не перезагружаем, если уже на странице логина
         if (!window.location.pathname.startsWith('/login')) {
-          window.location.href = '/login';
+      window.location.href = '/login';
         }
       }
     }

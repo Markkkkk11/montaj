@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { X, Mail, Phone, MessageCircle, ChevronRight, ChevronDown, Shield, Clock, Star, Zap, ArrowRight, HelpCircle } from 'lucide-react';
+import { X, Mail, MessageCircle, ChevronRight, ChevronDown, Shield, Clock, Star, Zap, ArrowRight, HelpCircle } from 'lucide-react';
 
 const SPECIALIZATIONS = [
   {
@@ -100,11 +100,19 @@ const FAQ_ITEMS = [
   },
   {
     question: 'Как стать Исполнителем?',
-    answer: 'В меню выберите кнопку «Для Исполнителя», зарегистрируйтесь как исполнитель — организация, ИП или физическое лицо (самозанятый), заполните все необходимые данные. После модерации вы получите доступ в личный кабинет, где сможете видеть заказы и выбирать их по своим специализациям в выбранном регионе.',
+    answer: 'На главной странице нажмите кнопку «Я исполнитель» или «Регистрация». Выберите роль «Исполнитель», заполните ФИО, номер телефона, пароль и город. После регистрации подтвердите номер телефона — вам поступит звонок, введите последние 4 цифры входящего номера. Затем войдите в личный кабинет и заполните профиль исполнителя: укажите специализации, город работы и описание опыта. После проверки профиля модератором вы получите доступ к заказам в выбранном городе. При регистрации вы бесплатно получаете тариф «Премиум» на 30 дней.',
   },
   {
     question: 'Как стать Заказчиком?',
-    answer: 'В меню выберите кнопку «Для Заказчика», зарегистрируйтесь как заказчик — ООО, ИП или физическое лицо (самозанятый), заполните все необходимые данные. После модерации вы получите доступ в личный кабинет, где сможете создавать заказы по выбранной специализации.',
+    answer: 'На главной странице нажмите кнопку «Разместить заказ» или «Регистрация». Выберите роль «Заказчик», заполните ФИО, номер телефона, пароль и город. После регистрации подтвердите номер телефона — вам поступит звонок, введите последние 4 цифры входящего номера. Затем войдите в личный кабинет — вы сразу можете создавать заказы. Укажите категорию работ, описание, город, адрес объекта, бюджет и сроки. При необходимости прикрепите фото, чертежи или документы. Размещение заказов бесплатное.',
+  },
+  {
+    question: 'Как работать Исполнителю на сайте?',
+    answer: 'Пошаговая инструкция для исполнителя:\n\n1. После входа в личный кабинет нажмите «Заказы» — откроется список доступных заказов в вашем городе и по вашим специализациям.\n2. Выберите подходящий заказ и нажмите «Подробнее» — откроется полная информация: описание работ, адрес, бюджет, сроки и прикреплённые документы.\n3. Если заказ вам подходит, нажмите кнопку «Откликнуться на заказ». Стоимость отклика зависит от вашего тарифа (Стандарт — 150₽, Комфорт — 500₽ при выборе, Премиум — бесплатно).\n4. Дождитесь, пока заказчик рассмотрит ваш отклик. Статус можно отслеживать в разделе «Мои отклики» в личном кабинете.\n5. Когда заказчик выберет вас — заказ появится в разделе «Активные заказы». Вам станут доступны контакты заказчика, а также чат для общения.\n6. Перед началом работ откройте заказ и нажмите кнопку «Приступить к работе» — это зафиксирует начало выполнения.\n7. После завершения всех работ и получения оплаты нажмите кнопку «Заказ выполнен» — заказ будет закрыт.\n8. После завершения заказа вы можете оставить отзыв о заказчике, нажав «Оставить отзыв».',
+  },
+  {
+    question: 'Как работать Заказчику на сайте?',
+    answer: 'Пошаговая инструкция для заказчика:\n\n1. После входа в личный кабинет нажмите «Создать заказ».\n2. Заполните форму: выберите категорию работ, укажите заголовок, подробное описание, город, адрес объекта (выберите из подсказок), даты начала и окончания работ, бюджет и способ оплаты. При необходимости прикрепите фото, чертежи или документы (до 5 файлов).\n3. Нажмите «Создать заказ» — заявка будет опубликована и станет видна исполнителям.\n4. Дождитесь откликов от специалистов. Вы получите уведомление о каждом новом отклике.\n5. Откройте заказ и просмотрите список откликнувшихся исполнителей. Нажмите «Профиль», чтобы изучить опыт, рейтинг и отзывы каждого специалиста.\n6. Выберите подходящего исполнителя, нажав кнопку «Выбрать исполнителя» — после этого вам станут доступны его контакты (телефон, email) и откроется чат для общения.\n7. Исполнитель нажмёт «Приступить к работе», а после завершения — «Заказ выполнен». Вы сможете отслеживать статус заказа в личном кабинете.\n8. После завершения заказа оставьте отзыв об исполнителе, нажав «Оставить отзыв» — это поможет другим заказчикам.',
   },
   {
     question: 'Как быстро откликаются на Заказ?',
@@ -156,9 +164,9 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/20">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
-            <img src="/logo.jpg" alt="SVM" className="h-11 w-11 rounded-full object-cover ring-2 ring-white shadow-soft transition-transform duration-300 group-hover:scale-105" />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent hidden sm:inline">
-              SVM
+            <img src="/logo.jpg" alt="SVMontaj" className="h-11 w-11 rounded-full object-cover ring-2 ring-white shadow-soft transition-transform duration-300 group-hover:scale-105" />
+            <span className="text-xl font-bold hidden sm:inline">
+              <span className="text-blue-600">SV</span><span className="text-red-500">Montaj</span>
             </span>
           </Link>
           <div className="flex gap-3">
@@ -198,21 +206,21 @@ export default function Home() {
             <p className="text-lg md:text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
               Проверенные специалисты по установке окон, дверей, потолков, кондиционеров
               и другим монтажным работам — рядом с вами
-            </p>
+        </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/register?role=customer">
+          <Link href="/register?role=customer">
                 <Button size="xl" className="w-full sm:w-auto gap-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 shadow-xl shadow-blue-500/25">
                   Разместить заказ
                   <ArrowRight className="h-5 w-5" />
                 </Button>
-              </Link>
-              <Link href="/register?role=executor">
+          </Link>
+          <Link href="/register?role=executor">
                 <Button size="xl" variant="outline" className="w-full sm:w-auto gap-2 border-2">
-                  Стать исполнителем
+              Стать исполнителем
                   <ChevronRight className="h-5 w-5" />
-                </Button>
-              </Link>
+            </Button>
+          </Link>
             </div>
           </div>
         </div>
@@ -415,7 +423,7 @@ export default function Home() {
               <div
                 key={index}
                 className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-soft"
-              >
+            >
                 <button
                   onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
                   className="w-full flex items-center justify-between p-5 text-left gap-4"
@@ -437,8 +445,8 @@ export default function Home() {
                     <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{item.answer}</p>
                   </div>
                 </div>
-              </div>
-            ))}
+            </div>
+          ))}
           </div>
         </div>
       </section>
@@ -453,23 +461,14 @@ export default function Home() {
                 <CardDescription className="text-base">Есть вопросы? Свяжитесь с нами</CardDescription>
               </CardHeader>
               <CardContent className="px-8 pb-8">
-                <div className="grid md:grid-cols-3 gap-4">
-                  <a href="mailto:SVMontaj24@yandex.ru" className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-all duration-200 group hover:shadow-soft">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-all duration-200 group hover:shadow-soft">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                       <Mail className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-gray-900">Email</p>
-                      <p className="text-xs text-muted-foreground">SVMontaj24</p>
-                    </div>
-                  </a>
-                  <a href="tel:+79000000000" className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl hover:bg-emerald-100 transition-all duration-200 group hover:shadow-soft">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                      <Phone className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Телефон</p>
-                      <p className="text-xs text-muted-foreground">Позвоните нам</p>
+                      <p className="text-xs text-muted-foreground">SVMontaj24@mail.ru</p>
                     </div>
                   </a>
                   <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-violet-50 rounded-2xl hover:bg-violet-100 transition-all duration-200 group hover:shadow-soft">
@@ -493,11 +492,11 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.jpg" alt="SVM" className="h-8 w-8 rounded-full object-cover" />
-              <span className="font-bold text-gray-900">SVM</span>
+              <img src="/logo.jpg" alt="SVMontaj" className="h-8 w-8 rounded-full object-cover" />
+              <span className="font-bold"><span className="text-blue-600">SV</span><span className="text-red-500">Montaj</span></span>
             </div>
             <p className="text-sm text-muted-foreground">
-              &copy; 2026 SVM. Все права защищены.
+              &copy; 2026 SVMontaj. Все права защищены.
             </p>
           </div>
         </div>

@@ -9,13 +9,15 @@ import { OrderCard } from '@/components/orders/OrderCard';
 import { Header } from '@/components/layout/Header';
 import { ordersApi } from '@/lib/api/orders';
 import { Order } from '@/lib/types';
-import { Plus, FileText, User, Star, Mail, MessageCircle, ArrowRight, TrendingUp, Package } from 'lucide-react';
+import { Plus, FileText, User, Star, Mail, MessageCircle, ArrowRight, TrendingUp, Package, ChevronDown } from 'lucide-react';
 
 export default function CustomerDashboard() {
   const { user, isHydrated } = useAuthStore();
   const router = useRouter();
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAllActive, setShowAllActive] = useState(false);
+  const [showAllCompleted, setShowAllCompleted] = useState(false);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -216,7 +218,7 @@ export default function CustomerDashboard() {
             <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
           </div>
           <div className="flex gap-4">
-            <a href="mailto:SVMontaj24@yandex.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+            <a href="mailto:SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
               <Mail className="h-4 w-4" /> Email
             </a>
             <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
@@ -253,11 +255,22 @@ export default function CustomerDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 gap-4 stagger-children">
-                {activeOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} isCustomer={true} />
-                ))}
-              </div>
+              <>
+                <div className="grid md:grid-cols-2 gap-4 stagger-children">
+                  {(showAllActive ? activeOrders : activeOrders.slice(0, 4)).map((order) => (
+                    <OrderCard key={order.id} order={order} isCustomer={true} />
+                  ))}
+                </div>
+                {activeOrders.length > 4 && (
+                  <button
+                    onClick={() => setShowAllActive(!showAllActive)}
+                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 bg-blue-50/80 hover:bg-blue-100 rounded-2xl transition-all duration-300 group"
+                  >
+                    {showAllActive ? 'Скрыть' : `Показать все (${activeOrders.length})`}
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllActive ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -270,10 +283,19 @@ export default function CustomerDashboard() {
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-4 stagger-children">
-                {completedOrders.slice(0, 4).map((order) => (
+                {(showAllCompleted ? completedOrders : completedOrders.slice(0, 4)).map((order) => (
                   <OrderCard key={order.id} order={order} isCustomer={true} />
                 ))}
               </div>
+              {completedOrders.length > 4 && (
+                <button
+                  onClick={() => setShowAllCompleted(!showAllCompleted)}
+                  className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-2xl transition-all duration-300 group"
+                >
+                  {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+                </button>
+              )}
             </div>
           )}
         </div>

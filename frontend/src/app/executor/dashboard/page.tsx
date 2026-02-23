@@ -11,7 +11,7 @@ import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
 import { TARIFF_LABELS, isExecutorProfileComplete } from '@/lib/utils';
-import { Wallet, FileText, User, Star, Search, Mail, MessageCircle, ArrowRight, TrendingUp, Zap, Package, ChevronRight, Gift, X } from 'lucide-react';
+import { Wallet, FileText, User, Star, Search, Mail, MessageCircle, ArrowRight, TrendingUp, Zap, Package, ChevronRight, ChevronDown, Gift, X } from 'lucide-react';
 
 export default function ExecutorDashboard() {
   const { user, logout, isHydrated } = useAuthStore();
@@ -20,6 +20,8 @@ export default function ExecutorDashboard() {
   const [myResponses, setMyResponses] = useState<Response[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bonusBannerClosed, setBonusBannerClosed] = useState(false);
+  const [showAllActive, setShowAllActive] = useState(false);
+  const [showAllCompleted, setShowAllCompleted] = useState(false);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -254,7 +256,7 @@ export default function ExecutorDashboard() {
             <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
           </div>
           <div className="flex gap-4">
-            <a href="mailto:SVMontaj24@yandex.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+            <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
               <Mail className="h-4 w-4" /> Email
             </a>
             <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
@@ -467,11 +469,22 @@ export default function ExecutorDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 gap-4 stagger-children">
-                {activeOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} />
-                ))}
-              </div>
+              <>
+                <div className="grid md:grid-cols-2 gap-4 stagger-children">
+                  {(showAllActive ? activeOrders : activeOrders.slice(0, 4)).map((order) => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
+                </div>
+                {activeOrders.length > 4 && (
+                  <button
+                    onClick={() => setShowAllActive(!showAllActive)}
+                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 bg-blue-50/80 hover:bg-blue-100 rounded-2xl transition-all duration-300 group"
+                  >
+                    {showAllActive ? 'Скрыть' : `Показать все (${activeOrders.length})`}
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllActive ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -490,11 +503,22 @@ export default function ExecutorDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid md:grid-cols-2 gap-4 stagger-children">
-                {completedOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} />
-                ))}
-              </div>
+              <>
+                <div className="grid md:grid-cols-2 gap-4 stagger-children">
+                  {(showAllCompleted ? completedOrders : completedOrders.slice(0, 4)).map((order) => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
+                </div>
+                {completedOrders.length > 4 && (
+                  <button
+                    onClick={() => setShowAllCompleted(!showAllCompleted)}
+                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-2xl transition-all duration-300 group"
+                  >
+                    {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

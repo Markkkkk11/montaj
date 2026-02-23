@@ -248,8 +248,18 @@ export default function EditProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="region">Регион работы *</Label>
-                <Input id="region" value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Москва и МО" />
+                <Label htmlFor="region">Город работы *</Label>
+                <select
+                  id="region"
+                  className="w-full mt-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all duration-200"
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                >
+                  <option value="">Выберите город</option>
+                  <option value="Москва">Москва</option>
+                  <option value="Санкт-Петербург">Санкт-Петербург</option>
+                  <option value="Краснодар">Краснодар</option>
+                </select>
               </div>
 
               <div className="space-y-1.5">

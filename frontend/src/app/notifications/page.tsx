@@ -117,15 +117,15 @@ export default function NotificationsPage() {
 
       <main className="container mx-auto px-4 py-8 max-w-3xl page-enter">
         <div className="mb-8 flex items-center justify-between">
-          <div>
+            <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-3">
               <Bell className="h-7 w-7" /> Уведомления
             </h1>
-            {unreadCount > 0 && (
+              {unreadCount > 0 && (
               <p className="text-sm text-muted-foreground mt-1">
                 Непрочитанных: <strong className="text-blue-600">{unreadCount}</strong>
-              </p>
-            )}
+                </p>
+              )}
           </div>
           {unreadCount > 0 && (
             <Button onClick={handleMarkAllAsRead} variant="outline" size="sm" className="gap-2">
@@ -165,8 +165,8 @@ export default function NotificationsPage() {
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm ${!notification.read ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
-                            {notification.title}
-                          </p>
+                          {notification.title}
+                        </p>
                           <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                             {getNotificationTypeLabel(notification.type)}
                           </span>

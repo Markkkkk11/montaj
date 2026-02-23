@@ -12,7 +12,7 @@ export default function TermsPage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/">
-            <img src="/logo.jpg" alt="SVM" className="h-14 w-14 rounded-full object-cover" />
+            <img src="/logo.jpg" alt="SVMontaj" className="h-14 w-14 rounded-full object-cover" />
           </Link>
           <Link href="/">
             <Button variant="ghost">
@@ -26,13 +26,13 @@ export default function TermsPage() {
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Правила работы на платформе «SVM»</CardTitle>
+            <CardTitle className="text-2xl">Правила работы на платформе «SVMontaj»</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none space-y-6">
             <section>
               <h3 className="text-lg font-semibold mb-2">1. Общие положения</h3>
               <p className="text-muted-foreground">
-                Платформа «SVM» — это сервис, который помогает заказчикам найти проверенных специалистов по монтажным работам,
+                Платформа «SVMontaj» — это сервис, который помогает заказчикам найти проверенных специалистов по монтажным работам,
                 а исполнителям — получать заказы. Регистрируясь на платформе, вы соглашаетесь с настоящими правилами.
               </p>
             </section>
@@ -89,7 +89,7 @@ export default function TermsPage() {
             <section>
               <h3 className="text-lg font-semibold mb-2">7. Обратная связь</h3>
               <p className="text-muted-foreground">
-                По всем вопросам обращайтесь: <a href="mailto:SVMontaj24@yandex.ru" className="text-primary hover:underline">SVMontaj24@yandex.ru</a>
+                По всем вопросам обращайтесь: <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="text-primary hover:underline">SVMontaj24@mail.ru</a>
               </p>
             </section>
           </CardContent>

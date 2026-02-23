@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Montaj - Платформа заказа монтажных услуг',
-    short_name: 'Montaj',
+    name: 'SVMontaj - Платформа заказа монтажных услуг',
+    short_name: 'SVMontaj',
     description: 'Платформа для поиска и заказа специалистов по монтажным работам',
     start_url: '/',
     display: 'standalone',
@@ -11,14 +11,14 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#007bff',
     icons: [
       {
-        src: '/icon-192.png',
+        src: '/logo.jpg',
         sizes: '192x192',
-        type: 'image/png',
+        type: 'image/jpeg',
       },
       {
-        src: '/icon-512.png',
+        src: '/logo.jpg',
         sizes: '512x512',
-        type: 'image/png',
+        type: 'image/jpeg',
       },
     ],
   };

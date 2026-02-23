@@ -123,8 +123,19 @@ export default function CreateOrderPage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="region">Регион *</Label>
-                  <Input id="region" required placeholder="Москва" value={formData.region || ''} onChange={(e) => { setFormData({ ...formData, region: e.target.value }); setAddressError(''); }} />
+                  <Label htmlFor="region">Город *</Label>
+                  <select
+                    id="region"
+                    required
+                    className={selectClassName}
+                    value={formData.region || ''}
+                    onChange={(e) => { setFormData({ ...formData, region: e.target.value }); setAddressError(''); }}
+                  >
+                    <option value="">Выберите город</option>
+                    <option value="Москва">Москва</option>
+                    <option value="Санкт-Петербург">Санкт-Петербург</option>
+                    <option value="Краснодар">Краснодар</option>
+                  </select>
                 </div>
                 <div>
                   <Label htmlFor="address">Адрес объекта *</Label>

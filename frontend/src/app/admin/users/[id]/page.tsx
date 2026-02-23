@@ -51,7 +51,7 @@ export default function AdminUserEditPage() {
       setEmail(data.email || '');
       setCity(data.city || '');
       setStatus(data.status || 'ACTIVE');
-      setRating(data.rating?.toString() || '3.0');
+      setRating(data.rating?.toString() || '0');
       setBalance(data.balance?.amount?.toString() || '0');
       setBonusBalance(data.balance?.bonusAmount?.toString() || '0');
       setTariffType(data.subscription?.tariffType || 'STANDARD');

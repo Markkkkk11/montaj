@@ -19,7 +19,7 @@ export default function AdminSettingsPage() {
 
   // Настройки платформы (локальные, для отображения)
   const [platformSettings, setPlatformSettings] = useState({
-    platformName: 'SVM',
+    platformName: 'SVMontaj',
     supportEmail: 'support@montaj.ru',
     supportPhone: '+7 (800) 123-45-67',
     maxFileSize: '5',
@@ -46,7 +46,7 @@ export default function AdminSettingsPage() {
     emailEnabled: 'true',
     smtpHost: 'smtp.yandex.ru',
     smtpPort: '465',
-    emailFrom: 'SVMontaj24@yandex.ru',
+    emailFrom: 'SVMontaj24@mail.ru',
   });
 
   const handleSave = async (section: string) => {

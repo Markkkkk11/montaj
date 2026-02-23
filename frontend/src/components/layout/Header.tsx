@@ -52,11 +52,11 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
           } className="flex items-center gap-3 group">
             <img
               src="/logo.jpg"
-              alt="SVM"
+              alt="SVMontaj"
               className="h-10 w-10 rounded-full object-cover ring-2 ring-white shadow-soft transition-transform duration-300 group-hover:scale-105"
             />
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent hidden sm:inline">
-              SVM
+            <span className="text-lg font-bold hidden sm:inline">
+              <span className="text-blue-600">SV</span><span className="text-red-500">Montaj</span>
             </span>
           </Link>
         </div>
