@@ -40,7 +40,9 @@ npm run build
 # 5. Перезапуск приложений
 echo "🚀 Перезапуск PM2..."
 cd "$APP_DIR"
-pm2 restart ecosystem.config.js
+mkdir -p "$APP_DIR/logs"
+pm2 delete all 2>/dev/null || true
+pm2 start ecosystem.config.js
 pm2 save
 
 echo ""
