@@ -84,12 +84,12 @@ export class AuthService {
       },
     });
 
-    // Создаём баланс с бонусом 1000₽
+    // Создаём баланс (бонус 1000₽ начисляется только после первого пополнения от 150₽)
     await prisma.balance.create({
       data: {
         userId,
         amount: 0,
-        bonusAmount: 1000, // Приветственный бонус
+        bonusAmount: 0,
       },
     });
 

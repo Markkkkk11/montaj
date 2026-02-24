@@ -10,8 +10,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 
 const AVAILABLE_REGIONS = [
-  'Москва',
-  'Санкт-Петербург',
+  'Москва и обл.',
+  'Санкт-Петербург и обл.',
   'Краснодар',
 ];
 

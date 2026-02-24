@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Specialization } from '@/lib/types';
-import { Camera, Save, User, Briefcase } from 'lucide-react';
+import { Camera, Save, User, Briefcase, ImagePlus, X as XIcon, Loader2 } from 'lucide-react';
 
 export default function EditProfilePage() {
   const { user, getCurrentUser, isHydrated } = useAuthStore();
@@ -39,6 +39,9 @@ export default function EditProfilePage() {
   const [shortDescription, setShortDescription] = useState('');
   const [fullDescription, setFullDescription] = useState('');
   const [isSelfEmployed, setIsSelfEmployed] = useState(false);
+  const [workPhotos, setWorkPhotos] = useState<string[]>([]);
+  const [uploadingWorkPhoto, setUploadingWorkPhoto] = useState(false);
+  const workPhotoInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -81,6 +84,7 @@ export default function EditProfilePage() {
       setShortDescription(user.executorProfile.shortDescription || '');
       setFullDescription(user.executorProfile.fullDescription || '');
       setIsSelfEmployed(user.executorProfile.isSelfEmployed || false);
+      setWorkPhotos(user.executorProfile.workPhotos || []);
     }
   }, [user, router, isHydrated]);
 
@@ -101,6 +105,40 @@ export default function EditProfilePage() {
     } catch (error: any) {
       toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось сохранить' });
     } finally { setIsSaving(false); }
+  };
+
+  const handleUploadWorkPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: 'Максимальный размер файла — 5 МБ' });
+      return;
+    }
+    try {
+      setUploadingWorkPhoto(true);
+      const formData = new FormData();
+      formData.append('photo', file);
+      const { data } = await api.post('/users/work-photos', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setWorkPhotos(data.workPhotos || []);
+      toast({ variant: 'success', title: '✅ Фото добавлено!' });
+      await getCurrentUser();
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось загрузить фото' });
+    } finally {
+      setUploadingWorkPhoto(false);
+      if (workPhotoInputRef.current) workPhotoInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveWorkPhoto = async (photoUrl: string) => {
+    try {
+      const { data } = await api.delete('/users/work-photos', { data: { photoUrl } });
+      setWorkPhotos(data.workPhotos || []);
+      toast({ variant: 'success', title: '✅ Фото удалено!' });
+      await getCurrentUser();
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось удалить фото' });
+    }
   };
 
   const handleSaveExecutorProfile = async () => {
@@ -256,8 +294,8 @@ export default function EditProfilePage() {
                   onChange={(e) => setRegion(e.target.value)}
                 >
                   <option value="">Выберите город</option>
-                  <option value="Москва">Москва</option>
-                  <option value="Санкт-Петербург">Санкт-Петербург</option>
+                  <option value="Москва и обл.">Москва и обл.</option>
+                  <option value="Санкт-Петербург и обл.">Санкт-Петербург и обл.</option>
                   <option value="Краснодар">Краснодар</option>
                 </select>
               </div>
@@ -298,6 +336,55 @@ export default function EditProfilePage() {
               <div className="flex items-center gap-3 py-2">
                 <input type="checkbox" id="isSelfEmployed" checked={isSelfEmployed} onChange={(e) => setIsSelfEmployed(e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary" />
                 <Label htmlFor="isSelfEmployed" className="cursor-pointer font-normal">Я самозанятый</Label>
+              </div>
+
+              {/* Portfolio */}
+              <div className="space-y-3 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-bold">Портфолио (фото работ)</Label>
+                  <span className="text-xs text-muted-foreground">{workPhotos.length} / 10</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Загрузите до 10 фотографий ваших выполненных работ. Это поможет заказчикам оценить качество.</p>
+                
+                {workPhotos.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {workPhotos.map((photo, idx) => {
+                      const photoSrc = photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${photo}` : photo;
+                      return (
+                        <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                          <img src={photoSrc} alt={`Работа ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => handleRemoveWorkPhoto(photo)}
+                            className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          >
+                            <XIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {workPhotos.length < 10 && (
+                  <div>
+                    <input ref={workPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleUploadWorkPhoto} className="hidden" />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => workPhotoInputRef.current?.click()} 
+                      disabled={uploadingWorkPhoto}
+                      className="gap-2"
+                    >
+                      {uploadingWorkPhoto ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Загрузка...</>
+                      ) : (
+                        <><ImagePlus className="h-4 w-4" /> Добавить фото</>
+                      )}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG или WebP. Макс. 5 МБ</p>
+                  </div>
+                )}
               </div>
 
               <Button

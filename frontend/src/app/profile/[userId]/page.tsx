@@ -225,15 +225,16 @@ export default function PublicProfilePage() {
               {/* Work Photos */}
               {profile.executorProfile.workPhotos.length > 0 && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Фото работ</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <p className="text-sm text-muted-foreground mb-2">Портфолио ({profile.executorProfile.workPhotos.length} фото)</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {profile.executorProfile.workPhotos.map((photo, i) => (
-                      <img
-                        key={i}
-                        src={photo.startsWith('/') ? `${API_URL}${photo}` : photo}
-                        alt={`Работа ${i + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
+                      <div key={i} className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                        <img
+                          src={photo.startsWith('/') ? `${API_URL}${photo}` : photo}
+                          alt={`Работа ${i + 1}`}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>

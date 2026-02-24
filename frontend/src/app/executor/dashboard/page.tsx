@@ -11,7 +11,7 @@ import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
 import { TARIFF_LABELS, isExecutorProfileComplete } from '@/lib/utils';
-import { Wallet, FileText, User, Star, Search, Mail, MessageCircle, ArrowRight, TrendingUp, Zap, Package, ChevronRight, ChevronDown, Gift, X } from 'lucide-react';
+import { Wallet, FileText, User, Star, Search, Mail, MessageCircle, ArrowRight, TrendingUp, Zap, Package, ChevronRight, ChevronDown, Gift, X, HelpCircle, Info } from 'lucide-react';
 
 export default function ExecutorDashboard() {
   const { user, logout, isHydrated } = useAuthStore();
@@ -247,26 +247,198 @@ export default function ExecutorDashboard() {
           </Card>
         </div>
 
-        {/* Feedback */}
-        <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center">
-              <MessageCircle className="h-5 w-5 text-gray-400" />
+        {/* Quick scroll buttons: Мои отклики / Активные заказы */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <button
+            onClick={() => document.getElementById('my-responses')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
+          >
+            <span className="text-2xl">📩</span>
+            <div className="text-left">
+              <p className="font-bold text-blue-900">Мои отклики</p>
+              <p className="text-xs text-blue-600">{pendingResponses.length} ожидают</p>
             </div>
-            <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
+            <ChevronDown className="h-5 w-5 text-blue-400 group-hover:translate-y-0.5 transition-transform" />
+          </button>
+          <button
+            onClick={() => document.getElementById('active-orders')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
+          >
+            <span className="text-2xl">📋</span>
+            <div className="text-left">
+              <p className="font-bold text-emerald-900">Активные заказы</p>
+              <p className="text-xs text-emerald-600">{activeOrders.length} в работе</p>
+            </div>
+            <ChevronDown className="h-5 w-5 text-emerald-400 group-hover:translate-y-0.5 transition-transform" />
+          </button>
+        </div>
+
+        {/* Balance & Bonus Info */}
+        <Card className="mb-8 overflow-hidden border-blue-100">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Info className="h-5 w-5 text-blue-600" /> Баланс и Бонусы
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-4 bg-blue-50/80 rounded-xl border border-blue-100">
+                <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                  <Wallet className="h-4 w-4" /> Что такое Баланс?
+                </h4>
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  Баланс — это ваш основной счёт на платформе. С него списывается оплата за отклики на заказы.
+                  Пополнить баланс можно через раздел «Пополнить баланс» (функция скоро будет доступна).
+                </p>
+              </div>
+              <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-100">
+                <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                  <Gift className="h-4 w-4" /> Что такое Бонусы?
+                </h4>
+                <p className="text-sm text-emerald-800 leading-relaxed">
+                  Бонусы — это дополнительные средства, которые можно использовать для оплаты откликов. При списании сначала используются бонусы, затем основной баланс.
+                  <strong> 1000 бонусных рублей</strong> начисляется после первого пополнения баланса на сумму от 150₽ (в течение 30 дней после регистрации).
+                </p>
+              </div>
+            </div>
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+              <HelpCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                <strong>Как пополнить баланс?</strong> Функция пополнения через платёжную систему скоро будет доступна. Следите за обновлениями!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* My Responses */}
+        <div className="space-y-8">
+          <div id="my-responses">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="section-title flex items-center gap-2">
+                  <span>📩</span> Мои отклики
+                </h2>
+                <p className="section-subtitle">{pendingResponses.length} ожидают</p>
+              </div>
+            </div>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => <div key={i} className="h-20 skeleton rounded-2xl" />)}
+              </div>
+            ) : pendingResponses.length === 0 ? (
+              <Card className="border-dashed border-2">
+                <CardContent className="py-8 text-center">
+                  <p className="text-muted-foreground mb-3">Нет активных откликов</p>
+                  <Button variant="outline" onClick={() => router.push('/orders')} className="gap-2">
+                    <Search className="h-4 w-4" /> Найти заказы
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3 stagger-children">
+                {pendingResponses.map((response) => (
+                  <Card key={response.id} className="hover:shadow-soft-lg transition-all duration-300">
+                    <CardContent className="pt-5 pb-5">
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 truncate">{response.order?.title}</h4>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(response.createdAt).toLocaleDateString('ru-RU')}
+                            </span>
+                            <span className="badge-warning">Ожидание</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/orders/${response.orderId}`)}
+                          className="gap-1 ml-3"
+                        >
+                          Открыть <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="flex gap-4">
-            <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
-              <Mail className="h-4 w-4" /> Email
-            </a>
-            <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
-              <MessageCircle className="h-4 w-4" /> Telegram
-            </a>
+
+          {/* Active Orders */}
+          <div id="active-orders">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="section-title">Активные заказы</h2>
+                <p className="section-subtitle">{activeOrders.length} в работе</p>
+              </div>
+            </div>
+            {activeOrders.length === 0 ? (
+              <Card className="border-dashed border-2">
+                <CardContent className="py-8 text-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Package className="h-8 w-8 text-gray-300" />
+                  </div>
+                  <p className="text-muted-foreground">Активные заказы появятся после того, как вас выберут</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 gap-4 stagger-children">
+                  {(showAllActive ? activeOrders : activeOrders.slice(0, 4)).map((order) => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
+                </div>
+                {activeOrders.length > 4 && (
+                  <button
+                    onClick={() => setShowAllActive(!showAllActive)}
+                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 bg-blue-50/80 hover:bg-blue-100 rounded-2xl transition-all duration-300 group"
+                  >
+                    {showAllActive ? 'Скрыть' : `Показать все (${activeOrders.length})`}
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllActive ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Completed Orders */}
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="section-title">Завершённые заказы</h2>
+                <p className="section-subtitle">{completedOrders.length} выполнено</p>
+              </div>
+            </div>
+            {completedOrders.length === 0 ? (
+              <Card className="border-dashed border-2">
+                <CardContent className="py-8 text-center">
+                  <p className="text-muted-foreground">Нет завершённых заказов</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 gap-4 stagger-children">
+                  {(showAllCompleted ? completedOrders : completedOrders.slice(0, 4)).map((order) => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
+                </div>
+                {completedOrders.length > 4 && (
+                  <button
+                    onClick={() => setShowAllCompleted(!showAllCompleted)}
+                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-2xl transition-all duration-300 group"
+                  >
+                    {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8 stagger-children">
+        <div className="grid md:grid-cols-4 gap-4 mt-8 mb-8 stagger-children">
           <Card
             className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-blue-200"
             onClick={() => router.push('/orders')}
@@ -396,130 +568,21 @@ export default function ExecutorDashboard() {
           </CardContent>
         </Card>
 
-        {/* My Responses */}
-        <div className="space-y-8">
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="section-title flex items-center gap-2">
-                  <span>📩</span> Мои отклики
-                </h2>
-                <p className="section-subtitle">{pendingResponses.length} ожидают</p>
-              </div>
+        {/* Feedback — at the bottom */}
+        <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center">
+              <MessageCircle className="h-5 w-5 text-gray-400" />
             </div>
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2].map(i => <div key={i} className="h-20 skeleton rounded-2xl" />)}
-              </div>
-            ) : pendingResponses.length === 0 ? (
-              <Card className="border-dashed border-2">
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground mb-3">Нет активных откликов</p>
-                  <Button variant="outline" onClick={() => router.push('/orders')} className="gap-2">
-                    <Search className="h-4 w-4" /> Найти заказы
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3 stagger-children">
-                {pendingResponses.map((response) => (
-                  <Card key={response.id} className="hover:shadow-soft-lg transition-all duration-300">
-                    <CardContent className="pt-5 pb-5">
-                      <div className="flex justify-between items-center">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-gray-900 truncate">{response.order?.title}</h4>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(response.createdAt).toLocaleDateString('ru-RU')}
-                            </span>
-                            <span className="badge-warning">Ожидание</span>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/orders/${response.orderId}`)}
-                          className="gap-1 ml-3"
-                        >
-                          Открыть <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
           </div>
-
-          {/* Active Orders */}
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="section-title">Активные заказы</h2>
-                <p className="section-subtitle">{activeOrders.length} в работе</p>
-              </div>
-            </div>
-            {activeOrders.length === 0 ? (
-              <Card className="border-dashed border-2">
-                <CardContent className="py-8 text-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Package className="h-8 w-8 text-gray-300" />
-                  </div>
-                  <p className="text-muted-foreground">Активные заказы появятся после того, как вас выберут</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <div className="grid md:grid-cols-2 gap-4 stagger-children">
-                  {(showAllActive ? activeOrders : activeOrders.slice(0, 4)).map((order) => (
-                    <OrderCard key={order.id} order={order} />
-                  ))}
-                </div>
-                {activeOrders.length > 4 && (
-                  <button
-                    onClick={() => setShowAllActive(!showAllActive)}
-                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 bg-blue-50/80 hover:bg-blue-100 rounded-2xl transition-all duration-300 group"
-                  >
-                    {showAllActive ? 'Скрыть' : `Показать все (${activeOrders.length})`}
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllActive ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Completed Orders */}
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="section-title">Завершённые заказы</h2>
-                <p className="section-subtitle">{completedOrders.length} выполнено</p>
-              </div>
-            </div>
-            {completedOrders.length === 0 ? (
-              <Card className="border-dashed border-2">
-                <CardContent className="py-8 text-center">
-                  <p className="text-muted-foreground">Нет завершённых заказов</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <div className="grid md:grid-cols-2 gap-4 stagger-children">
-                  {(showAllCompleted ? completedOrders : completedOrders.slice(0, 4)).map((order) => (
-                    <OrderCard key={order.id} order={order} />
-                  ))}
-                </div>
-                {completedOrders.length > 4 && (
-                  <button
-                    onClick={() => setShowAllCompleted(!showAllCompleted)}
-                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-2xl transition-all duration-300 group"
-                  >
-                    {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
-                  </button>
-                )}
-              </>
-            )}
+          <div className="flex gap-4">
+            <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+              <Mail className="h-4 w-4" /> Email
+            </a>
+            <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
+              <MessageCircle className="h-4 w-4" /> Telegram
+            </a>
           </div>
         </div>
       </main>

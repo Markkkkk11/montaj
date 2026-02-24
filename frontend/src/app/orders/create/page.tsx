@@ -132,8 +132,8 @@ export default function CreateOrderPage() {
                     onChange={(e) => { setFormData({ ...formData, region: e.target.value }); setAddressError(''); }}
                   >
                     <option value="">Выберите город</option>
-                    <option value="Москва">Москва</option>
-                    <option value="Санкт-Петербург">Санкт-Петербург</option>
+                    <option value="Москва и обл.">Москва и обл.</option>
+                    <option value="Санкт-Петербург и обл.">Санкт-Петербург и обл.</option>
                     <option value="Краснодар">Краснодар</option>
                   </select>
                 </div>

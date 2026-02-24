@@ -106,9 +106,9 @@ export class UserService {
       throw new Error('Профиль исполнителя не найден');
     }
 
-    // Проверяем лимит (максимум 5 фото)
-    if (profile.workPhotos.length >= 5) {
-      throw new Error('Максимальное количество фотографий: 5');
+    // Проверяем лимит (максимум 10 фото)
+    if (profile.workPhotos.length >= 10) {
+      throw new Error('Максимальное количество фотографий: 10');
     }
 
     return prisma.executorProfile.update({

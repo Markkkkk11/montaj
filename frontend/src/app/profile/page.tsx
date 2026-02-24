@@ -161,6 +161,22 @@ export default function ProfilePage() {
                 </div>
               )}
 
+              {user.executorProfile.workPhotos && user.executorProfile.workPhotos.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Портфолио ({user.executorProfile.workPhotos.length} фото)</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {user.executorProfile.workPhotos.map((photo: string, idx: number) => {
+                      const photoSrc = photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${photo}` : photo;
+                      return (
+                        <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                          <img src={photoSrc} alt={`Работа ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2">Самозанятый</p>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold ${
