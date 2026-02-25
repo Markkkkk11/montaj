@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import adminController from '../controllers/admin.controller';
+import settingsController from '../controllers/settings.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { requireActiveAdmin } from '../middleware/admin.middleware';
 import { validateBody } from '../middleware/validation.middleware';
@@ -18,6 +19,11 @@ router.use(requireActiveAdmin);
 // Статистика
 router.get('/statistics', adminController.getStatistics);
 router.get('/stats', adminController.getStatistics); // Alias
+
+// Настройки платформы
+router.get('/settings', settingsController.getAll);
+router.get('/settings/:section', settingsController.getBySection);
+router.put('/settings/:section', settingsController.updateSection);
 
 // Управление пользователями
 router.get('/users', adminController.getUsersForModeration);

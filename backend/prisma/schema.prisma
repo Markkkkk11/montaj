@@ -488,6 +488,20 @@ model NotificationSettings {
   @@map("notification_settings")
 }
 
+// Настройки платформы (key-value store)
+model PlatformSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique       // e.g. "platformName", "autoApproveUsers"
+  value     String                 // Значение настройки (строка)
+  section   String                 // Секция: "general", "moderation", "tariffs", "email"
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([section])
+  @@map("platform_settings")
+}
+
 // Модель для чата между заказчиком и исполнителем
 model Message {
   id          String   @id @default(uuid())

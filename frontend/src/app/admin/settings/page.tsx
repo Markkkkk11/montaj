@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,15 +12,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Settings, Shield, Bell, CreditCard, Mail, Database, Save } from 'lucide-react';
+import { Settings, Shield, CreditCard, Mail, Database, Save, Loader2, CheckCircle } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import axios from 'axios';
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function AdminSettingsPage() {
-  const [saving, setSaving] = useState(false);
+  const { token } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [savingSection, setSavingSection] = useState<string | null>(null);
+  const [savedSection, setSavedSection] = useState<string | null>(null);
 
-  // Настройки платформы (локальные, для отображения)
   const [platformSettings, setPlatformSettings] = useState({
     platformName: 'SVMontaj',
-    supportEmail: 'support@montaj.ru',
+    supportEmail: 'support@svmontaj.ru',
     supportPhone: '+7 (800) 123-45-67',
     maxFileSize: '5',
     maxWorkPhotos: '8',
@@ -49,13 +55,80 @@ export default function AdminSettingsPage() {
     emailFrom: 'SVMontaj24@mail.ru',
   });
 
-  const handleSave = async (section: string) => {
-    setSaving(true);
-    // Имитация сохранения — в будущем подключить к API
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setSaving(false);
-    alert(`Настройки "${section}" сохранены (пока локально)`);
+  // Загрузка настроек с сервера
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${API}/admin/settings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.data.success) {
+          const s = res.data.settings;
+
+          if (s.general) {
+            setPlatformSettings((prev) => ({ ...prev, ...s.general }));
+          }
+          if (s.moderation) {
+            setModerationSettings((prev) => ({ ...prev, ...s.moderation }));
+          }
+          if (s.tariffs) {
+            setTariffSettings((prev) => ({ ...prev, ...s.tariffs }));
+          }
+          if (s.email) {
+            setEmailSettings((prev) => ({ ...prev, ...s.email }));
+          }
+        }
+      } catch (err) {
+        console.error('Ошибка загрузки настроек:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) fetchSettings();
+  }, [token]);
+
+  const handleSave = async (section: string, data: Record<string, string>) => {
+    setSavingSection(section);
+    setSavedSection(null);
+    try {
+      await axios.put(`${API}/admin/settings/${section}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSavedSection(section);
+      setTimeout(() => setSavedSection(null), 2000);
+    } catch (err: any) {
+      alert(`Ошибка сохранения: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setSavingSection(null);
+    }
   };
+
+  const SaveButton = ({ section, data }: { section: string; data: Record<string, string> }) => (
+    <Button
+      onClick={() => handleSave(section, data)}
+      disabled={savingSection === section}
+    >
+      {savingSection === section ? (
+        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+      ) : savedSection === section ? (
+        <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+      ) : (
+        <Save className="h-4 w-4 mr-2" />
+      )}
+      {savedSection === section ? 'Сохранено ✓' : 'Сохранить'}
+    </Button>
+  );
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-3 text-muted-foreground">Загрузка настроек...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -144,10 +217,7 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
-            <Button onClick={() => handleSave('Основные')} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              Сохранить
-            </Button>
+            <SaveButton section="general" data={platformSettings} />
           </CardContent>
         </Card>
 
@@ -227,10 +297,7 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
-            <Button onClick={() => handleSave('Модерация')} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              Сохранить
-            </Button>
+            <SaveButton section="moderation" data={moderationSettings} />
           </CardContent>
         </Card>
 
@@ -303,10 +370,7 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
-            <Button onClick={() => handleSave('Тарифы')} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              Сохранить
-            </Button>
+            <SaveButton section="tariffs" data={tariffSettings} />
           </CardContent>
         </Card>
 
@@ -373,10 +437,7 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
-            <Button onClick={() => handleSave('Email')} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" />
-              Сохранить
-            </Button>
+            <SaveButton section="email" data={emailSettings} />
           </CardContent>
         </Card>
 
@@ -399,7 +460,7 @@ export default function AdminSettingsPage() {
               </div>
               <div className="flex justify-between py-2 border-b">
                 <span className="text-muted-foreground">Среда</span>
-                <span className="font-medium">Development</span>
+                <span className="font-medium">Production</span>
               </div>
               <div className="flex justify-between py-2 border-b">
                 <span className="text-muted-foreground">Backend</span>

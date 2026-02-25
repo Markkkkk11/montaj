@@ -1,0 +1,102 @@
+import prisma from '../config/database';
+
+// Дефолтные настройки платформы
+const DEFAULT_SETTINGS: Record<string, { value: string; section: string }> = {
+  // Основные
+  platformName:   { value: 'SVMontaj',              section: 'general' },
+  supportEmail:   { value: 'support@svmontaj.ru',   section: 'general' },
+  supportPhone:   { value: '+7 (800) 123-45-67',    section: 'general' },
+  maxFileSize:    { value: '5',                      section: 'general' },
+  maxWorkPhotos:  { value: '8',                      section: 'general' },
+  defaultRegion:  { value: 'Москва и обл.',          section: 'general' },
+
+  // Модерация
+  autoApproveUsers:   { value: 'false', section: 'moderation' },
+  autoApproveReviews: { value: 'false', section: 'moderation' },
+  autoApproveOrders:  { value: 'true',  section: 'moderation' },
+  minReviewLength:    { value: '10',    section: 'moderation' },
+
+  // Тарифы
+  standardPrice:            { value: '0',   section: 'tariffs' },
+  premiumPrice:             { value: '990', section: 'tariffs' },
+  premiumSpecializations:   { value: '5',   section: 'tariffs' },
+  standardSpecializations:  { value: '3',   section: 'tariffs' },
+  trialDays:                { value: '7',   section: 'tariffs' },
+
+  // Email
+  emailEnabled: { value: 'true',              section: 'email' },
+  smtpHost:     { value: 'smtp.yandex.ru',    section: 'email' },
+  smtpPort:     { value: '465',               section: 'email' },
+  emailFrom:    { value: 'SVMontaj24@mail.ru', section: 'email' },
+};
+
+export class SettingsService {
+  /**
+   * Инициализация дефолтных настроек (вызывается при старте)
+   */
+  async seedDefaults() {
+    for (const [key, { value, section }] of Object.entries(DEFAULT_SETTINGS)) {
+      await prisma.platformSetting.upsert({
+        where: { key },
+        update: {},           // Не перезаписываем, если уже есть
+        create: { key, value, section },
+      });
+    }
+    console.log('⚙️  Настройки платформы инициализированы');
+  }
+
+  /**
+   * Получить все настройки
+   */
+  async getAll(): Promise<Record<string, Record<string, string>>> {
+    const rows = await prisma.platformSetting.findMany();
+
+    const grouped: Record<string, Record<string, string>> = {};
+    for (const row of rows) {
+      if (!grouped[row.section]) grouped[row.section] = {};
+      grouped[row.section][row.key] = row.value;
+    }
+
+    return grouped;
+  }
+
+  /**
+   * Получить настройки по секции
+   */
+  async getBySection(section: string): Promise<Record<string, string>> {
+    const rows = await prisma.platformSetting.findMany({ where: { section } });
+    const result: Record<string, string> = {};
+    for (const row of rows) {
+      result[row.key] = row.value;
+    }
+    return result;
+  }
+
+  /**
+   * Получить одну настройку по ключу
+   */
+  async get(key: string): Promise<string | null> {
+    const row = await prisma.platformSetting.findUnique({ where: { key } });
+    return row?.value ?? DEFAULT_SETTINGS[key]?.value ?? null;
+  }
+
+  /**
+   * Обновить настройки секции (массово)
+   */
+  async updateSection(section: string, data: Record<string, string>) {
+    const updates = Object.entries(data).map(([key, value]) =>
+      prisma.platformSetting.upsert({
+        where: { key },
+        update: { value },
+        create: { key, value, section },
+      })
+    );
+
+    await prisma.$transaction(updates);
+
+    return this.getBySection(section);
+  }
+}
+
+export default new SettingsService();
+
