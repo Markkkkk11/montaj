@@ -41,7 +41,7 @@ export default function AdminSettingsPage() {
   const [tariffSettings, setTariffSettings] = useState({
     standardPrice: '0',
     premiumPrice: '990',
-    premiumSpecializations: '5',
+    premiumSpecializations: '3',
     standardSpecializations: '3',
     trialDays: '7',
   });
