@@ -30,7 +30,7 @@ export default function EditProfilePage() {
   const [website, setWebsite] = useState('');
   const [city, setCity] = useState('');
   const [address, setAddress] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
+  const [maxMessenger, setMaxMessenger] = useState('');
   const [telegram, setTelegram] = useState('');
   const [inn, setInn] = useState('');
   const [ogrn, setOgrn] = useState('');
@@ -42,6 +42,8 @@ export default function EditProfilePage() {
   const [workPhotos, setWorkPhotos] = useState<string[]>([]);
   const [uploadingWorkPhoto, setUploadingWorkPhoto] = useState(false);
   const workPhotoInputRef = useRef<HTMLInputElement>(null);
+  const executorSectionRef = useRef<HTMLDivElement>(null);
+  const [executorSectionUnlocked, setExecutorSectionUnlocked] = useState(false);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,7 +75,7 @@ export default function EditProfilePage() {
     setOrganization(user.organization || '');
     setCity(user.city || '');
     setAddress(user.address || '');
-    setWhatsapp(user.messengers?.whatsapp || '');
+    setMaxMessenger(user.messengers?.max || '');
     setTelegram(user.messengers?.telegram || '');
     setAbout(user.about || '');
     setWebsite(user.website || '');
@@ -85,6 +87,7 @@ export default function EditProfilePage() {
       setFullDescription(user.executorProfile.fullDescription || '');
       setIsSelfEmployed(user.executorProfile.isSelfEmployed || false);
       setWorkPhotos(user.executorProfile.workPhotos || []);
+      setExecutorSectionUnlocked(false);
     }
   }, [user, router, isHydrated]);
 
@@ -95,13 +98,17 @@ export default function EditProfilePage() {
         fullName, email: email || undefined, organization: organization || undefined,
         about: about || undefined, website: website || undefined, city,
         address: address || undefined,
-        messengers: { whatsapp: whatsapp || undefined, telegram: telegram || undefined },
+        messengers: { max: maxMessenger || undefined, telegram: telegram || undefined },
         inn: inn || undefined, ogrn: ogrn || undefined,
       });
       toast({ variant: 'success', title: '✅ Профиль обновлен!' });
       const cr = region, cs = shortDescription, cf = fullDescription;
       await getCurrentUser();
       setRegion(cr); setShortDescription(cs); setFullDescription(cf);
+      if (user?.role === 'EXECUTOR') {
+        setExecutorSectionUnlocked(true);
+        setTimeout(() => executorSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+      }
     } catch (error: any) {
       toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось сохранить' });
     } finally { setIsSaving(false); }
@@ -149,9 +156,9 @@ export default function EditProfilePage() {
         fullDescription: fullDescription || undefined, isSelfEmployed,
       });
       toast({ variant: 'success', title: '✅ Профиль исполнителя обновлен!' });
-      const cn = fullName, ce = email, co = organization, cc = city, ca = address, cw = whatsapp, ct = telegram, ci = inn, cg = ogrn;
+      const cn = fullName, ce = email, co = organization, cc = city, ca = address, cm = maxMessenger, ct = telegram, ci = inn, cg = ogrn;
       await getCurrentUser();
-      setFullName(cn); setEmail(ce); setOrganization(co); setCity(cc); setAddress(ca); setWhatsapp(cw); setTelegram(ct); setInn(ci); setOgrn(cg);
+      setFullName(cn); setEmail(ce); setOrganization(co); setCity(cc); setAddress(ca); setMaxMessenger(cm); setTelegram(ct); setInn(ci); setOgrn(cg);
     } catch (error: any) {
       toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось сохранить' });
     } finally { setIsSaving(false); }
@@ -168,6 +175,23 @@ export default function EditProfilePage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-1">Редактирование профиля</h1>
           <p className="text-muted-foreground">Обновите информацию о себе</p>
         </div>
+
+        {user.role === 'EXECUTOR' && (
+          <Card className="mb-6 border-blue-100 bg-blue-50/40">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3 text-sm">
+                <span className="badge-primary">Шаг 1</span>
+                <span className="text-blue-900">Сначала заполните и сохраните «Основная информация».</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm mt-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${executorSectionUnlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>Шаг 2</span>
+                <span className={executorSectionUnlocked ? 'text-emerald-800' : 'text-gray-600'}>
+                  {executorSectionUnlocked ? 'Теперь заполните «Профиль исполнителя».' : 'Профиль исполнителя откроется после сохранения шага 1.'}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Avatar Upload */}
         <Card className="mb-6">
@@ -271,8 +295,8 @@ export default function EditProfilePage() {
               <h3 className="font-semibold text-sm mb-3">Мессенджеры</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="whatsapp">WhatsApp</Label>
-                  <Input id="whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+79001234567" />
+                  <Label htmlFor="maxMessenger">MAX</Label>
+                  <Input id="maxMessenger" value={maxMessenger} onChange={(e) => setMaxMessenger(e.target.value)} placeholder="max.ru/username" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="telegram">Telegram</Label>
@@ -282,14 +306,14 @@ export default function EditProfilePage() {
             </div>
 
             <Button onClick={handleSaveBasicProfile} disabled={isSaving || !fullName || !city} className="w-full gap-2">
-              <Save className="h-4 w-4" /> {isSaving ? 'Сохранение...' : 'Сохранить основную информацию'}
+              <Save className="h-4 w-4" /> {isSaving ? 'Сохранение...' : user.role === 'EXECUTOR' ? 'Сохранить и перейти к профилю исполнителя' : 'Сохранить основную информацию'}
             </Button>
           </CardContent>
         </Card>
 
         {/* Executor Profile */}
-        {user.role === 'EXECUTOR' && (
-          <Card className="mb-6">
+        {user.role === 'EXECUTOR' && executorSectionUnlocked && (
+          <Card className="mb-6" ref={executorSectionRef}>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2"><Briefcase className="h-5 w-5" /> Профиль исполнителя</CardTitle>
               <CardDescription>Информация для заказчиков</CardDescription>

@@ -18,7 +18,7 @@ export interface User {
   city: string;
   address?: string;
   messengers?: {
-    whatsapp?: string;
+    max?: string;
     telegram?: string;
   };
   photo?: string;
@@ -80,7 +80,7 @@ export interface RegisterData {
   city: string;
   address?: string;
   messengers?: {
-    whatsapp?: string;
+    max?: string;
     telegram?: string;
   };
   inn?: string;

@@ -61,7 +61,7 @@ model User {
   organization      String?
   city              String
   address           String?
-  messengers        Json?       // {whatsapp: string, telegram: string}
+  messengers        Json?       // {max: string, telegram: string}
   photo             String?
   about             String?     @db.Text // Коротко о себе / о фирме
   website           String?     // Сайт компании

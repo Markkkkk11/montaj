@@ -38,7 +38,7 @@ export const registerSchema = Joi.object({
   }),
   address: Joi.string().optional().allow(''),
   messengers: Joi.object({
-    whatsapp: Joi.string().optional().allow(''),
+    max: Joi.string().optional().allow(''),
     telegram: Joi.string().optional().allow(''),
   }).optional(),
   inn: Joi.string().optional().allow(''),

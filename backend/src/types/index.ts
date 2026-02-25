@@ -14,7 +14,7 @@ export interface RegisterData {
   city: string;
   address?: string;
   messengers?: {
-    whatsapp?: string;
+    max?: string;
     telegram?: string;
   };
   inn?: string;
@@ -41,7 +41,7 @@ export interface UpdateProfileData {
   about?: string;
   website?: string;
   messengers?: {
-    whatsapp?: string;
+    max?: string;
     telegram?: string;
   };
   inn?: string;

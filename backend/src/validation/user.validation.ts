@@ -9,7 +9,7 @@ export const updateProfileSchema = Joi.object({
   about: Joi.string().max(1000).optional().allow(''),
   website: Joi.string().max(255).optional().allow(''),
   messengers: Joi.object({
-    whatsapp: Joi.string().optional().allow(''),
+    max: Joi.string().optional().allow(''),
     telegram: Joi.string().optional().allow(''),
   }).optional(),
   inn: Joi.string().optional().allow(''),
