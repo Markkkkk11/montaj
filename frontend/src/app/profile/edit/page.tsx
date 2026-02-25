@@ -252,17 +252,7 @@ export default function EditProfilePage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="city">Город *</Label>
-                <select
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">Выберите город</option>
-                  <option value="Москва и обл.">Москва и обл.</option>
-                  <option value="Санкт-Петербург и обл.">Санкт-Петербург и обл.</option>
-                  <option value="Краснодар">Краснодар</option>
-                </select>
+                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Введите ваш город" />
               </div>
               <div className="space-y-1.5 md:col-span-2">
                 <Label htmlFor="organization">Организация</Label>
