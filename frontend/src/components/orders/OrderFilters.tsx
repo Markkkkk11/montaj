@@ -20,7 +20,7 @@ interface OrderFiltersProps {
   initialFilters?: Filters;
 }
 
-export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps) {
+export function OrderFilters({ onApply, initialFilters = { region: 'Москва и обл.' } }: OrderFiltersProps) {
   const { user } = useAuthStore();
   const [filters, setFilters] = useState<Filters>(initialFilters);
 

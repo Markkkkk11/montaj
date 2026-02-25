@@ -16,7 +16,7 @@ export default function OrdersMapPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState<Filters>({});
+  const [filters, setFilters] = useState<Filters>({ region: 'Москва и обл.' });
   const requestIdRef = useRef(0);
 
   const loadOrders = useCallback(async () => {
