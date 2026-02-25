@@ -342,9 +342,9 @@ export default function EditProfilePage() {
               <div className="space-y-3 pt-4 border-t">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-bold">Портфолио (фото работ)</Label>
-                  <span className="text-xs text-muted-foreground">{workPhotos.length} / 10</span>
+                  <span className="text-xs text-muted-foreground">{workPhotos.length} / 8</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Загрузите до 10 фотографий ваших выполненных работ. Это поможет заказчикам оценить качество.</p>
+                <p className="text-xs text-muted-foreground">Загрузите до 8 фотографий ваших выполненных работ. Это поможет заказчикам оценить ваши возможности и качество.</p>
                 
                 {workPhotos.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -365,7 +365,7 @@ export default function EditProfilePage() {
                   </div>
                 )}
 
-                {workPhotos.length < 10 && (
+                {workPhotos.length < 8 && (
                   <div>
                     <input ref={workPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleUploadWorkPhoto} className="hidden" />
                     <Button 

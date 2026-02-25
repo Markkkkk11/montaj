@@ -20,6 +20,7 @@ export default function ExecutorDashboard() {
   const [myResponses, setMyResponses] = useState<Response[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bonusBannerClosed, setBonusBannerClosed] = useState(false);
+  const [balanceInfoClosed, setBalanceInfoClosed] = useState(false);
   const [showAllActive, setShowAllActive] = useState(false);
   const [showAllCompleted, setShowAllCompleted] = useState(false);
 
@@ -39,6 +40,7 @@ export default function ExecutorDashboard() {
       try {
         const banners = JSON.parse(closedBanners);
         setBonusBannerClosed(banners.bonusBanner || false);
+        setBalanceInfoClosed(banners.balanceInfo || false);
       } catch (e) {
         console.error('Error parsing closedBanners:', e);
       }
@@ -75,6 +77,19 @@ export default function ExecutorDashboard() {
       }
     }
     banners = { ...banners, bonusBanner: true };
+    localStorage.setItem('closedBanners', JSON.stringify(banners));
+  };
+
+  const handleCloseBalanceInfo = () => {
+    setBalanceInfoClosed(true);
+    const closedBanners = localStorage.getItem('closedBanners');
+    let banners: any = {};
+    if (closedBanners) {
+      try {
+        banners = JSON.parse(closedBanners);
+      } catch (e) {}
+    }
+    banners = { ...banners, balanceInfo: true };
     localStorage.setItem('closedBanners', JSON.stringify(banners));
   };
 
@@ -166,9 +181,9 @@ export default function ExecutorDashboard() {
               <Gift className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
-              <h3 className="font-bold text-emerald-900">Приветственный бонус</h3>
+              <h3 className="font-bold text-emerald-900">Бонусы на вашем счёте</h3>
               <p className="text-sm text-emerald-700 mt-1">
-                На ваш счёт зачислено <strong>{balance.bonusAmount} ₽</strong> бонусов!
+                На вашем счету <strong>{balance.bonusAmount} ₽</strong> бонусов! Бонусы начисляются при первом пополнении баланса от 150₽ (1000 бонусных рублей). Используйте бонусы для оплаты откликов на заказы — они списываются в первую очередь.
               </p>
             </div>
           </div>
@@ -317,41 +332,50 @@ export default function ExecutorDashboard() {
         </div>
 
         {/* Balance & Bonus Info */}
-        <Card className="mb-8 overflow-hidden border-blue-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Info className="h-5 w-5 text-blue-600" /> Баланс и Бонусы
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 bg-blue-50/80 rounded-xl border border-blue-100">
-                <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                  <Wallet className="h-4 w-4" /> Что такое Баланс?
-                </h4>
-                <p className="text-sm text-blue-800 leading-relaxed">
-                  Баланс — это ваш основной счёт на платформе. С него списывается оплата за отклики на заказы.
-                  Пополнить баланс можно нажав на карточку «Баланс» выше или через раздел пополнения.
+        {!balanceInfoClosed && (
+          <Card className="mb-8 overflow-hidden border-blue-100 relative">
+            <button
+              onClick={handleCloseBalanceInfo}
+              className="absolute top-4 right-4 p-1 hover:bg-blue-100 rounded-lg transition-colors z-10"
+              title="Закрыть"
+            >
+              <X className="h-4 w-4 text-blue-400" />
+            </button>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Info className="h-5 w-5 text-blue-600" /> Баланс и Бонусы
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="p-4 bg-blue-50/80 rounded-xl border border-blue-100">
+                  <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <Wallet className="h-4 w-4" /> Что такое Баланс?
+                  </h4>
+                  <p className="text-sm text-blue-800 leading-relaxed">
+                    Баланс — это ваш основной счёт на платформе. С него списывается оплата за отклики на заказы.
+                    Пополнить баланс можно нажав на карточку «Баланс» выше или через раздел пополнения.
+                  </p>
+                </div>
+                <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-100">
+                  <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                    <Gift className="h-4 w-4" /> Что такое Бонусы?
+                  </h4>
+                  <p className="text-sm text-emerald-800 leading-relaxed">
+                    Бонусы — это дополнительные средства, которые можно использовать для оплаты откликов. При списании сначала используются бонусы, затем основной баланс.
+                    <strong> 1000 бонусных рублей</strong> начисляется после первого пополнения баланса на сумму от 150₽ (в течение 30 дней после регистрации).
+                  </p>
+                </div>
+              </div>
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+                <HelpCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800">
+                  <strong>Как пополнить баланс?</strong> Нажмите на карточку «Баланс» в верхней панели — функция пополнения через платёжную систему скоро будет доступна.
                 </p>
               </div>
-              <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-100">
-                <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
-                  <Gift className="h-4 w-4" /> Что такое Бонусы?
-                </h4>
-                <p className="text-sm text-emerald-800 leading-relaxed">
-                  Бонусы — это дополнительные средства, которые можно использовать для оплаты откликов. При списании сначала используются бонусы, затем основной баланс.
-                  <strong> 1000 бонусных рублей</strong> начисляется после первого пополнения баланса на сумму от 150₽ (в течение 30 дней после регистрации).
-                </p>
-              </div>
-            </div>
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
-              <HelpCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-800">
-                <strong>Как пополнить баланс?</strong> Нажмите на карточку «Баланс» в верхней панели — функция пополнения через платёжную систему скоро будет доступна.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Tariff Management — above Мои отклики */}
         <Card className="mb-8 overflow-hidden">

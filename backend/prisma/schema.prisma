@@ -106,7 +106,7 @@ model ExecutorProfile {
   specializations     Specialization[]
   shortDescription    String?
   fullDescription     String?
-  workPhotos          String[]          // Массив URL фотографий работ (до 10)
+  workPhotos          String[]          // Массив URL фотографий работ (до 8)
   isSelfEmployed      Boolean           @default(false) // Самозанятый
   
   createdAt           DateTime          @default(now())
