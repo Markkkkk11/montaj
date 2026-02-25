@@ -92,9 +92,9 @@ export default function TariffsPage() {
       <Header showBack />
 
       <main className="container mx-auto px-4 py-8 max-w-5xl page-enter">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-2">Выбор тарифа</h1>
-          <p className="text-muted-foreground">Выберите подходящий тариф для работы на платформе</p>
+        <div className="text-center mb-8 sm:mb-10">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-2">Выбор тарифа</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Выберите подходящий тариф для работы на платформе</p>
         </div>
 
       {user.subscription && (
@@ -119,7 +119,7 @@ export default function TariffsPage() {
         </div>
       )}
 
-        <div className="grid md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
           {tariffs.map((tariff) => {
             const Icon = tariff.icon;
             return (

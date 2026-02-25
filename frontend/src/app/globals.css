@@ -255,3 +255,49 @@
 .page-enter {
   animation: fadeIn 0.4s ease-out forwards;
 }
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  .container {
+    @apply px-3;
+  }
+
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Improve touch targets */
+  button, a, [role="button"] {
+    min-height: 40px;
+  }
+  
+  /* Better card spacing on mobile */
+  .stat-number {
+    @apply text-2xl;
+  }
+  
+  /* Horizontal scroll for stats on mobile */
+  .mobile-scroll {
+    @apply flex overflow-x-auto gap-3 pb-2 -mx-3 px-3;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-scroll > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+}
+
+/* Safe area for devices with notch */
+@supports (padding: env(safe-area-inset-top)) {
+  header {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

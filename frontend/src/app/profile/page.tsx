@@ -28,13 +28,13 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50/50">
       <Header showBack />
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl page-enter">
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-3xl page-enter">
         {/* Profile Header */}
         <Card className="mb-6 overflow-hidden">
           <div className="h-24 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500" />
           <CardContent className="relative pt-0 pb-6">
-            <div className="flex items-end gap-5 -mt-12">
-              <div className="w-24 h-24 rounded-2xl bg-white flex items-center justify-center overflow-hidden border-4 border-white shadow-soft-lg flex-shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-5 -mt-12">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white flex items-center justify-center overflow-hidden border-4 border-white shadow-soft-lg flex-shrink-0">
                 {user.photo ? (
                   <img src={user.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.photo}` : user.photo} alt="Аватар" className="w-full h-full object-cover" />
                 ) : (
@@ -42,7 +42,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <div className="pb-1 flex-1 min-w-0">
-                <h2 className="text-2xl font-extrabold text-gray-900 truncate">{user.fullName}</h2>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 truncate">{user.fullName}</h2>
                 <div className="flex items-center gap-3 mt-1">
                   <span className={`badge-${user.role === 'CUSTOMER' ? 'primary' : 'success'}`}>
                     {user.role === 'CUSTOMER' ? 'Заказчик' : 'Исполнитель'}
@@ -54,7 +54,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-start sm:justify-end">
               <Button variant="outline" size="sm" onClick={() => router.push('/profile/edit')} className="gap-2">
                 <Edit className="h-4 w-4" /> Редактировать
               </Button>

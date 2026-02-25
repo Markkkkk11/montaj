@@ -61,9 +61,9 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
           </Link>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <NotificationBell />
-          <Link href="/profile" className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+          <Link href="/profile" className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
             {user?.photo ? (
               <img
                 src={user.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.photo}` : user.photo}
@@ -75,7 +75,7 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
                 <User className="h-4 w-4 text-white" />
               </div>
             )}
-            <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">
+            <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate hidden sm:inline">
               {user?.fullName?.split(' ')[0]}
             </span>
           </Link>
@@ -83,10 +83,10 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
             variant="ghost" 
             size="icon" 
             onClick={handleLogout} 
-            className="text-gray-400 hover:text-red-500 hover:bg-red-50"
+            className="text-gray-400 hover:text-red-500 hover:bg-red-50 h-9 w-9 sm:h-10 sm:w-10"
             title="Выйти"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </div>
       </div>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Specialization, OrderFilters as Filters } from '@/lib/types';
 import { useAuthStore } from '@/stores/authStore';
-import { SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { SlidersHorizontal, RotateCcw, ChevronDown } from 'lucide-react';
 
 const AVAILABLE_REGIONS = [
   'Москва и обл.',
@@ -23,9 +23,11 @@ interface OrderFiltersProps {
 export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps) {
   const { user } = useAuthStore();
   const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleApply = () => {
     onApply(filters);
+    setIsOpen(false);
   };
 
   const handleReset = () => {
@@ -37,14 +39,20 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
 
   const selectClassName = "w-full mt-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all duration-200";
 
+  const activeFiltersCount = [filters.category, filters.region, filters.sortBy !== 'createdAt' ? filters.sortBy : null, filters.sortOrder !== 'desc' ? filters.sortOrder : null].filter(Boolean).length;
+
   return (
-    <Card className="sticky top-20">
-      <CardHeader className="pb-3">
+    <Card className="lg:sticky lg:top-20">
+      <CardHeader className="pb-3 cursor-pointer lg:cursor-default" onClick={() => setIsOpen(!isOpen)}>
         <CardTitle className="text-base flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4" /> Фильтры
+          {activeFiltersCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">{activeFiltersCount}</span>
+          )}
+          <ChevronDown className={`h-4 w-4 ml-auto text-gray-400 transition-transform duration-300 lg:hidden ${isOpen ? 'rotate-180' : ''}`} />
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={`space-y-4 ${isOpen ? 'block' : 'hidden'} lg:block`}>
         {!isExecutor && (
           <div>
             <Label htmlFor="category" className="text-xs">Специализация</Label>

@@ -61,11 +61,11 @@ export default function CustomerDashboard() {
 
       <main className="container mx-auto px-4 py-8 page-enter">
         {/* Welcome */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
             Добро пожаловать, {user.fullName?.split(' ')[0]}! 👋
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Управляйте заказами и следите за их выполнением
           </p>
         </div>
@@ -86,53 +86,53 @@ export default function CustomerDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 stagger-children">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8 stagger-children">
           <Card className="overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Активные заказы</p>
-                  <p className="text-3xl font-extrabold text-gray-900 mt-1">{activeOrders.length}</p>
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
+              <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
+                <div className="text-center sm:text-left order-2 sm:order-1">
+                  <p className="text-[10px] sm:text-sm font-medium text-muted-foreground">Активные</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{activeOrders.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center">
-                  <Package className="h-6 w-6 text-blue-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl sm:rounded-2xl flex items-center justify-center order-1 sm:order-2">
+                  <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
               </div>
-              <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="mt-2 sm:mt-3 h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500" style={{ width: `${Math.min(activeOrders.length * 20, 100)}%` }} />
               </div>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Завершено</p>
-                  <p className="text-3xl font-extrabold text-gray-900 mt-1">{user.completedOrders}</p>
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
+              <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
+                <div className="text-center sm:text-left order-2 sm:order-1">
+                  <p className="text-[10px] sm:text-sm font-medium text-muted-foreground">Завершено</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{user.completedOrders}</p>
                 </div>
-                <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-emerald-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 rounded-xl sm:rounded-2xl flex items-center justify-center order-1 sm:order-2">
+                  <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
                 </div>
               </div>
-              <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="mt-2 sm:mt-3 h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500" style={{ width: `${Math.min(user.completedOrders * 10, 100)}%` }} />
               </div>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Рейтинг</p>
-                  <p className="text-3xl font-extrabold text-gray-900 mt-1">{user.rating.toFixed(1)}</p>
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
+              <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
+                <div className="text-center sm:text-left order-2 sm:order-1">
+                  <p className="text-[10px] sm:text-sm font-medium text-muted-foreground">Рейтинг</p>
+                  <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{user.rating.toFixed(1)}</p>
                 </div>
-                <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center">
-                  <Star className="h-6 w-6 text-amber-500" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 rounded-xl sm:rounded-2xl flex items-center justify-center order-1 sm:order-2">
+                  <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />
                 </div>
               </div>
-              <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="mt-2 sm:mt-3 h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all duration-500" style={{ width: `${(user.rating / 5) * 100}%` }} />
               </div>
             </CardContent>
@@ -140,27 +140,21 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8 stagger-children">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8 stagger-children">
           <Card
             className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-blue-200 overflow-hidden"
             onClick={() => router.push('/orders/create')}
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Plus className="h-6 w-6 text-blue-600" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                  <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-                <div>
-                  <CardTitle className="text-base">Создать заказ</CardTitle>
-                  <CardDescription className="text-xs">Новая заявка на монтаж</CardDescription>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-base font-bold text-gray-900">Создать</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Новая заявка</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full gap-2" size="sm">
-                Создать <ArrowRight className="h-4 w-4" />
-              </Button>
             </CardContent>
           </Card>
 
@@ -168,21 +162,16 @@ export default function CustomerDashboard() {
             className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-violet-200 overflow-hidden"
             onClick={() => router.push('/profile')}
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-violet-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <User className="h-6 w-6 text-violet-600" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-violet-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600" />
                 </div>
-                <div>
-                  <CardTitle className="text-base">Мой профиль</CardTitle>
-                  <CardDescription className="text-xs">Просмотр и редактирование</CardDescription>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-base font-bold text-gray-900">Профиль</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Редактировать</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" size="sm">
-                Перейти
-              </Button>
             </CardContent>
           </Card>
 
@@ -190,43 +179,40 @@ export default function CustomerDashboard() {
             className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-amber-200 overflow-hidden"
             onClick={() => router.push(`/profile/${user.id}/reviews`)}
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Star className="h-6 w-6 text-amber-500" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                  <Star className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />
                 </div>
-                <div>
-                  <CardTitle className="text-base">Мои отзывы</CardTitle>
-                  <CardDescription className="text-xs">Рейтинг {user.rating.toFixed(1)}</CardDescription>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-base font-bold text-gray-900">Отзывы</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Рейтинг {user.rating.toFixed(1)}</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" size="sm">
-                Смотреть
-              </Button>
             </CardContent>
           </Card>
         </div>
 
         {/* Feedback */}
-        <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center">
-              <MessageCircle className="h-5 w-5 text-gray-400" />
+        <div className="mb-6 sm:mb-8 p-3 sm:p-4 bg-white rounded-2xl border border-gray-100 shadow-soft">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="h-5 w-5 text-gray-400" />
+              </div>
+              <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
             </div>
-            <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
-          </div>
-          <div className="flex gap-4">
-            <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
-              <Mail className="h-4 w-4" /> Email
-            </a>
-            <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
-              <MessageCircle className="h-4 w-4" /> Telegram
-            </a>
-            <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
-              <MessageCircle className="h-4 w-4" /> MAX
-            </a>
+            <div className="flex flex-wrap gap-3 sm:gap-4 pl-12 sm:pl-0">
+              <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+                <Mail className="h-4 w-4" /> Email
+              </a>
+              <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
+                <MessageCircle className="h-4 w-4" /> Telegram
+              </a>
+              <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
+                <MessageCircle className="h-4 w-4" /> MAX
+              </a>
+            </div>
           </div>
         </div>
 

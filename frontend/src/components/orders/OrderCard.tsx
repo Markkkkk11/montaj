@@ -62,13 +62,13 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
 
       <CardContent>
         <div className="space-y-3">
-          <div className="flex items-center gap-4 flex-wrap text-sm">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5" />
-              <span className="truncate max-w-[200px]">{order.region}, {order.address}</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 text-sm">
+            <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
+              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">{order.region}, {order.address}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Calendar className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-1.5 text-muted-foreground flex-shrink-0">
+              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
               <span>{startDate}</span>
             </div>
           </div>

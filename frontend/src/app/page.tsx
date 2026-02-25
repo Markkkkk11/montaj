@@ -308,7 +308,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 max-w-6xl mx-auto">
             {SPECIALIZATIONS.map((spec) => (
               <div
                 key={spec.name}
@@ -339,10 +339,10 @@ export default function Home() {
           onClick={() => setSelectedSpec(null)}
         >
           <div 
-            className="bg-white rounded-3xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl transform scale-100"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl transform scale-100 mx-2 sm:mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-8">
+            <div className="p-5 sm:p-8">
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-4">
                   <div className={`w-16 h-16 ${selectedSpec.bg} rounded-2xl flex items-center justify-center`}>
@@ -437,7 +437,7 @@ export default function Home() {
                 </button>
                 <div
                   className={`overflow-hidden transition-all duration-300 ${
-                    openFaqIndex === index ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                    openFaqIndex === index ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
                   }`}
                 >
                   <div className="px-5 pb-5 pt-0">
@@ -460,8 +460,8 @@ export default function Home() {
                 <CardTitle className="text-2xl font-extrabold">Обратная связь</CardTitle>
                 <CardDescription className="text-base">Есть вопросы? Свяжитесь с нами</CardDescription>
               </CardHeader>
-              <CardContent className="px-8 pb-8">
-                <div className="grid md:grid-cols-3 gap-4">
+              <CardContent className="px-4 sm:px-8 pb-6 sm:pb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-all duration-200 group hover:shadow-soft">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                       <Mail className="h-5 w-5 text-blue-600" />

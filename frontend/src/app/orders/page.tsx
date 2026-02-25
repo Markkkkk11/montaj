@@ -60,41 +60,41 @@ export default function OrdersPage() {
       <Header showBack />
 
       <main className="container mx-auto px-4 py-8 page-enter">
-        <div className="mb-8 flex justify-between items-start">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
               {user.role === 'CUSTOMER' ? 'Все заказы' : 'Доступные заказы'}
             </h1>
-            <p className="text-muted-foreground flex items-center gap-2">
+            <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2">
               <Search className="h-4 w-4" />
               Найдено: <strong>{total}</strong>
             </p>
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-2 sm:gap-3 items-center w-full sm:w-auto">
             {user.role === 'EXECUTOR' && (
               <div className="flex bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="gap-2 rounded-lg"
+                  className="gap-1.5 sm:gap-2 rounded-lg text-xs sm:text-sm px-2.5 sm:px-3"
                 >
                   <List className="w-4 h-4" />
-                  Список
+                  <span className="hidden sm:inline">Список</span>
                 </Button>
                 <Button
                   variant={viewMode === 'map' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('map')}
-                  className="gap-2 rounded-lg"
+                  className="gap-1.5 sm:gap-2 rounded-lg text-xs sm:text-sm px-2.5 sm:px-3"
                 >
                   <Map className="w-4 h-4" />
-                  Карта
+                  <span className="hidden sm:inline">Карта</span>
                 </Button>
               </div>
             )}
             {user.role === 'CUSTOMER' && (
-              <Button onClick={() => router.push('/orders/create')} className="gap-2">
+              <Button onClick={() => router.push('/orders/create')} className="gap-2 flex-1 sm:flex-none" size="sm">
                 Создать заказ
               </Button>
             )}

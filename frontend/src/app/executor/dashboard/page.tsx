@@ -124,11 +124,11 @@ export default function ExecutorDashboard() {
 
       <main className="container mx-auto px-4 py-8 page-enter">
         {/* Welcome */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
             Добро пожаловать, {user.fullName?.split(' ')[0]}! 🔧
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Находите заказы и зарабатывайте
           </p>
         </div>
@@ -189,104 +189,98 @@ export default function ExecutorDashboard() {
           </div>
         )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 stagger-children">
-          <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5" onClick={() => router.push('/executor/balance')}>
-            <CardContent className="pt-5 pb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                  <Wallet className="h-5 w-5 text-blue-600" />
+        {/* Stats Grid — horizontal scroll on mobile */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:pb-0 stagger-children" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 min-w-[140px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }} onClick={() => router.push('/executor/balance')}>
+              <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">Баланс</p>
+                    <p className="text-base sm:text-lg font-extrabold text-gray-900 truncate">{balance?.amount || '0'} ₽</p>
+                    <p className="text-[10px] text-blue-600 font-semibold">Пополнить →</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Баланс</p>
-                  <p className="text-lg font-extrabold text-gray-900">{balance?.amount || '0'} ₽</p>
-                  <p className="text-[10px] text-blue-600 font-semibold">Пополнить →</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100">
-            <CardContent className="pt-5 pb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <Gift className="h-5 w-5 text-emerald-600" />
+            <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100 min-w-[130px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }}>
+              <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Gift className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-medium text-emerald-600">Бонусы</p>
+                    <p className="text-base sm:text-lg font-extrabold text-emerald-700 truncate">{balance?.bonusAmount || '0'} ₽</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-emerald-600">Бонусы</p>
-                  <p className="text-lg font-extrabold text-emerald-700">{balance?.bonusAmount || '0'} ₽</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
-            <CardContent className="pt-5 pb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-violet-600" />
+            <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 min-w-[130px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }}>
+              <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-violet-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">Тариф</p>
+                    <p className="text-base sm:text-lg font-extrabold text-gray-900 truncate">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Тариф</p>
-                  <p className="text-lg font-extrabold text-gray-900">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
-            <CardContent className="pt-5 pb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
-                  <Star className="h-5 w-5 text-amber-500" />
+            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 min-w-[110px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }} onClick={() => router.push(`/profile/${user.id}/reviews`)}>
+              <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Star className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">Рейтинг</p>
+                    <p className="text-base sm:text-lg font-extrabold text-gray-900">{user.rating.toFixed(1)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Рейтинг</p>
-                  <p className="text-lg font-extrabold text-gray-900">{user.rating.toFixed(1)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card
-            className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5"
-            onClick={() => document.getElementById('completed-orders')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            <CardContent className="pt-5 pb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-sky-600" />
+            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 min-w-[120px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }} onClick={() => document.getElementById('completed-orders')?.scrollIntoView({ behavior: 'smooth' })}>
+              <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-sky-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-sky-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">Выполнено</p>
+                    <p className="text-base sm:text-lg font-extrabold text-gray-900">{user.completedOrders}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Выполнено</p>
-                  <p className="text-lg font-extrabold text-gray-900">{user.completedOrders}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Quick Actions: Заказы, Профиль, Тарифы */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8 stagger-children">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8 stagger-children">
           <Card
             className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-blue-200"
             onClick={() => router.push('/orders')}
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Search className="h-6 w-6 text-blue-600" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                  <Search className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-                <div>
-                  <CardTitle className="text-base">Заказы</CardTitle>
-                  <CardDescription className="text-xs">Найти работу</CardDescription>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-base font-bold text-gray-900">Заказы</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Найти работу</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full gap-2" size="sm">
-                Смотреть <ArrowRight className="h-4 w-4" />
-              </Button>
             </CardContent>
           </Card>
 
@@ -294,19 +288,16 @@ export default function ExecutorDashboard() {
             className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-violet-200"
             onClick={() => router.push('/profile')}
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-violet-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <User className="h-6 w-6 text-violet-600" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-violet-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600" />
                 </div>
-                <div>
-                  <CardTitle className="text-base">Профиль</CardTitle>
-                  <CardDescription className="text-xs">Редактировать</CardDescription>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-base font-bold text-gray-900">Профиль</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Редактировать</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" size="sm">Перейти</Button>
             </CardContent>
           </Card>
 
@@ -314,19 +305,16 @@ export default function ExecutorDashboard() {
             className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-amber-200"
             onClick={() => router.push('/executor/tariffs')}
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FileText className="h-6 w-6 text-amber-500" />
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />
                 </div>
-                <div>
-                  <CardTitle className="text-base">Тарифы</CardTitle>
-                  <CardDescription className="text-xs">Подробности</CardDescription>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-base font-bold text-gray-900">Тарифы</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Подробности</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" size="sm">Подробнее</Button>
             </CardContent>
           </Card>
         </div>
@@ -378,7 +366,7 @@ export default function ExecutorDashboard() {
         )}
 
         {/* Tariff Management — above Мои отклики */}
-        <Card className="mb-8 overflow-hidden">
+        <Card className="mb-6 sm:mb-8 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500" />
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Управление тарифом</CardTitle>
@@ -403,22 +391,22 @@ export default function ExecutorDashboard() {
               </Button>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-3">
-              <div className="p-4 bg-gray-50 rounded-xl text-center">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Стоимость отклика</p>
-                <p className="text-xl font-extrabold text-blue-600">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Стоимость отклика</p>
+                <p className="text-lg sm:text-xl font-extrabold text-blue-600">
                   {subscription?.tariffType === 'COMFORT' ? '500' : subscription?.tariffType === 'PREMIUM' ? '0' : '150'} ₽
                 </p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-xl text-center">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Специализации</p>
-                <p className="text-xl font-extrabold text-violet-600">
+              <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Специализации</p>
+                <p className="text-lg sm:text-xl font-extrabold text-violet-600">
                   {subscription?.tariffType === 'PREMIUM' ? `до ${subscription.specializationCount}` : '1'}
                 </p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-xl text-center">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Отклики</p>
-                <p className="text-xl font-extrabold text-emerald-600">
+              <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Отклики</p>
+                <p className="text-lg sm:text-xl font-extrabold text-emerald-600">
                   {subscription?.tariffType === 'PREMIUM' ? '∞' : 'Платные'}
                 </p>
               </div>
@@ -427,28 +415,28 @@ export default function ExecutorDashboard() {
         </Card>
 
         {/* Quick scroll buttons: Мои отклики / Активные заказы */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8">
           <button
             onClick={() => document.getElementById('my-responses')?.scrollIntoView({ behavior: 'smooth' })}
-            className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
+            className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
           >
-            <span className="text-2xl">📩</span>
-            <div className="text-left">
-              <p className="font-bold text-blue-900">Мои отклики</p>
-              <p className="text-xs text-blue-600">{pendingResponses.length} ожидают</p>
+            <span className="text-xl sm:text-2xl">📩</span>
+            <div className="text-left min-w-0">
+              <p className="font-bold text-blue-900 text-sm sm:text-base">Мои отклики</p>
+              <p className="text-[10px] sm:text-xs text-blue-600">{pendingResponses.length} ожидают</p>
             </div>
-            <ChevronDown className="h-5 w-5 text-blue-400 group-hover:translate-y-0.5 transition-transform" />
+            <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 group-hover:translate-y-0.5 transition-transform hidden sm:block" />
           </button>
           <button
             onClick={() => document.getElementById('active-orders')?.scrollIntoView({ behavior: 'smooth' })}
-            className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
+            className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
           >
-            <span className="text-2xl">📋</span>
-            <div className="text-left">
-              <p className="font-bold text-emerald-900">Активные заказы</p>
-              <p className="text-xs text-emerald-600">{activeOrders.length} в работе</p>
+            <span className="text-xl sm:text-2xl">📋</span>
+            <div className="text-left min-w-0">
+              <p className="font-bold text-emerald-900 text-sm sm:text-base">Активные заказы</p>
+              <p className="text-[10px] sm:text-xs text-emerald-600">{activeOrders.length} в работе</p>
             </div>
-            <ChevronDown className="h-5 w-5 text-emerald-400 group-hover:translate-y-0.5 transition-transform" />
+            <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 group-hover:translate-y-0.5 transition-transform hidden sm:block" />
           </button>
         </div>
 
@@ -595,23 +583,25 @@ export default function ExecutorDashboard() {
         </div>
 
         {/* Feedback — at the bottom */}
-        <div className="mb-8 mt-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center">
-              <MessageCircle className="h-5 w-5 text-gray-400" />
+        <div className="mb-8 mt-8 p-3 sm:p-4 bg-white rounded-2xl border border-gray-100 shadow-soft">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="h-5 w-5 text-gray-400" />
+              </div>
+              <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
             </div>
-            <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
-          </div>
-          <div className="flex gap-4">
-            <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
-              <Mail className="h-4 w-4" /> Email
-            </a>
-            <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
-              <MessageCircle className="h-4 w-4" /> Telegram
-            </a>
-            <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
-              <MessageCircle className="h-4 w-4" /> MAX
-            </a>
+            <div className="flex flex-wrap gap-3 sm:gap-4 pl-12 sm:pl-0">
+              <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+                <Mail className="h-4 w-4" /> Email
+              </a>
+              <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
+                <MessageCircle className="h-4 w-4" /> Telegram
+              </a>
+              <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
+                <MessageCircle className="h-4 w-4" /> MAX
+              </a>
+            </div>
           </div>
         </div>
       </main>

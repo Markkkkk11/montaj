@@ -121,7 +121,7 @@ export default function CreateOrderPage() {
                 <p className="text-xs text-muted-foreground mt-1">Минимум 20 символов</p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="region">Город *</Label>
                   <select
@@ -158,7 +158,7 @@ export default function CreateOrderPage() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="startDate">Дата начала работ *</Label>
                   <Input

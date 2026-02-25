@@ -139,12 +139,12 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
   }
 
   return (
-    <Card className="flex flex-col h-[600px]">
+    <Card className="flex flex-col h-[70vh] sm:h-[600px]">
       {/* Заголовок */}
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-lg">Чат по заказу</h3>
-          <div className="flex items-center gap-3">
+      <div className="p-3 sm:p-4 border-b">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h3 className="font-semibold text-base sm:text-lg">Чат по заказу</h3>
+          <div className="flex items-center gap-2 sm:gap-3">
             {!connected && (
               <span className="text-xs text-muted-foreground">Переподключение...</span>
             )}
@@ -165,7 +165,7 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
       </div>
 
       {/* Сообщения */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
         {socketMessages.length === 0 && (
           <div className="text-center text-muted-foreground py-8">
             Пока нет сообщений. Начните общение!
@@ -179,7 +179,7 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
               key={message.id}
               className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-[70%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
+              <div className={`max-w-[85%] sm:max-w-[70%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
                 {!isOwn && (
                   <span className="text-xs text-muted-foreground mb-1">
                     {message.sender.fullName}
@@ -200,7 +200,7 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
                     const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(message.fileUrl);
                     return isImage ? (
                       <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="block mt-2">
-                        <img src={fileUrl} alt="Фото" className="max-w-[250px] max-h-[200px] rounded-md" />
+                        <img src={fileUrl} alt="Фото" className="max-w-[180px] max-h-[150px] sm:max-w-[250px] sm:max-h-[200px] rounded-md" />
                       </a>
                     ) : (
                       <a
@@ -252,7 +252,7 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
       </div>
 
       {/* Поле ввода */}
-      <div className="p-4 border-t">
+      <div className="p-3 sm:p-4 border-t">
         <div className="flex gap-2">
           <input
             ref={fileInputRef}
@@ -267,6 +267,7 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
             onClick={() => fileInputRef.current?.click()}
             disabled={sending}
             title="Прикрепить файл"
+            className="h-9 w-9 sm:h-10 sm:w-10"
           >
             <Paperclip className="h-4 w-4" />
           </Button>
@@ -277,12 +278,13 @@ export function ChatBox({ orderId, otherUserId }: ChatBoxProps) {
             onKeyPress={handleKeyPress}
             placeholder="Введите сообщение..."
             disabled={sending}
-            className="flex-1"
+            className="flex-1 text-sm"
           />
           <Button
             onClick={handleSend}
             disabled={sending || !inputValue.trim()}
             size="icon"
+            className="h-9 w-9 sm:h-10 sm:w-10"
           >
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
