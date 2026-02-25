@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
     standardPrice: '0',
     premiumPrice: '990',
     premiumSpecializations: '3',
-    standardSpecializations: '3',
+    standardSpecializations: '1',
     trialDays: '7',
   });
 

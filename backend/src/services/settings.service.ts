@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS: Record<string, { value: string; section: string }> = {
   standardPrice:            { value: '0',   section: 'tariffs' },
   premiumPrice:             { value: '990', section: 'tariffs' },
   premiumSpecializations:   { value: '3',   section: 'tariffs' },
-  standardSpecializations:  { value: '3',   section: 'tariffs' },
+  standardSpecializations:  { value: '1',   section: 'tariffs' },
   trialDays:                { value: '7',   section: 'tariffs' },
 
   // Email
@@ -94,7 +94,37 @@ export class SettingsService {
 
     await prisma.$transaction(updates);
 
+    // При изменении тарифных настроек — обновить существующие подписки
+    if (section === 'tariffs') {
+      await this.syncSubscriptionLimits(data);
+    }
+
     return this.getBySection(section);
+  }
+
+  /**
+   * Синхронизировать лимиты специализаций в существующих подписках
+   */
+  private async syncSubscriptionLimits(data: Record<string, string>) {
+    if (data.premiumSpecializations) {
+      const premiumSpecs = parseInt(data.premiumSpecializations, 10);
+      if (!isNaN(premiumSpecs) && premiumSpecs > 0) {
+        await prisma.subscription.updateMany({
+          where: { tariffType: 'PREMIUM' },
+          data: { specializationCount: premiumSpecs },
+        });
+      }
+    }
+
+    if (data.standardSpecializations) {
+      const standardSpecs = parseInt(data.standardSpecializations, 10);
+      if (!isNaN(standardSpecs) && standardSpecs > 0) {
+        await prisma.subscription.updateMany({
+          where: { tariffType: 'STANDARD' },
+          data: { specializationCount: standardSpecs },
+        });
+      }
+    }
   }
 }
 
