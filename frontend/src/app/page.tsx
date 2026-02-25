@@ -461,7 +461,7 @@ export default function Home() {
                 <CardDescription className="text-base">Есть вопросы? Свяжитесь с нами</CardDescription>
               </CardHeader>
               <CardContent className="px-8 pb-8">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-3 gap-4">
                   <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-all duration-200 group hover:shadow-soft">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                       <Mail className="h-5 w-5 text-blue-600" />
@@ -478,6 +478,15 @@ export default function Home() {
                     <div>
                       <p className="text-sm font-semibold text-gray-900">Telegram</p>
                       <p className="text-xs text-muted-foreground">Напишите нам</p>
+                    </div>
+                  </a>
+                  <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-sky-50 rounded-2xl hover:bg-sky-100 transition-all duration-200 group hover:shadow-soft">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                      <MessageCircle className="h-5 w-5 text-sky-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">MAX</p>
+                      <p className="text-xs text-muted-foreground">Мессенджер</p>
                     </div>
                   </a>
                 </div>

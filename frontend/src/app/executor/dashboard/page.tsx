@@ -176,7 +176,7 @@ export default function ExecutorDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 stagger-children">
-          <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+          <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5" onClick={() => router.push('/executor/balance')}>
             <CardContent className="pt-5 pb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
@@ -185,6 +185,7 @@ export default function ExecutorDashboard() {
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Баланс</p>
                   <p className="text-lg font-extrabold text-gray-900">{balance?.amount || '0'} ₽</p>
+                  <p className="text-[10px] text-blue-600 font-semibold">Пополнить →</p>
                 </div>
               </div>
             </CardContent>
@@ -232,7 +233,10 @@ export default function ExecutorDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+          <Card
+            className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5"
+            onClick={() => document.getElementById('completed-orders')?.scrollIntoView({ behavior: 'smooth' })}
+          >
             <CardContent className="pt-5 pb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center">
@@ -246,6 +250,157 @@ export default function ExecutorDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Quick Actions: Заказы, Профиль, Тарифы */}
+        <div className="grid md:grid-cols-3 gap-4 mb-8 stagger-children">
+          <Card
+            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-blue-200"
+            onClick={() => router.push('/orders')}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Search className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Заказы</CardTitle>
+                  <CardDescription className="text-xs">Найти работу</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full gap-2" size="sm">
+                Смотреть <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-violet-200"
+            onClick={() => router.push('/profile')}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-violet-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <User className="h-6 w-6 text-violet-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Профиль</CardTitle>
+                  <CardDescription className="text-xs">Редактировать</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full" size="sm">Перейти</Button>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-amber-200"
+            onClick={() => router.push('/executor/tariffs')}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileText className="h-6 w-6 text-amber-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Тарифы</CardTitle>
+                  <CardDescription className="text-xs">Подробности</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full" size="sm">Подробнее</Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Balance & Bonus Info */}
+        <Card className="mb-8 overflow-hidden border-blue-100">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Info className="h-5 w-5 text-blue-600" /> Баланс и Бонусы
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-4 bg-blue-50/80 rounded-xl border border-blue-100">
+                <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                  <Wallet className="h-4 w-4" /> Что такое Баланс?
+                </h4>
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  Баланс — это ваш основной счёт на платформе. С него списывается оплата за отклики на заказы.
+                  Пополнить баланс можно нажав на карточку «Баланс» выше или через раздел пополнения.
+                </p>
+              </div>
+              <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-100">
+                <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                  <Gift className="h-4 w-4" /> Что такое Бонусы?
+                </h4>
+                <p className="text-sm text-emerald-800 leading-relaxed">
+                  Бонусы — это дополнительные средства, которые можно использовать для оплаты откликов. При списании сначала используются бонусы, затем основной баланс.
+                  <strong> 1000 бонусных рублей</strong> начисляется после первого пополнения баланса на сумму от 150₽ (в течение 30 дней после регистрации).
+                </p>
+              </div>
+            </div>
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+              <HelpCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                <strong>Как пополнить баланс?</strong> Нажмите на карточку «Баланс» в верхней панели — функция пополнения через платёжную систему скоро будет доступна.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tariff Management — above Мои отклики */}
+        <Card className="mb-8 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Управление тарифом</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                  <Zap className="h-5 w-5 text-violet-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</h3>
+                  {subscription?.expiresAt && (
+                    <p className="text-xs text-muted-foreground">
+                      до {new Date(subscription.expiresAt).toLocaleDateString('ru-RU')}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Button onClick={() => router.push('/executor/tariffs')} variant="outline" size="sm" className="gap-1">
+                Изменить <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-3">
+              <div className="p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Стоимость отклика</p>
+                <p className="text-xl font-extrabold text-blue-600">
+                  {subscription?.tariffType === 'COMFORT' ? '500' : subscription?.tariffType === 'PREMIUM' ? '0' : '150'} ₽
+                </p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Специализации</p>
+                <p className="text-xl font-extrabold text-violet-600">
+                  {subscription?.tariffType === 'PREMIUM' ? `до ${subscription.specializationCount}` : '1'}
+                </p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-xl text-center">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Отклики</p>
+                <p className="text-xl font-extrabold text-emerald-600">
+                  {subscription?.tariffType === 'PREMIUM' ? '∞' : 'Платные'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick scroll buttons: Мои отклики / Активные заказы */}
         <div className="grid grid-cols-2 gap-4 mb-8">
@@ -272,43 +427,6 @@ export default function ExecutorDashboard() {
             <ChevronDown className="h-5 w-5 text-emerald-400 group-hover:translate-y-0.5 transition-transform" />
           </button>
         </div>
-
-        {/* Balance & Bonus Info */}
-        <Card className="mb-8 overflow-hidden border-blue-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Info className="h-5 w-5 text-blue-600" /> Баланс и Бонусы
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 bg-blue-50/80 rounded-xl border border-blue-100">
-                <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                  <Wallet className="h-4 w-4" /> Что такое Баланс?
-                </h4>
-                <p className="text-sm text-blue-800 leading-relaxed">
-                  Баланс — это ваш основной счёт на платформе. С него списывается оплата за отклики на заказы.
-                  Пополнить баланс можно через раздел «Пополнить баланс» (функция скоро будет доступна).
-                </p>
-              </div>
-              <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-100">
-                <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
-                  <Gift className="h-4 w-4" /> Что такое Бонусы?
-                </h4>
-                <p className="text-sm text-emerald-800 leading-relaxed">
-                  Бонусы — это дополнительные средства, которые можно использовать для оплаты откликов. При списании сначала используются бонусы, затем основной баланс.
-                  <strong> 1000 бонусных рублей</strong> начисляется после первого пополнения баланса на сумму от 150₽ (в течение 30 дней после регистрации).
-                </p>
-              </div>
-            </div>
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
-              <HelpCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-800">
-                <strong>Как пополнить баланс?</strong> Функция пополнения через платёжную систему скоро будет доступна. Следите за обновлениями!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* My Responses */}
         <div className="space-y-8">
@@ -403,7 +521,7 @@ export default function ExecutorDashboard() {
           </div>
 
           {/* Completed Orders */}
-          <div>
+          <div id="completed-orders">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="section-title">Завершённые заказы</h2>
@@ -418,158 +536,42 @@ export default function ExecutorDashboard() {
               </Card>
             ) : (
               <>
-                <div className="grid md:grid-cols-2 gap-4 stagger-children">
-                  {(showAllCompleted ? completedOrders : completedOrders.slice(0, 4)).map((order) => (
-                    <OrderCard key={order.id} order={order} />
-                  ))}
-                </div>
-                {completedOrders.length > 4 && (
-                  <button
-                    onClick={() => setShowAllCompleted(!showAllCompleted)}
-                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-2xl transition-all duration-300 group"
-                  >
-                    {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
-                  </button>
+                {showAllCompleted && (
+                  <div className="space-y-2 stagger-children">
+                    {completedOrders.map((order) => (
+                      <div key={order.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm truncate">
+                              {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{order.description}</p>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs text-muted-foreground">{order.region}</span>
+                              <span className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('ru-RU')}</span>
+                              <span className="text-xs font-bold text-blue-600">{parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
+                            </div>
+                          </div>
+                          <span className="ml-3 px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg flex-shrink-0">Завершён</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
+                <button
+                  onClick={() => setShowAllCompleted(!showAllCompleted)}
+                  className="w-full mt-2 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-2xl transition-all duration-300 group"
+                >
+                  {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+                </button>
               </>
             )}
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-4 gap-4 mt-8 mb-8 stagger-children">
-          <Card
-            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-blue-200"
-            onClick={() => router.push('/orders')}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Search className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Заказы</CardTitle>
-                  <CardDescription className="text-xs">Найти работу</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full gap-2" size="sm">
-                Смотреть <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-violet-200"
-            onClick={() => router.push('/profile')}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-violet-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <User className="h-6 w-6 text-violet-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Профиль</CardTitle>
-                  <CardDescription className="text-xs">Редактировать</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" size="sm">Перейти</Button>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-amber-200"
-            onClick={() => router.push('/executor/tariffs')}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FileText className="h-6 w-6 text-amber-500" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Тарифы</CardTitle>
-                  <CardDescription className="text-xs">Подробности</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" size="sm">Подробнее</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center">
-                  <Wallet className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Баланс</CardTitle>
-                  <CardDescription className="text-xs">Пополнить</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" size="sm" disabled>Скоро</Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tariff Management */}
-        <Card className="mb-8 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500" />
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Управление тарифом</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                  <Zap className="h-5 w-5 text-violet-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</h3>
-                  {subscription?.expiresAt && (
-                    <p className="text-xs text-muted-foreground">
-                      до {new Date(subscription.expiresAt).toLocaleDateString('ru-RU')}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <Button onClick={() => router.push('/executor/tariffs')} variant="outline" size="sm" className="gap-1">
-                Изменить <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-3">
-              <div className="p-4 bg-gray-50 rounded-xl text-center">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Стоимость отклика</p>
-                <p className="text-xl font-extrabold text-blue-600">
-                  {subscription?.tariffType === 'COMFORT' ? '500' : subscription?.tariffType === 'PREMIUM' ? '0' : '150'} ₽
-                </p>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-xl text-center">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Специализации</p>
-                <p className="text-xl font-extrabold text-violet-600">
-                  {subscription?.tariffType === 'PREMIUM' ? `до ${subscription.specializationCount}` : '1'}
-                </p>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-xl text-center">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Отклики</p>
-                <p className="text-xl font-extrabold text-emerald-600">
-                  {subscription?.tariffType === 'PREMIUM' ? '∞' : 'Платные'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Feedback — at the bottom */}
-        <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft flex items-center justify-between flex-wrap gap-4">
+        <div className="mb-8 mt-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center">
               <MessageCircle className="h-5 w-5 text-gray-400" />
@@ -582,6 +584,9 @@ export default function ExecutorDashboard() {
             </a>
             <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
               <MessageCircle className="h-4 w-4" /> Telegram
+            </a>
+            <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
+              <MessageCircle className="h-4 w-4" /> MAX
             </a>
           </div>
         </div>

@@ -218,11 +218,14 @@ export default function CustomerDashboard() {
             <span className="text-sm font-semibold text-gray-600">Обратная связь:</span>
           </div>
           <div className="flex gap-4">
-            <a href="mailto:SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+            <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
               <Mail className="h-4 w-4" /> Email
             </a>
             <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
               <MessageCircle className="h-4 w-4" /> Telegram
+            </a>
+            <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
+              <MessageCircle className="h-4 w-4" /> MAX
             </a>
           </div>
         </div>
@@ -282,20 +285,35 @@ export default function CustomerDashboard() {
                   <p className="section-subtitle">{completedOrders.length} завершённых</p>
                 </div>
               </div>
-              <div className="grid md:grid-cols-2 gap-4 stagger-children">
-                {(showAllCompleted ? completedOrders : completedOrders.slice(0, 4)).map((order) => (
-                  <OrderCard key={order.id} order={order} isCustomer={true} />
-                ))}
-              </div>
-              {completedOrders.length > 4 && (
-                <button
-                  onClick={() => setShowAllCompleted(!showAllCompleted)}
-                  className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-2xl transition-all duration-300 group"
-                >
-                  {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
-                </button>
+              {showAllCompleted && (
+                <div className="space-y-2 stagger-children">
+                  {completedOrders.map((order) => (
+                    <div key={order.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm truncate">
+                            {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{order.description}</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-xs text-muted-foreground">{order.region}</span>
+                            <span className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('ru-RU')}</span>
+                            <span className="text-xs font-bold text-blue-600">{parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
+                          </div>
+                        </div>
+                        <span className="ml-3 px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg flex-shrink-0">Завершён</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
+              <button
+                onClick={() => setShowAllCompleted(!showAllCompleted)}
+                className="w-full mt-2 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-2xl transition-all duration-300 group"
+              >
+                {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
+                <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+              </button>
             </div>
           )}
         </div>
