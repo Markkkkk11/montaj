@@ -58,16 +58,16 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Дашборд</h1>
+    <div className="p-4 sm:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold">Дашборд</h1>
         <p className="text-muted-foreground mt-2">
           Общая статистика платформы
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">Пользователи</CardTitle>
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Детальная статистика */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Статистика заказов</CardTitle>

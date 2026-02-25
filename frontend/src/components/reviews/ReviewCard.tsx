@@ -68,7 +68,7 @@ export function ReviewCard({ review, showOrder = false }: ReviewCardProps) {
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-1">
               <div>
                 <h4 className="font-semibold text-sm">
                   {review.reviewer?.fullName}

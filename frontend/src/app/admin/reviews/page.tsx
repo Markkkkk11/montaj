@@ -194,9 +194,9 @@ export default function AdminReviewsPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Модерация отзывов</h1>
+    <div className="p-4 sm:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold">Модерация отзывов</h1>
         <p className="text-muted-foreground mt-2">
           Просмотр и модерация отзывов пользователей. Всего: {total}
         </p>
@@ -205,8 +205,8 @@ export default function AdminReviewsPage() {
       {/* Фильтры */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <div className="w-64">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="w-full sm:w-64">
               <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setPage(1); }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Фильтр по статусу" />
@@ -242,6 +242,7 @@ export default function AdminReviewsPage() {
             </div>
           ) : (
             <>
+              <div className="overflow-x-auto -mx-6">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -329,6 +330,7 @@ export default function AdminReviewsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
 
               {/* Пагинация */}
               {totalPages > 1 && (

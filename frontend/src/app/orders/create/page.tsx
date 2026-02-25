@@ -76,10 +76,10 @@ export default function CreateOrderPage() {
     <div className="min-h-screen bg-gray-50/50">
       <Header showBack backHref="/customer/dashboard" />
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl page-enter">
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-3xl page-enter">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-2xl font-extrabold">Создать заказ</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-extrabold">Создать заказ</CardTitle>
             <CardDescription>Заполните информацию о работе</CardDescription>
           </CardHeader>
           <CardContent>
@@ -179,7 +179,7 @@ export default function CreateOrderPage() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="budget">Бюджет *</Label>
                   <Input
@@ -247,7 +247,7 @@ export default function CreateOrderPage() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button type="submit" className="flex-1" disabled={isLoading} size="lg">
                   {isLoading ? (
                     <div className="flex items-center gap-2">

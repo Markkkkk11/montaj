@@ -276,19 +276,19 @@ export default function CustomerDashboard() {
                 <div className="space-y-2 stagger-children">
                   {completedOrders.map((order) => (
                     <div key={order.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-gray-900 text-sm truncate">
                             {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{order.description}</p>
-                          <div className="flex items-center gap-3 mt-1">
+                          <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
                             <span className="text-xs text-muted-foreground">{order.region}</span>
                             <span className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('ru-RU')}</span>
                             <span className="text-xs font-bold text-blue-600">{parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
                           </div>
                         </div>
-                        <span className="ml-3 px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg flex-shrink-0">Завершён</span>
+                        <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg flex-shrink-0">Завершён</span>
                       </div>
                     </div>
                   ))}

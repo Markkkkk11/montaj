@@ -126,10 +126,10 @@ function RegisterContent() {
   // Шаг 1: Выбор роли
   if (step === 'role') {
     return (
-      <div className="min-h-screen relative flex items-center justify-center p-4">
+      <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
-        <div className="absolute top-20 right-10 w-72 h-72 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-20 left-10 w-80 h-80 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-20 -right-10 w-48 sm:w-72 h-48 sm:h-72 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-20 -left-10 w-56 sm:w-80 h-56 sm:h-80 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="w-full max-w-2xl relative animate-fade-in-up">
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-gray-900 mb-6 transition-colors group">
@@ -138,44 +138,44 @@ function RegisterContent() {
           </Link>
 
           <Card className="border-0 shadow-soft-xl">
-            <CardHeader className="text-center pb-2 pt-8">
-              <div className="mx-auto w-14 h-14 bg-gradient-to-br from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
-                <UserPlus className="h-7 w-7 text-white" />
+            <CardHeader className="text-center pb-2 pt-6 sm:pt-8">
+              <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
+                <UserPlus className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
               </div>
-              <CardTitle className="text-2xl font-extrabold">Регистрация</CardTitle>
-              <CardDescription className="text-base">Выберите, кем вы хотите зарегистрироваться</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl font-extrabold">Регистрация</CardTitle>
+              <CardDescription className="text-sm sm:text-base">Выберите, кем вы хотите зарегистрироваться</CardDescription>
             </CardHeader>
-            <CardContent className="px-8 pb-8 space-y-4">
+            <CardContent className="px-4 sm:px-8 pb-6 sm:pb-8 space-y-3 sm:space-y-4">
               <button
                 onClick={() => handleRoleSelect('CUSTOMER')}
-                className="w-full p-6 border-2 border-gray-100 rounded-2xl hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 text-left group flex items-center gap-5 hover:shadow-soft"
+                className="w-full p-4 sm:p-6 border-2 border-gray-100 rounded-2xl hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 text-left group flex items-center gap-3 sm:gap-5 hover:shadow-soft"
               >
-                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                  <Briefcase className="h-7 w-7 text-blue-600" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <Briefcase className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold mb-1 text-gray-900">Заказчик</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Разместите заказ и выберите исполнителя из откликнувшихся специалистов
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-bold mb-0.5 sm:mb-1 text-gray-900">Заказчик</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Разместите заказ и выберите исполнителя
                   </p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+                <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
               </button>
 
               <button
                 onClick={() => handleRoleSelect('EXECUTOR')}
-                className="w-full p-6 border-2 border-gray-100 rounded-2xl hover:border-violet-300 hover:bg-violet-50/50 transition-all duration-300 text-left group flex items-center gap-5 hover:shadow-soft"
+                className="w-full p-4 sm:p-6 border-2 border-gray-100 rounded-2xl hover:border-violet-300 hover:bg-violet-50/50 transition-all duration-300 text-left group flex items-center gap-3 sm:gap-5 hover:shadow-soft"
               >
-                <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                  <Wrench className="h-7 w-7 text-violet-600" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-violet-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <Wrench className="h-6 w-6 sm:h-7 sm:w-7 text-violet-600" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold mb-1 text-gray-900">Исполнитель</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Откликайтесь на заказы и выполняйте работы по монтажу
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-bold mb-0.5 sm:mb-1 text-gray-900">Исполнитель</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Откликайтесь на заказы и выполняйте работы
                   </p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-violet-500 transition-colors" />
+                <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-violet-500 transition-colors flex-shrink-0" />
               </button>
 
               <div className="pt-4 text-center">
@@ -196,9 +196,9 @@ function RegisterContent() {
   // Шаг 2: Заполнение информации
   if (step === 'info') {
     return (
-      <div className="min-h-screen relative flex items-center justify-center p-4">
+      <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
-        <div className="absolute top-20 right-10 w-72 h-72 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-20 -right-10 w-48 sm:w-72 h-48 sm:h-72 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="w-full max-w-md relative animate-fade-in-up">
           <button
@@ -210,7 +210,7 @@ function RegisterContent() {
           </button>
 
           <Card className="border-0 shadow-soft-xl">
-            <CardHeader className="pt-8 px-8">
+            <CardHeader className="pt-6 sm:pt-8 px-4 sm:px-8">
               <div className="flex items-center gap-3 mb-2">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === 'CUSTOMER' ? 'bg-blue-50' : 'bg-violet-50'}`}>
                   {role === 'CUSTOMER' ? <Briefcase className="h-5 w-5 text-blue-600" /> : <Wrench className="h-5 w-5 text-violet-600" />}
@@ -221,7 +221,7 @@ function RegisterContent() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="px-8 pb-8">
+            <CardContent className="px-4 sm:px-8 pb-6 sm:pb-8">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="fullName">ФИО *</Label>
@@ -343,17 +343,17 @@ function RegisterContent() {
 
   // Шаг 3: Верификация телефона
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-20 -left-10 w-48 sm:w-72 h-48 sm:h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative animate-fade-in-up">
         <Card className="border-0 shadow-soft-xl">
-          <CardHeader className="text-center pt-8 px-8">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
-              <span className="text-3xl">📞</span>
+          <CardHeader className="text-center pt-6 sm:pt-8 px-4 sm:px-8">
+            <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
+              <span className="text-2xl sm:text-3xl">📞</span>
             </div>
-            <CardTitle className="text-2xl font-extrabold">Подтверждение телефона</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-extrabold">Подтверждение телефона</CardTitle>
             <CardDescription className="space-y-2">
               <p>
                 Мы позвоним на номер <strong>{registeredPhone}</strong>
@@ -363,11 +363,11 @@ function RegisterContent() {
               </p>
             </CardDescription>
           </CardHeader>
-          <CardContent className="px-8 pb-8">
+          <CardContent className="px-4 sm:px-8 pb-6 sm:pb-8">
             <form onSubmit={handleVerify} className="space-y-6">
-              <div className="flex items-center justify-center gap-3 px-4">
+              <div className="flex items-center justify-center gap-2 sm:gap-3 px-2 sm:px-4">
                 {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="w-14 h-14 flex-shrink-0">
+                  <div key={i} className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0">
                     <input
                       id={`code-${i}`}
                       type="text"

@@ -84,10 +84,10 @@ export default function PublicProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.jpg" alt="SVMontaj" className="h-14 w-14 rounded-full object-cover" />
-          <Button variant="ghost" onClick={() => router.back()}>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <img src="/logo.jpg" alt="SVMontaj" className="h-10 w-10 sm:h-14 sm:w-14 rounded-full object-cover" />
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Назад
           </Button>
@@ -95,12 +95,12 @@ export default function PublicProfilePage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-3xl">
         {/* Avatar + Name */}
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300 flex-shrink-0">
                 {profile.photo ? (
                   <img
                     src={profile.photo.startsWith('/') ? `${API_URL}${profile.photo}` : profile.photo}
@@ -108,13 +108,13 @@ export default function PublicProfilePage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-3xl text-gray-500">{profile.fullName.charAt(0).toUpperCase()}</span>
+                  <span className="text-2xl sm:text-3xl text-gray-500">{profile.fullName.charAt(0).toUpperCase()}</span>
                 )}
               </div>
-              <div>
-                <h3 className="text-2xl font-bold">{profile.fullName}</h3>
-                <p className="text-muted-foreground">{profile.role === 'CUSTOMER' ? 'Заказчик' : 'Исполнитель'}</p>
-                <div className="flex items-center gap-4 mt-2">
+              <div className="text-center sm:text-left">
+                <h3 className="text-xl sm:text-2xl font-bold">{profile.fullName}</h3>
+                <p className="text-muted-foreground text-sm">{profile.role === 'CUSTOMER' ? 'Заказчик' : 'Исполнитель'}</p>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 mt-2">
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                     <span className="font-semibold">{profile.rating.toFixed(1)}</span>

@@ -131,9 +131,9 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Настройки</h1>
+    <div className="p-4 sm:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold">Настройки</h1>
         <p className="text-muted-foreground mt-2">
           Управление параметрами платформы
         </p>
@@ -152,7 +152,7 @@ export default function AdminSettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="platformName">Название платформы</Label>
                 <Input
@@ -233,7 +233,7 @@ export default function AdminSettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Автоодобрение пользователей</Label>
                 <Select
@@ -313,7 +313,7 @@ export default function AdminSettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="standardPrice">Стандарт — цена (₽/мес)</Label>
                 <Input
@@ -386,7 +386,7 @@ export default function AdminSettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Рассылка включена</Label>
                 <Select
@@ -453,7 +453,7 @@ export default function AdminSettingsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="flex justify-between py-2 border-b">
                 <span className="text-muted-foreground">Версия платформы</span>
                 <span className="font-medium">1.0.0</span>

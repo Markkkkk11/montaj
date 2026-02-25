@@ -181,21 +181,21 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-28 pb-20 overflow-hidden">
-        {/* Background decorations */}
+      <section className="relative pt-24 sm:pt-28 pb-16 sm:pb-20 overflow-hidden">
+        {/* Background decorations - contained within section */}
         <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-40 right-1/4 w-48 h-48 bg-pink-200/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-20 -left-10 w-48 sm:w-72 h-48 sm:h-72 bg-blue-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 -right-10 w-56 sm:w-96 h-56 sm:h-96 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-40 right-1/4 w-32 sm:w-48 h-32 sm:h-48 bg-pink-200/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="container mx-auto px-4 relative">
           <div className="max-w-4xl mx-auto text-center animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur border border-blue-100 rounded-full px-4 py-2 mb-8 shadow-soft">
-              <Zap className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-gray-700">Платформа монтажных услуг №1</span>
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur border border-blue-100 rounded-full px-3 sm:px-4 py-2 mb-6 sm:mb-8 shadow-soft">
+              <Zap className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-gray-700">Платформа монтажных услуг №1</span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight leading-[1.1]">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 sm:mb-6 tracking-tight leading-[1.1]">
               <span className="text-gray-900">Найдите мастера</span>
               <br />
               <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
@@ -203,40 +203,40 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-gray-500 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-2">
               Проверенные специалисты по установке окон, дверей, потолков, кондиционеров
               и другим монтажным работам — рядом с вами
-        </p>
+            </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/register?role=customer">
-                <Button size="xl" className="w-full sm:w-auto gap-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 shadow-xl shadow-blue-500/25">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+              <Link href="/register?role=customer">
+                <Button size="lg" className="w-full sm:w-auto gap-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 shadow-xl shadow-blue-500/25">
                   Разместить заказ
                   <ArrowRight className="h-5 w-5" />
                 </Button>
-          </Link>
-          <Link href="/register?role=executor">
-                <Button size="xl" variant="outline" className="w-full sm:w-auto gap-2 border-2">
-              Стать исполнителем
+              </Link>
+              <Link href="/register?role=executor">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 border-2">
+                  Стать исполнителем
                   <ChevronRight className="h-5 w-5" />
-            </Button>
-          </Link>
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-20 bg-white relative">
+      <section className="py-12 sm:py-20 bg-white relative">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Как это работает</h2>
-            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <div className="text-center mb-10 sm:mb-16 animate-fade-in">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Как это работает</h2>
+            <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">
               Три простых шага до идеального результата
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 stagger-children max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 stagger-children max-w-5xl mx-auto">
             {[
               {
                 step: '01',
@@ -279,12 +279,12 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-gray-50/80">
+      <section className="py-12 sm:py-20 bg-gray-50/80">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Почему выбирают нас</h2>
+          <div className="text-center mb-10 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Почему выбирают нас</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto stagger-children">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto stagger-children">
             {FEATURES.map((feature) => (
               <div key={feature.title} className="flex flex-col items-center text-center group">
                 <div className={`w-16 h-16 ${feature.bg} rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-soft`}>
@@ -299,11 +299,11 @@ export default function Home() {
       </section>
 
       {/* Specializations */}
-      <section className="py-20 bg-white">
+      <section className="py-12 sm:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Наши специализации</h2>
-            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <div className="text-center mb-10 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Наши специализации</h2>
+            <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">
               Выберите направление и найдите подходящего мастера
             </p>
           </div>
@@ -313,11 +313,11 @@ export default function Home() {
               <div
                 key={spec.name}
                 onClick={() => setSelectedSpec(spec)}
-                className={`relative p-6 bg-white rounded-2xl border-2 ${spec.border} hover:shadow-soft-lg transition-shadow duration-300 cursor-pointer group hover:-translate-y-1 overflow-hidden`}
+                className={`relative p-4 sm:p-6 bg-white rounded-2xl border-2 ${spec.border} hover:shadow-soft-lg transition-shadow duration-300 cursor-pointer group hover:-translate-y-1 overflow-hidden`}
               >
                 <div className={`absolute inset-0 ${spec.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                 <div className="relative">
-                  <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300 inline-block">
+                  <div className="text-3xl sm:text-5xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300 inline-block">
                     {spec.icon}
                   </div>
                   <h4 className="text-lg font-bold mb-2 text-gray-900">{spec.name}</h4>
@@ -379,24 +379,24 @@ export default function Home() {
       )}
 
       {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden">
+      <section className="py-12 sm:py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-violet-600 pointer-events-none" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0aDR2MmgtNHYtMnptMC04aDR2MmgtNHYtMnptLTggOGg0djJoLTR2LTJ6bTAtOGg0djJoLTR2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30 pointer-events-none" />
         <div className="container mx-auto px-4 text-center relative">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mb-4">
             Готовы начать?
           </h2>
-          <p className="text-blue-100 text-lg mb-8 max-w-xl mx-auto">
+          <p className="text-blue-100 text-base sm:text-lg mb-6 sm:mb-8 max-w-xl mx-auto">
             Зарегистрируйтесь бесплатно и получите доступ к сотням заказов и исполнителей
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
             <Link href="/register?role=customer">
-              <Button size="xl" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-gray-50 shadow-xl">
+              <Button size="lg" className="w-full sm:w-auto bg-white text-blue-600 hover:bg-gray-50 shadow-xl">
                 Я заказчик
               </Button>
             </Link>
             <Link href="/register?role=executor">
-              <Button size="xl" className="w-full sm:w-auto bg-white/20 backdrop-blur-sm border-2 border-white/40 text-white hover:bg-white/30 hover:border-white/60 shadow-xl">
+              <Button size="lg" className="w-full sm:w-auto bg-white/20 backdrop-blur-sm border-2 border-white/40 text-white hover:bg-white/30 hover:border-white/60 shadow-xl">
                 Я исполнитель
               </Button>
             </Link>
@@ -405,14 +405,14 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-white">
+      <section className="py-12 sm:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-blue-50 rounded-full px-4 py-2 mb-6">
-              <HelpCircle className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">Ответы на вопросы</span>
+          <div className="text-center mb-10 sm:mb-16">
+            <div className="inline-flex items-center gap-2 bg-blue-50 rounded-full px-3 sm:px-4 py-2 mb-4 sm:mb-6">
+              <HelpCircle className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-blue-700">Ответы на вопросы</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Популярные вопросы</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">Популярные вопросы</h2>
             <p className="text-gray-500 text-lg max-w-xl mx-auto">
               Всё, что нужно знать о работе с платформой
             </p>
@@ -457,8 +457,8 @@ export default function Home() {
           <div className="max-w-2xl mx-auto">
             <Card className="overflow-hidden border-0 shadow-soft-lg">
               <CardHeader className="text-center pb-2 pt-8">
-                <CardTitle className="text-2xl font-extrabold">Обратная связь</CardTitle>
-                <CardDescription className="text-base">Есть вопросы? Свяжитесь с нами</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl font-extrabold">Обратная связь</CardTitle>
+                <CardDescription className="text-sm sm:text-base">Есть вопросы? Свяжитесь с нами</CardDescription>
               </CardHeader>
               <CardContent className="px-4 sm:px-8 pb-6 sm:pb-8">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -497,14 +497,14 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-white py-10">
+      <footer className="border-t bg-white py-6 sm:py-10">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3">
               <img src="/logo.jpg" alt="SVMontaj" className="h-8 w-8 rounded-full object-cover" />
               <span className="font-bold"><span className="text-blue-600">SV</span><span className="text-red-500">Montaj</span></span>
             </div>
-            <div className="text-sm text-muted-foreground text-center md:text-right">
+            <div className="text-sm text-muted-foreground text-center sm:text-right">
               <p>&copy; 2026 SVMontaj. Все права защищены.</p>
               <p className="text-xs mt-1">ИНН 502715051593</p>
             </div>

@@ -113,9 +113,9 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Управление заказами</h1>
+    <div className="p-4 sm:p-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold">Управление заказами</h1>
         <p className="text-muted-foreground mt-2">
           Просмотр и управление всеми заказами на платформе
         </p>
@@ -124,7 +124,7 @@ export default function AdminOrdersPage() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -163,6 +163,7 @@ export default function AdminOrdersPage() {
           {loading ? (
             <div className="text-center py-8">Загрузка...</div>
           ) : (
+            <div className="overflow-x-auto -mx-6">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -238,6 +239,7 @@ export default function AdminOrdersPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

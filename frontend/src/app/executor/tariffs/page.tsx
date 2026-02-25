@@ -91,8 +91,8 @@ export default function TariffsPage() {
     <div className="min-h-screen bg-gray-50/50">
       <Header showBack />
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl page-enter">
-        <div className="text-center mb-8 sm:mb-10">
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-5xl page-enter">
+        <div className="text-center mb-6 sm:mb-10">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-2">Выбор тарифа</h1>
           <p className="text-sm sm:text-base text-muted-foreground">Выберите подходящий тариф для работы на платформе</p>
         </div>
@@ -141,8 +141,8 @@ export default function TariffsPage() {
                   <CardTitle className="text-xl">{tariff.name}</CardTitle>
                 <CardDescription>{tariff.description}</CardDescription>
                   <div className="mt-3">
-                    <span className="text-3xl font-extrabold text-gray-900">{tariff.price}</span>
-                    <span className="text-sm text-muted-foreground ml-2">{tariff.period}</span>
+                    <span className="text-2xl sm:text-3xl font-extrabold text-gray-900">{tariff.price}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground ml-2">{tariff.period}</span>
                 </div>
               </CardHeader>
               <CardContent>

@@ -170,10 +170,10 @@ export default function EditProfilePage() {
     <div className="min-h-screen bg-gray-50/50">
       <Header showBack backHref="/profile" />
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl page-enter">
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-1">Редактирование профиля</h1>
-          <p className="text-muted-foreground">Обновите информацию о себе</p>
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-3xl page-enter">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-1">Редактирование профиля</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Обновите информацию о себе</p>
         </div>
 
         {user.role === 'EXECUTOR' && (
@@ -196,9 +196,9 @@ export default function EditProfilePage() {
         {/* Avatar Upload */}
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 sm:gap-6">
               <div className="relative group">
-                <div className="w-24 h-24 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200 shadow-soft">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200 shadow-soft">
                   {user.photo ? (
                     <img
                       src={user.photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.photo}` : user.photo}

@@ -92,7 +92,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
       <div className="container mx-auto px-4 max-w-2xl">
         <Button variant="ghost" onClick={() => router.back()} className="mb-4">
           ← Назад
@@ -100,7 +100,7 @@ export default function ContactPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Обратная связь</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">Обратная связь</CardTitle>
             <CardDescription>
               Задайте вопрос или отправьте предложение. Ваше сообщение будет отправлено администратору.
             </CardDescription>
@@ -118,7 +118,7 @@ export default function ContactPage() {
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="phone">Телефон *</Label>
                   <Input

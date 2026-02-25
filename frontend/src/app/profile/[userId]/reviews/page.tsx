@@ -46,10 +46,10 @@ export default function UserReviewsPage() {
     <div className="min-h-screen bg-gray-50/50">
       <Header showBack />
 
-      <main className="container mx-auto px-4 py-8 page-enter">
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-3">
-            <Star className="h-7 w-7 text-amber-500" /> Отзывы
+      <main className="container mx-auto px-4 py-6 sm:py-8 page-enter">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-3">
+            <Star className="h-6 w-6 sm:h-7 sm:w-7 text-amber-500" /> Отзывы
           </h1>
         </div>
 
@@ -65,7 +65,7 @@ export default function UserReviewsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {stats && (
               <div className="lg:col-span-1">
                 <ReviewStats stats={stats} />

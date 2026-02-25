@@ -69,10 +69,10 @@ export default function SpecializationsPage() {
     <div className="min-h-screen bg-gray-50/50">
       <Header showBack />
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl page-enter">
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-3xl page-enter">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-2xl font-extrabold">Специализации</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-extrabold">Специализации</CardTitle>
             <CardDescription>Выберите категории заказов, которые вы хотите видеть</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

@@ -366,19 +366,19 @@ export default function ExecutorDashboard() {
         )}
 
         {/* Tariff Management — above Мои отклики */}
-        <Card className="mb-6 sm:mb-8 overflow-hidden">
+        <Card className="mb-6 sm:mb-8 overflow-hidden relative">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500" />
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Управление тарифом</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                  <Zap className="h-5 w-5 text-violet-600" />
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl mb-4 gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                  <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600" />
                 </div>
-                <div>
-                  <h3 className="font-bold">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</h3>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-sm sm:text-base truncate">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</h3>
                   {subscription?.expiresAt && (
                     <p className="text-xs text-muted-foreground">
                       до {new Date(subscription.expiresAt).toLocaleDateString('ru-RU')}
@@ -386,8 +386,8 @@ export default function ExecutorDashboard() {
                   )}
                 </div>
               </div>
-              <Button onClick={() => router.push('/executor/tariffs')} variant="outline" size="sm" className="gap-1">
-                Изменить <ChevronRight className="h-4 w-4" />
+              <Button onClick={() => router.push('/executor/tariffs')} variant="outline" size="sm" className="gap-1 flex-shrink-0 text-xs sm:text-sm">
+                Изменить <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
 
@@ -468,11 +468,11 @@ export default function ExecutorDashboard() {
               <div className="space-y-3 stagger-children">
                 {pendingResponses.map((response) => (
                   <Card key={response.id} className="hover:shadow-soft-lg transition-all duration-300">
-                    <CardContent className="pt-5 pb-5">
-                      <div className="flex justify-between items-center">
+                    <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
+                      <div className="flex justify-between items-center gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-gray-900 truncate">{response.order?.title}</h4>
-                          <div className="flex items-center gap-3 mt-1">
+                          <h4 className="font-bold text-gray-900 truncate text-sm sm:text-base">{response.order?.title}</h4>
+                          <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
                             <span className="text-xs text-muted-foreground">
                               {new Date(response.createdAt).toLocaleDateString('ru-RU')}
                             </span>
@@ -483,9 +483,10 @@ export default function ExecutorDashboard() {
                           variant="outline"
                           size="sm"
                           onClick={() => router.push(`/orders/${response.orderId}`)}
-                          className="gap-1 ml-3"
+                          className="gap-1 flex-shrink-0 text-xs sm:text-sm"
                         >
-                          Открыть <ChevronRight className="h-4 w-4" />
+                          <span className="hidden sm:inline">Открыть</span>
+                          <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardContent>
@@ -552,19 +553,19 @@ export default function ExecutorDashboard() {
                   <div className="space-y-2 stagger-children">
                     {completedOrders.map((order) => (
                       <div key={order.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-900 text-sm truncate">
                               {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{order.description}</p>
-                            <div className="flex items-center gap-3 mt-1">
+                            <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
                               <span className="text-xs text-muted-foreground">{order.region}</span>
                               <span className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('ru-RU')}</span>
                               <span className="text-xs font-bold text-blue-600">{parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
                             </div>
                           </div>
-                          <span className="ml-3 px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg flex-shrink-0">Завершён</span>
+                          <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg flex-shrink-0">Завершён</span>
                         </div>
                       </div>
                     ))}

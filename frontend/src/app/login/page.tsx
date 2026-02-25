@@ -59,11 +59,11 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-20 right-10 w-80 h-80 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-20 -left-10 w-48 sm:w-72 h-48 sm:h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 -right-10 w-56 sm:w-80 h-56 sm:h-80 bg-violet-200/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative animate-fade-in-up">
         {/* Back button */}
@@ -80,7 +80,7 @@ function LoginContent() {
             <CardTitle className="text-2xl font-extrabold">Вход в систему</CardTitle>
             <CardDescription className="text-base">Введите ваш телефон и пароль</CardDescription>
           </CardHeader>
-          <CardContent className="px-8 pb-8">
+          <CardContent className="px-5 sm:px-8 pb-6 sm:pb-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <Label htmlFor="phone">Телефон</Label>

@@ -115,11 +115,11 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-gray-50/50">
       <Header showBack />
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl page-enter">
-        <div className="mb-8 flex items-center justify-between">
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-3xl page-enter">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-3">
-              <Bell className="h-7 w-7" /> Уведомления
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-3">
+              <Bell className="h-6 w-6 sm:h-7 sm:w-7" /> Уведомления
             </h1>
               {unreadCount > 0 && (
               <p className="text-sm text-muted-foreground mt-1">

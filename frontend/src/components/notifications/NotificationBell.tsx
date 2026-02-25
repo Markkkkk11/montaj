@@ -150,7 +150,7 @@ export function NotificationBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 max-h-[500px] overflow-y-auto">
+      <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-80 max-h-[500px] overflow-y-auto">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Уведомления</span>
           {unreadCount > 0 && (

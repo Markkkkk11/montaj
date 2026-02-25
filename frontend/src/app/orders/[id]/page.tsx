@@ -407,9 +407,9 @@ export default function OrderDetailPage() {
             )}
 
             {/* Actions */}
-            <div className="flex gap-2 sm:gap-3 pt-2 flex-wrap">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
               {canRespond && !hasResponded && (
-                <Button onClick={handleRespond} disabled={actionLoading} className="flex-1 min-w-[200px]" size="lg">
+                <Button onClick={handleRespond} disabled={actionLoading} className="flex-1 w-full sm:w-auto" size="lg">
                   {actionLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -447,7 +447,7 @@ export default function OrderDetailPage() {
 
               {isAssignedExecutor && order.status === 'IN_PROGRESS' && !order.workStartedAt && (
                 <>
-                  <Button onClick={handleStartWork} disabled={actionLoading} className="flex-1 min-w-[200px] gap-2" size="lg" variant="success">
+                  <Button onClick={handleStartWork} disabled={actionLoading} className="flex-1 w-full sm:w-auto gap-2" size="lg" variant="success">
                     <Play className="h-5 w-5" /> Приступить к работе
                   </Button>
                   <Button onClick={handleCancelWork} disabled={actionLoading} variant="destructive" size="lg">
@@ -458,7 +458,7 @@ export default function OrderDetailPage() {
 
               {isAssignedExecutor && order.status === 'IN_PROGRESS' && order.workStartedAt && (
                 <>
-                  <Button onClick={handleCompleteOrder} disabled={actionLoading} className="flex-1 min-w-[200px] gap-2" size="lg" variant="success">
+                  <Button onClick={handleCompleteOrder} disabled={actionLoading} className="flex-1 w-full sm:w-auto gap-2" size="lg" variant="success">
                     <CheckCircle className="h-5 w-5" /> Заказ выполнен
                   </Button>
                   <Button onClick={handleCancelWork} disabled={actionLoading} variant="outline">
@@ -474,7 +474,7 @@ export default function OrderDetailPage() {
               )}
 
               {order.status === 'COMPLETED' && (isCustomer || isAssignedExecutor) && canReview && (
-                <Button onClick={() => router.push(`/orders/${orderId}/review`)} variant="outline" className="flex-1 min-w-[200px] gap-2">
+                <Button onClick={() => router.push(`/orders/${orderId}/review`)} variant="outline" className="flex-1 w-full sm:w-auto gap-2">
                   <Star className="h-4 w-4" /> Оставить отзыв
                 </Button>
               )}
@@ -531,13 +531,13 @@ export default function OrderDetailPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-2 items-center flex-wrap">
-                      <Button variant="outline" size="sm" onClick={() => router.push(`/profile/${response.executorId}`)}>
+                    <div className="flex gap-2 items-center flex-wrap mt-2">
+                      <Button variant="outline" size="sm" onClick={() => router.push(`/profile/${response.executorId}`)} className="text-xs sm:text-sm">
                         Профиль
                       </Button>
                       {order.status === 'PUBLISHED' && response.status === 'PENDING' && (
-                        <Button onClick={() => handleSelectExecutor(response.executorId)} disabled={actionLoading} size="sm">
-                          Выбрать исполнителя
+                        <Button onClick={() => handleSelectExecutor(response.executorId)} disabled={actionLoading} size="sm" className="text-xs sm:text-sm">
+                          Выбрать
                         </Button>
                       )}
                       {response.status === 'ACCEPTED' && (
