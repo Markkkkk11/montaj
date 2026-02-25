@@ -3,6 +3,7 @@ import { hashPassword, comparePassword } from '../utils/hash';
 import { generateToken } from '../utils/jwt';
 import { RegisterData, LoginData } from '../types';
 import smsService from './sms.service';
+import settingsService from './settings.service';
 
 export class AuthService {
   /**
@@ -37,6 +38,10 @@ export class AuthService {
     // Хэшируем пароль
     const hashedPassword = await hashPassword(data.password);
 
+    // Проверяем настройку автоодобрения пользователей
+    const autoApprove = await settingsService.get('autoApproveUsers');
+    const initialStatus = autoApprove === 'true' ? 'ACTIVE' : 'PENDING';
+
     // Создаём пользователя
     const user = await prisma.user.create({
       data: {
@@ -51,6 +56,7 @@ export class AuthService {
         messengers: (data.messengers || {}) as any,
         inn: data.inn,
         ogrn: data.ogrn,
+        status: initialStatus,
       },
     });
 
@@ -93,13 +99,16 @@ export class AuthService {
       },
     });
 
-    // Создаём подписку Premium на 1 месяц
+    // Создаём подписку Premium на 1 месяц (кол-во специализаций из настроек)
+    const tariffSettings = await settingsService.getBySection('tariffs');
+    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+
     await prisma.subscription.create({
       data: {
         userId,
         tariffType: 'PREMIUM',
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 дней
-        specializationCount: 3,
+        specializationCount: premiumSpecs,
       },
     });
   }

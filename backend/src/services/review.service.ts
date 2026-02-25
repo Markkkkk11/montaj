@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import notificationService from './notification.service';
+import settingsService from './settings.service';
 
 export class ReviewService {
   /**
@@ -64,10 +65,16 @@ export class ReviewService {
       throw new Error('Рейтинг должен быть от 1 до 5');
     }
 
-    // Валидация комментария
-    if (comment.trim().length < 10) {
-      throw new Error('Комментарий должен содержать минимум 10 символов');
+    // Валидация комментария (длина из настроек)
+    const minLenSetting = await settingsService.get('minReviewLength');
+    const minLen = parseInt(minLenSetting || '10', 10);
+    if (comment.trim().length < minLen) {
+      throw new Error(`Комментарий должен содержать минимум ${minLen} символов`);
     }
+
+    // Проверяем автоодобрение отзывов из настроек
+    const autoApproveReviews = await settingsService.get('autoApproveReviews');
+    const reviewStatus = autoApproveReviews === 'true' ? 'APPROVED' : 'PENDING';
 
     // Создать отзыв
     const review = await prisma.review.create({
@@ -77,7 +84,7 @@ export class ReviewService {
         revieweeId,
         rating,
         comment: comment.trim(),
-        status: 'PENDING', // На модерацию
+        status: reviewStatus as any,
       },
       include: {
         reviewer: {
@@ -104,6 +111,18 @@ export class ReviewService {
         },
       },
     });
+
+    // Если автоодобрение — сразу пересчитываем рейтинг
+    if (reviewStatus === 'APPROVED') {
+      const approvedReviews = await prisma.review.findMany({
+        where: { revieweeId, status: 'APPROVED' },
+      });
+      const avgRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0) / approvedReviews.length;
+      await prisma.user.update({
+        where: { id: revieweeId },
+        data: { rating: avgRating },
+      });
+    }
 
     // Уведомление о новом отзыве (fire-and-forget)
     notificationService.notifyReviewReceived(

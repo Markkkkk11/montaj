@@ -76,7 +76,7 @@ export class SubscriptionController {
    */
   async getTariffInfo(req: Request, res: Response) {
     try {
-      const tariffInfo = subscriptionService.getTariffInfo();
+      const tariffInfo = await subscriptionService.getTariffInfo();
 
       res.json({
         success: true,

@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import yookassa from '../config/yookassa';
+import settingsService from './settings.service';
 
 export class PaymentService {
   /**
@@ -273,6 +274,13 @@ export class PaymentService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + duration);
 
+    // Берём кол-во специализаций и цену из настроек
+    const tariffSettings = await settingsService.getBySection('tariffs');
+    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+    const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+    const premiumPrice = parseInt(tariffSettings.premiumPrice || '5000', 10);
+    const specCount = tariffType === 'PREMIUM' ? premiumSpecs : standardSpecs;
+
     // Обновить или создать подписку
     await prisma.subscription.upsert({
       where: { userId },
@@ -280,12 +288,12 @@ export class PaymentService {
         userId,
         tariffType,
         expiresAt,
-        specializationCount: tariffType === 'PREMIUM' ? 3 : 1,
+        specializationCount: specCount,
       },
       update: {
         tariffType,
         expiresAt,
-        specializationCount: tariffType === 'PREMIUM' ? 3 : 1,
+        specializationCount: specCount,
       },
     });
 
@@ -294,7 +302,7 @@ export class PaymentService {
       data: {
         userId,
         type: 'SUBSCRIPTION',
-        amount: -5000,
+        amount: -premiumPrice,
         description: `Оплата подписки ${tariffType} на ${duration} дней`,
       },
     });

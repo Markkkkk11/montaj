@@ -1,4 +1,5 @@
 import prisma from '../config/database';
+import settingsService from './settings.service';
 
 export class SubscriptionService {
   /**
@@ -64,7 +65,10 @@ export class SubscriptionService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
-    const specializationCount = tariffType === 'PREMIUM' ? 3 : 1;
+    const tariffSettings = await settingsService.getBySection('tariffs');
+    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+    const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+    const specializationCount = tariffType === 'PREMIUM' ? premiumSpecs : standardSpecs;
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
@@ -97,17 +101,20 @@ export class SubscriptionService {
     }
 
     // Для Standard и Comfort просто меняем тариф
+    const tariffSettings = await settingsService.getBySection('tariffs');
+    const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+
     const subscription = await prisma.subscription.upsert({
       where: { userId },
       create: {
         userId,
         tariffType: newTariffType,
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 год для бесплатных
-        specializationCount: 1,
+        specializationCount: standardSpecs,
       },
       update: {
         tariffType: newTariffType,
-        specializationCount: 1,
+        specializationCount: standardSpecs,
       },
     });
 
@@ -219,12 +226,15 @@ export class SubscriptionService {
     const newExpiresAt = new Date(baseDate);
     newExpiresAt.setDate(newExpiresAt.getDate() + 30);
 
+    const tariffSettings = await settingsService.getBySection('tariffs');
+    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+
     const updated = await prisma.subscription.update({
       where: { userId },
       data: {
         expiresAt: newExpiresAt,
         tariffType: 'PREMIUM',
-        specializationCount: 3,
+        specializationCount: premiumSpecs,
       },
     });
 
@@ -232,20 +242,27 @@ export class SubscriptionService {
   }
 
   /**
-   * Получить информацию о тарифах
+   * Получить информацию о тарифах (из настроек БД)
    */
-  getTariffInfo() {
+  async getTariffInfo() {
+    const tariffSettings = await settingsService.getBySection('tariffs');
+
+    const standardPrice = parseInt(tariffSettings.standardPrice || '0', 10);
+    const premiumPrice = parseInt(tariffSettings.premiumPrice || '5000', 10);
+    const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+
     return {
       STANDARD: {
         name: 'Стандарт',
-        price: 0,
+        price: standardPrice,
         responsePrice: 150,
         orderTakenPrice: 0,
         description: 'Оплата за каждый отклик - 150₽',
-        specializationCount: 1,
+        specializationCount: standardSpecs,
         features: [
           'Платный отклик 150₽',
-          'Одна специализация',
+          `${standardSpecs === 1 ? 'Одна специализация' : `До ${standardSpecs} специализаций`}`,
           'Доступ к заказам',
         ],
       },
@@ -255,25 +272,25 @@ export class SubscriptionService {
         responsePrice: 0,
         orderTakenPrice: 500,
         description: 'Оплата только за взятый заказ - 500₽',
-        specializationCount: 1,
+        specializationCount: standardSpecs,
         features: [
           'Бесплатные отклики',
           'Оплата только при выборе - 500₽',
-          'Одна специализация',
+          `${standardSpecs === 1 ? 'Одна специализация' : `До ${standardSpecs} специализаций`}`,
           'Доступ к заказам',
         ],
       },
       PREMIUM: {
         name: 'Премиум',
-        price: 5000,
+        price: premiumPrice,
         responsePrice: 0,
         orderTakenPrice: 0,
-        description: 'Подписка на 30 дней - 5000₽',
+        description: `Подписка на 30 дней - ${premiumPrice}₽`,
         duration: 30,
-        specializationCount: 3,
+        specializationCount: premiumSpecs,
         features: [
           'Безлимитные отклики',
-          'До 3-х специализаций',
+          `До ${premiumSpecs} специализаций`,
           'Приоритет в откликах',
           'Расширенная статистика',
         ],

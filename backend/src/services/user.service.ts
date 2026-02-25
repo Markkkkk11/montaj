@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import { UpdateProfileData, UpdateExecutorProfileData } from '../types';
+import settingsService from './settings.service';
 
 export class UserService {
   /**
@@ -106,9 +107,11 @@ export class UserService {
       throw new Error('Профиль исполнителя не найден');
     }
 
-    // Проверяем лимит (максимум 8 фото)
-    if (profile.workPhotos.length >= 8) {
-      throw new Error('Максимальное количество фотографий: 8');
+    // Проверяем лимит из настроек
+    const maxPhotosSetting = await settingsService.get('maxWorkPhotos');
+    const maxPhotos = parseInt(maxPhotosSetting || '8', 10);
+    if (profile.workPhotos.length >= maxPhotos) {
+      throw new Error(`Максимальное количество фотографий: ${maxPhotos}`);
     }
 
     return prisma.executorProfile.update({
