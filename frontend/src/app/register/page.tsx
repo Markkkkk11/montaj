@@ -272,13 +272,18 @@ function RegisterContent() {
 
                 <div>
                   <Label htmlFor="city">Город *</Label>
-                  <Input
+                  <select
                     id="city"
                     required
                     value={formData.city || ''}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="Москва"
-                  />
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Выберите город</option>
+                    <option value="Москва и обл.">Москва и обл.</option>
+                    <option value="Санкт-Петербург и обл.">Санкт-Петербург и обл.</option>
+                    <option value="Краснодар">Краснодар</option>
+                  </select>
                 </div>
 
                 <div>

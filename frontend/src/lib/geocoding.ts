@@ -62,7 +62,10 @@ export async function geocodeAddress(
  */
 export const DEFAULT_CITY_COORDS: Record<string, GeocodingResult> = {
   'Москва': { latitude: 55.7558, longitude: 37.6173 },
+  'Москва и обл.': { latitude: 55.7558, longitude: 37.6173 },
   'Санкт-Петербург': { latitude: 59.9343, longitude: 30.3351 },
+  'Санкт-Петербург и обл.': { latitude: 59.9343, longitude: 30.3351 },
+  'Краснодар': { latitude: 45.0355, longitude: 38.9753 },
   'Новосибирск': { latitude: 55.0084, longitude: 82.9357 },
   'Екатеринбург': { latitude: 56.8389, longitude: 60.6057 },
   'Казань': { latitude: 55.8304, longitude: 49.0661 },

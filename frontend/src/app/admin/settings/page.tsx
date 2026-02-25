@@ -23,8 +23,8 @@ export default function AdminSettingsPage() {
     supportEmail: 'support@montaj.ru',
     supportPhone: '+7 (800) 123-45-67',
     maxFileSize: '5',
-    maxWorkPhotos: '5',
-    defaultRegion: 'Москва',
+    maxWorkPhotos: '8',
+    defaultRegion: 'Москва и обл.',
   });
 
   const [moderationSettings, setModerationSettings] = useState({
