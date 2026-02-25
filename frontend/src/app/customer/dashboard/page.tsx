@@ -210,7 +210,7 @@ export default function CustomerDashboard() {
               <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
                 <MessageCircle className="h-4 w-4" /> Telegram
               </a>
-              <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
+              <a href="https://max.ru/u/f9LHodD0cOKIe-cyRoYq_Udu4_b14n0rL0vJ3BA4GWqjW0uOGlGmWjK1Vow" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
                 <MessageCircle className="h-4 w-4" /> MAX
               </a>
             </div>

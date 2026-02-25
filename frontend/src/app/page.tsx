@@ -480,7 +480,7 @@ export default function Home() {
                       <p className="text-xs text-muted-foreground">Напишите нам</p>
                     </div>
                   </a>
-                  <a href="https://max.ru/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-sky-50 rounded-2xl hover:bg-sky-100 transition-all duration-200 group hover:shadow-soft">
+                  <a href="https://max.ru/u/f9LHodD0cOKIe-cyRoYq_Udu4_b14n0rL0vJ3BA4GWqjW0uOGlGmWjK1Vow" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-sky-50 rounded-2xl hover:bg-sky-100 transition-all duration-200 group hover:shadow-soft">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                       <MessageCircle className="h-5 w-5 text-sky-600" />
                     </div>
