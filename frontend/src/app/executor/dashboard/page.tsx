@@ -173,14 +173,14 @@ export default function ExecutorDashboard() {
           <div className="mb-6 p-5 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl animate-fade-in flex items-start gap-4 relative">
             <button
               onClick={handleCloseBonusBanner}
-              className="absolute top-3 right-3 p-1.5 hover:bg-emerald-100 rounded-xl transition-colors"
+              className="absolute top-2.5 right-2.5 p-2 hover:bg-emerald-100 rounded-xl transition-colors"
             >
               <X className="h-6 w-6 text-emerald-500" />
             </button>
             <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
               <Gift className="h-6 w-6 text-emerald-600" />
             </div>
-            <div>
+            <div className="pr-8">
               <h3 className="font-bold text-emerald-900">Бонусы на вашем счёте</h3>
               <p className="text-sm text-emerald-700 mt-1">
                 На вашем счету <strong>{balance.bonusAmount} ₽</strong> бонусов! Бонусы начисляются при первом пополнении баланса от 150₽ (1000 бонусных рублей). Используйте бонусы для оплаты откликов на заказы — они списываются в первую очередь.
@@ -194,14 +194,14 @@ export default function ExecutorDashboard() {
           <Card className="mb-6 overflow-hidden border-blue-100 relative">
             <button
               onClick={handleCloseBalanceInfo}
-              className="absolute top-3 right-3 p-1.5 hover:bg-blue-100 rounded-xl transition-colors z-10"
+              className="absolute top-2.5 right-2.5 p-2 hover:bg-blue-100 rounded-xl transition-colors z-10"
               title="Закрыть"
             >
               <X className="h-6 w-6 text-blue-400" />
             </button>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 pr-12">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Info className="h-5 w-5 text-blue-600" /> Баланс и Бонусы
+                <Info className="h-5 w-5 text-blue-600 flex-shrink-0" /> Баланс и Бонусы
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
