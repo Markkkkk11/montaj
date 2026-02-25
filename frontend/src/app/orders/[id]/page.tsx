@@ -179,7 +179,7 @@ export default function OrderDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50/50">
-        <Header showBack />
+        <Header showBack backHref="/orders" />
         <div className="container mx-auto px-4 py-8 max-w-5xl">
           <div className="space-y-4">
             <div className="h-8 w-48 skeleton rounded-xl" />
@@ -193,7 +193,7 @@ export default function OrderDetailPage() {
   if (error || !order) {
     return (
       <div className="min-h-screen bg-gray-50/50">
-        <Header showBack />
+        <Header showBack backHref="/orders" />
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <div className="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -215,7 +215,7 @@ export default function OrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <Header showBack />
+      <Header showBack backHref="/orders" />
 
       <main className="container mx-auto px-4 py-8 max-w-5xl page-enter">
         {/* Order Details Card */}

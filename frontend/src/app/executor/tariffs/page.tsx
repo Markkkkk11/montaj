@@ -74,7 +74,6 @@ export default function TariffsPage() {
         'Приоритетное размещение',
         'Детальная аналитика',
         'Персональный менеджер',
-        'Возврат средств при отмене',
       ],
       gradient: 'from-amber-50 to-yellow-50',
       border: 'border-amber-300',
