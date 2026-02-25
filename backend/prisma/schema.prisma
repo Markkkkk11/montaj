@@ -38,6 +38,7 @@ enum TariffType {
 }
 
 enum OrderStatus {
+  PENDING      // На модерации (автоодобрение выключено)
   PUBLISHED    // Опубликован, ожидает откликов
   IN_PROGRESS  // Исполнитель выбран, работа в процессе
   COMPLETED    // Работа завершена

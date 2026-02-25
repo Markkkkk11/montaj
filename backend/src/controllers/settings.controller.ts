@@ -1,14 +1,26 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '../types';
 import settingsService from '../services/settings.service';
 
 export class SettingsController {
   /**
-   * Получить все настройки (сгруппированы по секциям)
+   * Получить все настройки (сгруппированы по секциям) — для админов
    */
   async getAll(req: AuthRequest, res: Response) {
     try {
       const settings = await settingsService.getAll();
+      res.json({ success: true, settings });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Получить публичные настройки (без авторизации)
+   */
+  async getPublic(req: Request, res: Response) {
+    try {
+      const settings = await settingsService.getPublicSettings();
       res.json({ success: true, settings });
     } catch (error: any) {
       res.status(500).json({ success: false, error: error.message });

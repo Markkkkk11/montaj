@@ -1,5 +1,6 @@
 import transporter from '../config/email';
 import { config } from '../config/env';
+import settingsService from './settings.service';
 
 export interface EmailOptions {
   to: string;
@@ -13,14 +14,22 @@ export class EmailService {
    * Отправить email
    */
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    if (!config.emailEnabled) {
+    // Проверяем настройку из БД, с фолбэком на env
+    const emailEnabledSetting = await settingsService.get('emailEnabled');
+    const isEnabled = emailEnabledSetting !== null ? emailEnabledSetting === 'true' : config.emailEnabled;
+    
+    if (!isEnabled) {
       console.log('[Email] Disabled, skipping:', options.subject);
       return false;
     }
 
+    // Читаем emailFrom из настроек БД, с фолбэком на env
+    const emailFromSetting = await settingsService.get('emailFrom');
+    const emailFrom = emailFromSetting || config.emailFrom;
+
     try {
       const info = await transporter.sendMail({
-        from: `"Montaj Platform" <${config.emailFrom}>`,
+        from: `"Montaj Platform" <${emailFrom}>`,
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -307,8 +316,10 @@ export class EmailService {
 
     // Send to admin email
     try {
+      const emailFromSetting = await settingsService.get('emailFrom');
+      const emailFrom = emailFromSetting || config.emailFrom;
       await transporter.sendMail({
-        from: `"Montaj Platform" <${config.emailFrom}>`,
+        from: `"Montaj Platform" <${emailFrom}>`,
         to: 'SVMontaj24@yandex.ru',
         subject: `📩 [${topicLabel}] Сообщение от ${senderName}`,
         html,

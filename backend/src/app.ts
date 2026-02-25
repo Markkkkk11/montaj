@@ -20,6 +20,7 @@ import notificationRoutes from './routes/notification.routes';
 import chatRoutes from './routes/chat.routes';
 import geocodingRoutes from './routes/geocoding.routes';
 import contactRoutes from './routes/contact.routes';
+import settingsController from './controllers/settings.controller';
 
 // Инициализация приложения
 const app: Application = express();
@@ -77,16 +78,26 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/geocoding', geocodingRoutes);
 app.use('/api/contact', contactRoutes);
 
+// Публичные настройки платформы (без авторизации)
+app.get('/api/settings/public', settingsController.getPublic);
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Обработка ошибок Multer (файл слишком большой, неверный тип)
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use(async (err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      res.status(400).json({ error: 'Файл слишком большой. Максимум 10 МБ.' });
+      // Читаем лимит из настроек БД
+      try {
+        const settingsService = (await import('./services/settings.service')).default;
+        const maxFileSizeMB = await settingsService.get('maxFileSize') || '5';
+        res.status(400).json({ error: `Файл слишком большой. Максимум ${maxFileSizeMB} МБ.` });
+      } catch {
+        res.status(400).json({ error: 'Файл слишком большой. Максимум 10 МБ.' });
+      }
       return;
     }
     res.status(400).json({ error: `Ошибка загрузки: ${err.message}` });

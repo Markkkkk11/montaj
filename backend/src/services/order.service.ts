@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import notificationService from './notification.service';
+import settingsService from './settings.service';
 import { config } from '../config/env';
 import fs from 'fs';
 import path from 'path';
@@ -42,6 +43,10 @@ export class OrderService {
       throw new Error('Минимальная цена заказа — 3000₽');
     }
 
+    // Проверяем настройку автоодобрения заказов
+    const autoApproveOrders = await settingsService.get('autoApproveOrders');
+    const orderStatus = autoApproveOrders === 'true' ? 'PUBLISHED' : 'PENDING';
+
     const order = await prisma.order.create({
       data: {
         customerId: data.customerId,
@@ -58,7 +63,7 @@ export class OrderService {
         budgetType: data.budgetType || 'fixed',
         paymentMethod: data.paymentMethod,
         files: data.files || [],
-        status: 'PUBLISHED',
+        status: orderStatus,
       },
       include: {
         customer: {

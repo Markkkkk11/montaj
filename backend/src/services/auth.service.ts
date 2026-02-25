@@ -99,15 +99,16 @@ export class AuthService {
       },
     });
 
-    // Создаём подписку Premium на 1 месяц (кол-во специализаций из настроек)
+    // Создаём подписку Premium (пробный период и кол-во специализаций из настроек)
     const tariffSettings = await settingsService.getBySection('tariffs');
     const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+    const trialDays = parseInt(tariffSettings.trialDays || '7', 10);
 
     await prisma.subscription.create({
       data: {
         userId,
         tariffType: 'PREMIUM',
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 дней
+        expiresAt: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
         specializationCount: premiumSpecs,
       },
     });

@@ -81,6 +81,33 @@ export class SettingsService {
   }
 
   /**
+   * Получить публичные настройки (безопасные для отдачи без авторизации)
+   */
+  async getPublicSettings(): Promise<Record<string, string>> {
+    const publicKeys = [
+      'platformName', 'supportEmail', 'supportPhone', 'defaultRegion',
+      'standardPrice', 'premiumPrice', 'premiumSpecializations',
+      'standardSpecializations', 'trialDays', 'maxWorkPhotos', 'maxFileSize',
+    ];
+    
+    const rows = await prisma.platformSetting.findMany({
+      where: { key: { in: publicKeys } },
+    });
+    
+    const result: Record<string, string> = {};
+    for (const row of rows) {
+      result[row.key] = row.value;
+    }
+    // Добавляем дефолтные значения для отсутствующих ключей
+    for (const key of publicKeys) {
+      if (!result[key] && DEFAULT_SETTINGS[key]) {
+        result[key] = DEFAULT_SETTINGS[key].value;
+      }
+    }
+    return result;
+  }
+
+  /**
    * Обновить настройки секции (массово)
    */
   async updateSection(section: string, data: Record<string, string>) {
