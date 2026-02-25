@@ -100,10 +100,25 @@ export class OrderService {
     }
 
     if (filters.region) {
-      where.region = {
-        contains: filters.region,
-        mode: 'insensitive',
+      // Маппинг расширенных названий → базовые для поиска по contains
+      const regionMap: Record<string, string[]> = {
+        'Москва и обл.': ['Москва'],
+        'Санкт-Петербург и обл.': ['Санкт-Петербург'],
       };
+
+      const variants = regionMap[filters.region];
+      if (variants) {
+        // Ищем заказы, где region содержит любое из названий (старое или новое)
+        where.OR = [
+          { region: { contains: filters.region, mode: 'insensitive' } },
+          ...variants.map((v) => ({ region: { contains: v, mode: 'insensitive' as const } })),
+        ];
+      } else {
+        where.region = {
+          contains: filters.region,
+          mode: 'insensitive',
+        };
+      }
     }
 
     if (filters.minBudget || filters.maxBudget) {
