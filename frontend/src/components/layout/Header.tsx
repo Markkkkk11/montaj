@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { useAuthStore } from '@/stores/authStore';
+import { getUserFirstName } from '@/lib/utils';
 import { LogOut, ArrowLeft, User } from 'lucide-react';
 
 interface HeaderProps {
@@ -15,13 +16,7 @@ interface HeaderProps {
 export function Header({ showBack = false, backHref }: HeaderProps) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
-  const displayName = user?.fullName
-    ? (() => {
-        const parts = user.fullName.trim().split(/\s+/);
-        // Common RU format is "Фамилия Имя Отчество", so show the name.
-        return parts.length > 1 ? parts[1] : parts[0];
-      })()
-    : '';
+  const displayName = getUserFirstName(user?.fullName);
 
   const handleLogout = () => {
     logout();

@@ -10,7 +10,7 @@ import { Header } from '@/components/layout/Header';
 import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
-import { TARIFF_LABELS, isExecutorProfileComplete } from '@/lib/utils';
+import { TARIFF_LABELS, getUserFirstName, isExecutorProfileComplete } from '@/lib/utils';
 import { Wallet, FileText, User, Star, Search, Mail, MessageCircle, ArrowRight, TrendingUp, Zap, Package, ChevronRight, ChevronDown, Gift, X, HelpCircle, Info } from 'lucide-react';
 
 export default function ExecutorDashboard() {
@@ -126,7 +126,7 @@ export default function ExecutorDashboard() {
         {/* Welcome */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
-            Добро пожаловать, {user.fullName?.split(' ')[0]}! 🔧
+            Добро пожаловать, {getUserFirstName(user.fullName)}! 🔧
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             Находите заказы и зарабатывайте

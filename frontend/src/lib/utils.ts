@@ -6,6 +6,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Получить отображаемое имя пользователя из ФИО
+export function getUserFirstName(fullName?: string): string {
+  if (!fullName) return '';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 0) return '';
+  // Typical RU format: "Фамилия Имя Отчество"
+  return parts.length > 1 ? parts[1] : parts[0];
+}
+
 // Форматирование номера телефона
 export function formatPhone(phone: string): string {
   // Простое форматирование +7 (XXX) XXX-XX-XX

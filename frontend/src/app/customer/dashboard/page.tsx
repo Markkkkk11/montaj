@@ -10,6 +10,7 @@ import { Header } from '@/components/layout/Header';
 import { ordersApi } from '@/lib/api/orders';
 import { Order } from '@/lib/types';
 import { Plus, FileText, User, Star, Mail, MessageCircle, ArrowRight, TrendingUp, Package, ChevronDown } from 'lucide-react';
+import { getUserFirstName } from '@/lib/utils';
 
 export default function CustomerDashboard() {
   const { user, isHydrated } = useAuthStore();
@@ -63,7 +64,7 @@ export default function CustomerDashboard() {
         {/* Welcome */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
-            Добро пожаловать, {user.fullName?.split(' ')[0]}! 👋
+            Добро пожаловать, {getUserFirstName(user.fullName)}! 👋
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             Управляйте заказами и следите за их выполнением
