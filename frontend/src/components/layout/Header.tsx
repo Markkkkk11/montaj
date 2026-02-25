@@ -15,6 +15,13 @@ interface HeaderProps {
 export function Header({ showBack = false, backHref }: HeaderProps) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const displayName = user?.fullName
+    ? (() => {
+        const parts = user.fullName.trim().split(/\s+/);
+        // Common RU format is "Фамилия Имя Отчество", so show the name.
+        return parts.length > 1 ? parts[1] : parts[0];
+      })()
+    : '';
 
   const handleLogout = () => {
     logout();
@@ -76,7 +83,7 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
               </div>
             )}
             <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate hidden sm:inline">
-              {user?.fullName?.split(' ')[0]}
+              {displayName}
             </span>
           </Link>
           <Button 
