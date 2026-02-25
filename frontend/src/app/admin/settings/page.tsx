@@ -14,9 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Settings, Shield, CreditCard, Mail, Database, Save, Loader2, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
-import axios from 'axios';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import api from '@/lib/api';
 
 export default function AdminSettingsPage() {
   const { token } = useAuthStore();
@@ -59,9 +57,7 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await axios.get(`${API}/admin/settings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get('/admin/settings');
 
         if (res.data.success) {
           const s = res.data.settings;
@@ -93,9 +89,7 @@ export default function AdminSettingsPage() {
     setSavingSection(section);
     setSavedSection(null);
     try {
-      await axios.put(`${API}/admin/settings/${section}`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put(`/admin/settings/${section}`, data);
       setSavedSection(section);
       setTimeout(() => setSavedSection(null), 2000);
     } catch (err: any) {
