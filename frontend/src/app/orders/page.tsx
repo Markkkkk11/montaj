@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -18,28 +18,9 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState<Filters>({ region: 'Москва и обл.' });
+  const [filters, setFilters] = useState<Filters>({});
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const requestIdRef = useRef(0);
-
-  const loadOrders = useCallback(async () => {
-    const currentRequestId = ++requestIdRef.current;
-    try {
-      setIsLoading(true);
-      const result = await ordersApi.getOrders({ ...filters, page });
-      if (currentRequestId !== requestIdRef.current) return;
-      setOrders(result.orders);
-      setTotal(result.total);
-    } catch (error) {
-      if (currentRequestId !== requestIdRef.current) return;
-      console.error('Error loading orders:', error);
-    } finally {
-      if (currentRequestId === requestIdRef.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [filters, page]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -52,7 +33,20 @@ export default function OrdersPage() {
       return;
     }
     loadOrders();
-  }, [user, filters, page, isHydrated, loadOrders]);
+  }, [user, filters, page, isHydrated]);
+
+  const loadOrders = async () => {
+    try {
+      setIsLoading(true);
+      const result = await ordersApi.getOrders({ ...filters, page });
+      setOrders(result.orders);
+      setTotal(result.total);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleApplyFilters = (newFilters: Filters) => {
     setFilters(newFilters);

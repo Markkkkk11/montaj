@@ -17,19 +17,16 @@ declare global {
   }
 }
 
-// Координаты городов России
-const CITY_COORDS: Record<string, [number, number]> = {
-  'Москва и обл.': [55.7558, 37.6173],
-  'Санкт-Петербург и обл.': [59.9343, 30.3351],
-  'Краснодар': [45.0355, 38.9753],
+// Координаты и зум для регионов
+const REGION_CONFIG: Record<string, { center: [number, number]; zoom: number }> = {
+  'Москва и обл.': { center: [55.7558, 37.6173], zoom: 9 },
+  'Санкт-Петербург и обл.': { center: [59.9343, 30.3351], zoom: 9 },
+  'Краснодар': { center: [45.0355, 38.9753], zoom: 11 },
 };
 
-// Уровень зума для каждого региона
-const REGION_ZOOM: Record<string, number> = {
-  'Москва и обл.': 9,
-  'Санкт-Петербург и обл.': 9,
-  'Краснодар': 11,
-};
+// Настройки по умолчанию (Все регионы) — такой же масштаб как Москва и обл.
+const DEFAULT_CENTER: [number, number] = [55.7558, 37.6173];
+const DEFAULT_ZOOM = 9;
 
 // Цвета маркеров по категориям
 const CATEGORY_COLORS: Record<string, string> = {
@@ -75,21 +72,17 @@ export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
         mapRef.current = null;
       }
 
-      // Определяем центр карты на основе региона
-      const center = region && CITY_COORDS[region] 
-        ? CITY_COORDS[region] 
-        : CITY_COORDS['Москва и обл.']; // Москва по умолчанию
+      // Определяем центр и зум карты на основе региона
+      const config = region && REGION_CONFIG[region] 
+        ? REGION_CONFIG[region] 
+        : { center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM };
 
-      const zoomLevel = region && REGION_ZOOM[region]
-        ? REGION_ZOOM[region]
-        : 9; // По умолчанию обзорный зум для Москвы и обл.
-
-      console.log('🗺️ Initializing map with center:', center, 'zoom:', zoomLevel, 'for region:', region);
+      console.log('🗺️ Initializing map with center:', config.center, 'zoom:', config.zoom, 'for region:', region);
 
       // Создаем карту
       mapRef.current = new window.ymaps.Map(mapContainerRef.current, {
-        center: center,
-        zoom: zoomLevel,
+        center: config.center,
+        zoom: config.zoom,
         controls: ['zoomControl', 'fullscreenControl'],
       });
 
@@ -177,15 +170,18 @@ export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
         bounds.push([order.latitude, order.longitude]);
       });
 
-      // Подстраиваем карту под все метки ТОЛЬКО если НЕ выбран конкретный регион
-      if (bounds.length > 0 && !region && mapRef.current && mapRef.current.setBounds) {
+      // Устанавливаем центр и зум в соответствии с выбранным регионом
+      const currentConfig = region && REGION_CONFIG[region]
+        ? REGION_CONFIG[region]
+        : { center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM };
+
+      if (mapRef.current && mapRef.current.setCenter) {
         try {
-          mapRef.current.setBounds(bounds, {
-            checkZoomRange: true,
-            zoomMargin: 50,
+          mapRef.current.setCenter(currentConfig.center, currentConfig.zoom, {
+            duration: 300,
           });
         } catch (error) {
-          console.error('❌ Ошибка при установке границ карты:', error);
+          console.error('❌ Ошибка при установке центра карты:', error);
         }
       }
     }

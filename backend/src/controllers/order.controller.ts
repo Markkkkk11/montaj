@@ -64,10 +64,9 @@ export class OrderController {
    */
   async getOrders(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const regionRaw = req.query.region as string | undefined;
       const filters = {
         category: req.query.category as any,
-        region: regionRaw ? regionRaw.trim() : undefined,
+        region: req.query.region as string,
         minBudget: req.query.minBudget ? Number(req.query.minBudget) : undefined,
         maxBudget: req.query.maxBudget ? Number(req.query.maxBudget) : undefined,
         status: req.query.status as any,

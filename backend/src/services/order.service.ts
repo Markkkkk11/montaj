@@ -101,7 +101,7 @@ export class OrderService {
 
     if (filters.region) {
       where.region = {
-        equals: filters.region.trim(),
+        contains: filters.region,
         mode: 'insensitive',
       };
     }

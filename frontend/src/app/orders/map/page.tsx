@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -16,31 +16,25 @@ export default function OrdersMapPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState<Filters>({ region: 'Москва и обл.' });
-  const requestIdRef = useRef(0);
-
-  const loadOrders = useCallback(async () => {
-    const currentRequestId = ++requestIdRef.current;
-    try {
-      setIsLoading(true);
-      const result = await ordersApi.getOrders({ ...filters, limit: 100 });
-      if (currentRequestId !== requestIdRef.current) return;
-      setOrders(result.orders);
-    } catch (error) {
-      if (currentRequestId !== requestIdRef.current) return;
-      console.error('Error loading orders:', error);
-    } finally {
-      if (currentRequestId === requestIdRef.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [filters]);
+  const [filters, setFilters] = useState<Filters>({});
 
   useEffect(() => {
     if (!isHydrated) return;
     if (!user) { router.push('/login'); return; }
     loadOrders();
-  }, [user, filters, isHydrated, loadOrders]);
+  }, [user, filters, isHydrated]);
+
+  const loadOrders = async () => {
+    try {
+      setIsLoading(true);
+      const result = await ordersApi.getOrders({ ...filters, limit: 100 });
+      setOrders(result.orders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!user) return null;
 
