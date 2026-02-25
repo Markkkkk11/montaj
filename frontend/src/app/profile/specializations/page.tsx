@@ -127,11 +127,11 @@ export default function SpecializationsPage() {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button onClick={handleSave} disabled={isSaving || selected.length === 0} className="flex-1 gap-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Button onClick={handleSave} disabled={isSaving || selected.length === 0} className="w-full sm:flex-1 gap-2">
                 <Save className="h-4 w-4" /> {isSaving ? 'Сохранение...' : 'Сохранить специализации'}
               </Button>
-              <Button variant="outline" onClick={() => router.back()} disabled={isSaving}>Отмена</Button>
+              <Button variant="outline" onClick={() => router.back()} disabled={isSaving} className="w-full sm:w-auto">Отмена</Button>
             </div>
 
             {selected.length === 0 && (
