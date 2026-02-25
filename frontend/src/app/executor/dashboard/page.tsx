@@ -221,7 +221,7 @@ export default function ExecutorDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+            <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 order-5 sm:order-3 col-span-2 sm:col-span-1">
               <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 bg-violet-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -235,7 +235,7 @@ export default function ExecutorDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
+            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 order-4 sm:order-4" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
               <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -249,7 +249,7 @@ export default function ExecutorDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 col-span-2 sm:col-span-1" onClick={() => document.getElementById('completed-orders')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 order-3 sm:order-5" onClick={() => document.getElementById('completed-orders')?.scrollIntoView({ behavior: 'smooth' })}>
               <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 bg-sky-50 rounded-xl flex items-center justify-center flex-shrink-0">
