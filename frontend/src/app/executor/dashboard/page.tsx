@@ -173,9 +173,9 @@ export default function ExecutorDashboard() {
           <div className="mb-6 p-5 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl animate-fade-in flex items-start gap-4 relative">
             <button
               onClick={handleCloseBonusBanner}
-              className="absolute top-4 right-4 p-1 hover:bg-emerald-100 rounded-lg transition-colors"
+              className="absolute top-3 right-3 p-1.5 hover:bg-emerald-100 rounded-xl transition-colors"
             >
-              <X className="h-4 w-4 text-emerald-500" />
+              <X className="h-6 w-6 text-emerald-500" />
             </button>
             <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
               <Gift className="h-6 w-6 text-emerald-600" />
@@ -189,10 +189,10 @@ export default function ExecutorDashboard() {
           </div>
         )}
 
-        {/* Stats Grid — horizontal scroll on mobile */}
+        {/* Stats Grid — vertical on mobile, 5 cols on desktop */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:pb-0 stagger-children" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 min-w-[140px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }} onClick={() => router.push('/executor/balance')}>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 stagger-children">
+            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5" onClick={() => router.push('/executor/balance')}>
               <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -207,7 +207,7 @@ export default function ExecutorDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100 min-w-[130px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }}>
+            <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100">
               <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -221,7 +221,7 @@ export default function ExecutorDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 min-w-[130px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }}>
+            <Card className="hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
               <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 bg-violet-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -235,7 +235,7 @@ export default function ExecutorDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 min-w-[110px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }} onClick={() => router.push(`/profile/${user.id}/reviews`)}>
+            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5" onClick={() => router.push(`/profile/${user.id}/reviews`)}>
               <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -249,7 +249,7 @@ export default function ExecutorDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 min-w-[120px] sm:min-w-0 flex-shrink-0 sm:flex-shrink" style={{ scrollSnapAlign: 'start' }} onClick={() => document.getElementById('completed-orders')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Card className="cursor-pointer hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 col-span-2 sm:col-span-1" onClick={() => document.getElementById('completed-orders')?.scrollIntoView({ behavior: 'smooth' })}>
               <CardContent className="pt-4 pb-4 sm:pt-5 sm:pb-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 bg-sky-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -324,10 +324,10 @@ export default function ExecutorDashboard() {
           <Card className="mb-8 overflow-hidden border-blue-100 relative">
             <button
               onClick={handleCloseBalanceInfo}
-              className="absolute top-4 right-4 p-1 hover:bg-blue-100 rounded-lg transition-colors z-10"
+              className="absolute top-3 right-3 p-1.5 hover:bg-blue-100 rounded-xl transition-colors z-10"
               title="Закрыть"
             >
-              <X className="h-4 w-4 text-blue-400" />
+              <X className="h-6 w-6 text-blue-400" />
             </button>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -365,7 +365,33 @@ export default function ExecutorDashboard() {
           </Card>
         )}
 
-        {/* Tariff Management — above Мои отклики */}
+        {/* Quick scroll buttons: Мои отклики / Активные заказы */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8">
+          <button
+            onClick={() => document.getElementById('my-responses')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
+          >
+            <span className="text-xl sm:text-2xl">📩</span>
+            <div className="text-left min-w-0">
+              <p className="font-bold text-blue-900 text-sm sm:text-base">Мои отклики</p>
+              <p className="text-[10px] sm:text-xs text-blue-600">{pendingResponses.length} ожидают</p>
+            </div>
+            <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 group-hover:translate-y-0.5 transition-transform hidden sm:block" />
+          </button>
+          <button
+            onClick={() => document.getElementById('active-orders')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
+          >
+            <span className="text-xl sm:text-2xl">📋</span>
+            <div className="text-left min-w-0">
+              <p className="font-bold text-emerald-900 text-sm sm:text-base">Активные заказы</p>
+              <p className="text-[10px] sm:text-xs text-emerald-600">{activeOrders.length} в работе</p>
+            </div>
+            <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 group-hover:translate-y-0.5 transition-transform hidden sm:block" />
+          </button>
+        </div>
+
+        {/* Tariff Management */}
         <Card className="mb-6 sm:mb-8 overflow-hidden relative">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-blue-500" />
           <CardHeader className="pb-3">
@@ -413,32 +439,6 @@ export default function ExecutorDashboard() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Quick scroll buttons: Мои отклики / Активные заказы */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8">
-          <button
-            onClick={() => document.getElementById('my-responses')?.scrollIntoView({ behavior: 'smooth' })}
-            className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
-          >
-            <span className="text-xl sm:text-2xl">📩</span>
-            <div className="text-left min-w-0">
-              <p className="font-bold text-blue-900 text-sm sm:text-base">Мои отклики</p>
-              <p className="text-[10px] sm:text-xs text-blue-600">{pendingResponses.length} ожидают</p>
-            </div>
-            <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 group-hover:translate-y-0.5 transition-transform hidden sm:block" />
-          </button>
-          <button
-            onClick={() => document.getElementById('active-orders')?.scrollIntoView({ behavior: 'smooth' })}
-            className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
-          >
-            <span className="text-xl sm:text-2xl">📋</span>
-            <div className="text-left min-w-0">
-              <p className="font-bold text-emerald-900 text-sm sm:text-base">Активные заказы</p>
-              <p className="text-[10px] sm:text-xs text-emerald-600">{activeOrders.length} в работе</p>
-            </div>
-            <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 group-hover:translate-y-0.5 transition-transform hidden sm:block" />
-          </button>
-        </div>
 
         {/* My Responses */}
         <div className="space-y-8">
