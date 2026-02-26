@@ -40,11 +40,13 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
               </span>
               {order.status !== 'PUBLISHED' && (
                 <span className={`px-3 py-1 rounded-xl text-xs font-semibold ${
+                  order.status === 'PENDING' ? 'bg-orange-50 text-orange-700 border border-orange-100' :
                   order.status === 'IN_PROGRESS' && !order.workStartedAt ? 'bg-amber-50 text-amber-700 border border-amber-100' :
                   order.status === 'IN_PROGRESS' && order.workStartedAt ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                   order.status === 'COMPLETED' ? 'bg-gray-50 text-gray-600 border border-gray-100' :
                   'bg-red-50 text-red-700 border border-red-100'
                 }`}>
+                  {order.status === 'PENDING' && 'На модерации'}
                   {order.status === 'IN_PROGRESS' && !order.workStartedAt && 'Исполнитель выбран'}
                   {order.status === 'IN_PROGRESS' && order.workStartedAt && 'В работе'}
                   {order.status === 'COMPLETED' && 'Завершён'}

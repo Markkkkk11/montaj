@@ -367,7 +367,7 @@ export default function ExecutorDashboard() {
 
         {/* Quick scroll buttons: Мои отклики / Активные заказы */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6 sm:mb-8">
-          <button
+            <button
             onClick={() => document.getElementById('my-responses')?.scrollIntoView({ behavior: 'smooth' })}
             className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
           >
@@ -377,7 +377,7 @@ export default function ExecutorDashboard() {
               <p className="text-[10px] sm:text-xs text-blue-600">{pendingResponses.length} ожидают</p>
             </div>
             <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 group-hover:translate-y-0.5 transition-transform hidden sm:block" />
-          </button>
+            </button>
           <button
             onClick={() => document.getElementById('active-orders')?.scrollIntoView({ behavior: 'smooth' })}
             className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl hover:shadow-soft-lg hover:-translate-y-0.5 transition-all duration-300 group"
@@ -386,10 +386,10 @@ export default function ExecutorDashboard() {
             <div className="text-left min-w-0">
               <p className="font-bold text-emerald-900 text-sm sm:text-base">Активные заказы</p>
               <p className="text-[10px] sm:text-xs text-emerald-600">{activeOrders.length} в работе</p>
-            </div>
+                </div>
             <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 group-hover:translate-y-0.5 transition-transform hidden sm:block" />
           </button>
-        </div>
+              </div>
 
         {/* Tariff Management */}
         <Card className="mb-6 sm:mb-8 overflow-hidden relative">

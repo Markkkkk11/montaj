@@ -94,7 +94,7 @@ export interface LoginData {
 }
 
 // Order types
-export type OrderStatus = 'PUBLISHED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ARCHIVED';
+export type OrderStatus = 'PENDING' | 'PUBLISHED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ARCHIVED';
 export type PaymentMethod = 'CASH' | 'CARD' | 'BANK';
 
 export interface Order {

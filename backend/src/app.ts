@@ -96,7 +96,7 @@ app.use(async (err: any, req: Request, res: Response, next: NextFunction) => {
         const maxFileSizeMB = await settingsService.get('maxFileSize') || '5';
         res.status(400).json({ error: `Файл слишком большой. Максимум ${maxFileSizeMB} МБ.` });
       } catch {
-        res.status(400).json({ error: 'Файл слишком большой. Максимум 10 МБ.' });
+      res.status(400).json({ error: 'Файл слишком большой. Максимум 10 МБ.' });
       }
       return;
     }
