@@ -13,7 +13,7 @@ import { Order, OrderFilters as Filters } from '@/lib/types';
 import { List, Map, Search, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 
 export default function OrdersPage() {
-  const { user, isHydrated } = useAuthStore();
+  const { user, isHydrated, getCurrentUser } = useAuthStore();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
@@ -21,6 +21,7 @@ export default function OrdersPage() {
   const [filters, setFilters] = useState<Filters>({});
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [userRefreshed, setUserRefreshed] = useState(false);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -28,12 +29,16 @@ export default function OrdersPage() {
       router.push('/login');
       return;
     }
+    if (!userRefreshed) {
+      getCurrentUser().then(() => setUserRefreshed(true));
+      return;
+    }
     if (user.role === 'CUSTOMER') {
       router.push('/customer/dashboard');
       return;
     }
     loadOrders();
-  }, [user, filters, page, isHydrated]);
+  }, [user, filters, page, isHydrated, userRefreshed]);
 
   const loadOrders = async () => {
     try {
