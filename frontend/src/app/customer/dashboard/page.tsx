@@ -97,15 +97,15 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* Stats — 5 блоков */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 mb-5 sm:mb-8 stagger-children">
+        {/* Stats — 4 блока */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-5 sm:mb-8 stagger-children">
           <Card
             className="cursor-pointer overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5"
             onClick={() => document.getElementById('section-active')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
           >
             <CardContent className="p-3 sm:pt-5 sm:px-5">
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Package className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
                 <div>
@@ -122,7 +122,7 @@ export default function CustomerDashboard() {
           >
             <CardContent className="p-3 sm:pt-5 sm:px-5">
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-violet-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 bg-violet-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Users className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600" />
                 </div>
                 <div>
@@ -139,7 +139,7 @@ export default function CustomerDashboard() {
           >
             <CardContent className="p-3 sm:pt-5 sm:px-5">
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Hammer className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
                 </div>
                 <div>
@@ -152,28 +152,11 @@ export default function CustomerDashboard() {
 
           <Card
             className="cursor-pointer overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5"
-            onClick={() => router.push(`/profile/${user.id}/reviews`)}
-          >
-            <CardContent className="p-3 sm:pt-5 sm:px-5">
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Star className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight">Рейтинг</p>
-                  <p className="text-xl sm:text-2xl font-extrabold text-gray-900">{user.rating.toFixed(1)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="cursor-pointer overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5 col-span-2 sm:col-span-1"
             onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
           >
             <CardContent className="p-3 sm:pt-5 sm:px-5">
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
                 </div>
                 <div>
@@ -186,7 +169,7 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-5 sm:mb-8 stagger-children">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-5 sm:mb-8 stagger-children">
           <Card
             className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-blue-200 overflow-hidden"
             onClick={() => router.push('/orders/create')}
@@ -197,7 +180,7 @@ export default function CustomerDashboard() {
                   <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-bold text-gray-900">Создать заказ</p>
+                  <p className="text-xs sm:text-sm font-bold text-gray-900">Создать</p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Новая заявка</p>
                 </div>
               </div>
@@ -216,6 +199,23 @@ export default function CustomerDashboard() {
                 <div className="min-w-0">
                   <p className="text-xs sm:text-sm font-bold text-gray-900">Профиль</p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Редактировать</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer group hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-amber-200 overflow-hidden"
+            onClick={() => router.push(`/profile/${user.id}/reviews`)}
+          >
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:text-left gap-1.5 sm:gap-3">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-bold text-gray-900">Отзывы</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">⭐ {user.rating.toFixed(1)}</p>
                 </div>
               </div>
             </CardContent>
