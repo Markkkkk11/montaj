@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
 import { RegisterData } from '@/lib/types';
-import { ArrowLeft, UserPlus, Briefcase, Wrench, ChevronRight } from 'lucide-react';
+import { ArrowLeft, UserPlus, Briefcase, Wrench, ChevronRight, ScrollText, Shield, Users, Hammer, CreditCard, Eye, Scale, Mail, X } from 'lucide-react';
 
 export default function RegisterPage() {
   return (
@@ -35,6 +36,7 @@ function RegisterContent() {
   const [verificationCode, setVerificationCode] = useState('');
   const [registeredPhone, setRegisteredPhone] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
+  const [showRules, setShowRules] = useState(false);
 
   useEffect(() => {
     if (resendTimer > 0) {
@@ -307,11 +309,192 @@ function RegisterContent() {
                   />
                   <Label htmlFor="agreeToTerms" className="font-normal leading-relaxed text-sm mb-0">
                     Я ознакомился и согласен с{' '}
-                    <a href="/terms" target="_blank" className="text-primary hover:underline font-semibold">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setShowRules(true); }}
+                      className="text-primary hover:underline font-semibold"
+                    >
                       правилами работы сайта
-                    </a>
+                    </button>
                   </Label>
                 </div>
+
+                {/* Модальное окно с правилами */}
+                <Dialog open={showRules} onOpenChange={setShowRules}>
+                  <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0">
+                    {/* Шапка */}
+                    <div className="bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-5 text-white relative flex-shrink-0">
+                      <button
+                        onClick={() => setShowRules(false)}
+                        className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                      >
+                        <X className="h-4 w-4 text-white" />
+                      </button>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                          <ScrollText className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <DialogHeader>
+                            <DialogTitle className="text-white text-lg font-bold">Правила работы на платформе «SVMontaj»</DialogTitle>
+                          </DialogHeader>
+                          <p className="text-blue-100 text-xs mt-0.5">от 21.02.2026</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Содержимое с прокруткой */}
+                    <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+                      {/* 1. Общие положения */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Shield className="h-3.5 w-3.5 text-blue-600" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">1. Общие положения</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed pl-9">
+                          Платформа «SVMontaj» (далее Компания) — это сервис, который помогает заказчикам найти проверенных специалистов по монтажным работам, а исполнителям — получать заказы. Регистрируясь на платформе, вы соглашаетесь с настоящими правилами. Компания оказывает информационные услуги, операционно-технологические услуги (в том числе, заведение/обработка информации на сайте, мониторинг и поиск Заявок, информирование Пользователей о текущем статусе Заявки) с использованием Интернет ресурса.
+                        </p>
+                      </section>
+
+                      {/* 2. Для заказчиков */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Users className="h-3.5 w-3.5 text-emerald-600" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">2. Для заказчиков</h3>
+                        </div>
+                        <ul className="space-y-1.5 pl-9">
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-emerald-500 mt-1.5 flex-shrink-0">•</span>Регистрация и размещение заказов на платформе бесплатны.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-emerald-500 mt-1.5 flex-shrink-0">•</span>Заказчик обязан предоставить достоверную информацию о себе и своих заказах.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-emerald-500 mt-1.5 flex-shrink-0">•</span>Оплата за выполненные работы гарантируется и производится напрямую исполнителю по договорённости.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-emerald-500 mt-1.5 flex-shrink-0">•</span>Заказчик обязуется оставлять объективные отзывы о работе исполнителя.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-emerald-500 mt-1.5 flex-shrink-0">•</span>Запрещено размещать не существующие заказы, заказы не связанные с монтажными работами, указывать в описании/прикреплённых файлах заказа контактную информацию, размещать информацию запрещённую на территории РФ.</li>
+                        </ul>
+                      </section>
+
+                      {/* 3. Для исполнителей */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-violet-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Hammer className="h-3.5 w-3.5 text-violet-600" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">3. Для исполнителей</h3>
+                        </div>
+                        <ul className="space-y-1.5 pl-9">
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель обязан предоставить достоверную информацию о себе, опыте и квалификации.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель обязан качественно выполнять принятые заказы в оговорённые сроки.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Стоимость отклика зависит от выбранного тарифа (Стандарт, Комфорт, Премиум).</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Новые исполнители получают тариф «Премиум» на 30 дней бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течении 30 дней после регистрации. Бонусы можно использовать для оплаты откликов на заказы.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Рейтинг исполнителя формируется на основе отзывов заказчиков.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Контактные данные исполнителя открываются заказчику только после выбора исполнителя.</li>
+                        </ul>
+                      </section>
+
+                      {/* 4. Тарифы для исполнителей */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <CreditCard className="h-3.5 w-3.5 text-amber-600" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">4. Тарифы для исполнителей</h3>
+                        </div>
+                        <div className="space-y-2 pl-9">
+                          <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <p className="text-sm font-semibold text-gray-800">Стандарт</p>
+                            <p className="text-xs text-gray-500 mt-0.5">150 ₽ за каждый отклик. 1 специализация (свободный выбор).</p>
+                          </div>
+                          <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                            <p className="text-sm font-semibold text-blue-800">Комфорт</p>
+                            <p className="text-xs text-blue-600/70 mt-0.5">500 ₽ только за взятый заказ. 1 специализация (свободный выбор). Возврат при отмене заказчиком.</p>
+                          </div>
+                          <div className="p-3 bg-violet-50/50 rounded-xl border border-violet-100">
+                            <p className="text-sm font-semibold text-violet-800">Премиум</p>
+                            <p className="text-xs text-violet-600/70 mt-0.5">5000 ₽ за 30 дней. Безлимитные отклики, до 3 специализаций (свободный выбор).</p>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* 5. Модерация */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-sky-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Eye className="h-3.5 w-3.5 text-sky-600" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">5. Модерация</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed pl-9">
+                          Все профили проходят модерацию. Отзывы также проходят проверку перед публикацией. Администрация оставляет за собой право заблокировать пользователя за нарушение правил.
+                        </p>
+                      </section>
+
+                      {/* 6. Ответственность */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Scale className="h-3.5 w-3.5 text-red-500" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">6. Ответственность</h3>
+                        </div>
+                        <div className="text-sm text-gray-600 leading-relaxed space-y-2 pl-9">
+                          <p>Компания не будет выступать и не выступает в качестве лица, ответственного и (или) заинтересованного в отношениях между Исполнителем и Заказчиком. Отношения между Исполнителем и Заказчиком регулируется законодательством РФ, если иное прямо не предусмотрено Соглашением и (или) Регулирующими документами.</p>
+                          <p>Пользователь самостоятельно и всецело несёт все риски и ответственность за соответствие законодательству, содержание, полноту, корректность и достоверность размещённой им информации и Контента.</p>
+                          <p>Пользователь и (или) Посетитель соглашается и понимает, что Исполнитель и (или) Заказчик не является сотрудником Компании, аффилированным лицом либо иным лицом, как-либо связанным с Компанией, за которое Компания может, либо обязано нести ответственность.</p>
+                          <p>Компания ни при каких обстоятельствах не несёт никакой ответственности за:</p>
+                          <ul className="space-y-1 ml-3">
+                            <li className="flex items-start gap-2"><span className="text-red-400 mt-1.5 flex-shrink-0">•</span>какие-либо действия/бездействие, являющиеся прямым или косвенным результатом действий/бездействия Пользователя и/или третьих лиц;</li>
+                            <li className="flex items-start gap-2"><span className="text-red-400 mt-1.5 flex-shrink-0">•</span>какие-либо косвенные убытки и/или упущенную выгоду Пользователя и/или третьих сторон вне зависимости от того, могла ли Компания предвидеть возможность таких убытков или нет;</li>
+                            <li className="flex items-start gap-2"><span className="text-red-400 mt-1.5 flex-shrink-0">•</span>взаиморасчёты между Заказчиком и Исполнителем, так как все договорённости между заказчиком и исполнителем достигаются напрямую, самостоятельно;</li>
+                            <li className="flex items-start gap-2"><span className="text-red-400 mt-1.5 flex-shrink-0">•</span>использование (невозможность использования) и какие бы то ни было последствия использования (невозможности использования) Пользователем выбранной им формы оплаты Услуг.</li>
+                          </ul>
+                          <p className="font-medium text-gray-700">Платформа не может гарантировать получение заказов исполнителями.</p>
+                          <p>За нарушения правил пользования сервисом «SVMontaj», Пользователи будут безвозвратно заблокированы.</p>
+                        </div>
+                      </section>
+
+                      {/* 7. Вступление в силу */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <ScrollText className="h-3.5 w-3.5 text-orange-500" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">7. Вступление в силу правил и порядок изменения</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed pl-9">
+                          Компания оставляет за собой право изменять условия Правил и всех их неотъемлемых частей без согласования с Пользователем с уведомлением последнего посредством размещения на своём Интернет-ресурсе новой редакции Правил. Пользователь обязуется самостоятельно знакомиться с новым содержанием Правил. Новая редакция Правил вступает в силу с момента опубликования на Интернет-ресурсе.
+                        </p>
+                      </section>
+
+                      {/* 8. Обратная связь */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-teal-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Mail className="h-3.5 w-3.5 text-teal-600" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">8. Обратная связь</h3>
+                        </div>
+                        <div className="pl-9 space-y-1.5">
+                          <p className="text-sm text-gray-600">
+                            По всем вопросам обращайтесь:{' '}
+                            <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="text-primary hover:underline font-semibold">SVMontaj24@mail.ru</a>
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Пользователь выражает своё согласие на получение личных сообщений от Администрации в любое время и любого характера, в том числе и информационно-рекламного.
+                          </p>
+                        </div>
+                      </section>
+                    </div>
+
+                    {/* Кнопка закрытия внизу */}
+                    <div className="border-t px-6 py-4 bg-gray-50/80 flex-shrink-0">
+                      <Button onClick={() => setShowRules(false)} className="w-full" size="lg">
+                        Понятно
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
                 {error && (
                   <div className="p-4 bg-red-50 border border-red-100 rounded-xl animate-fade-in">
