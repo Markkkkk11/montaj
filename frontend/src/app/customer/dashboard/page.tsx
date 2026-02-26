@@ -273,29 +273,6 @@ export default function CustomerDashboard() {
             )}
           </section>
 
-          {/* Обратная связь — под активными заказами */}
-          <div className="p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-soft">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <MessageCircle className="h-4 w-4 text-gray-400" />
-                </div>
-                <span className="text-xs sm:text-sm font-semibold text-gray-600">Обратная связь:</span>
-              </div>
-              <div className="flex flex-wrap gap-3 sm:gap-4 pl-10 sm:pl-0">
-                <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-xs sm:text-sm text-blue-600 hover:underline font-medium">
-                  <Mail className="h-3.5 w-3.5" /> Email
-                </a>
-                <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-violet-600 hover:underline font-medium">
-                  <MessageCircle className="h-3.5 w-3.5" /> Telegram
-                </a>
-                <a href="https://max.ru/u/f9LHodD0cOKIe-cyRoYq_Udu4_b14n0rL0vJ3BA4GWqjW0uOGlGmWjK1Vow" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-sky-600 hover:underline font-medium">
-                  <MessageCircle className="h-3.5 w-3.5" /> MAX
-                </a>
-              </div>
-            </div>
-          </div>
-
           {/* 2. Отклики — заказы с откликами, исполнитель не выбран */}
           {(responseOrders.length > 0 || !isLoading) && (
             <section id="section-responses" className="scroll-mt-20">
@@ -443,6 +420,29 @@ export default function CustomerDashboard() {
               )}
             </section>
           )}
+
+          {/* Обратная связь — под завершёнными */}
+          <div className="p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-soft">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <MessageCircle className="h-4 w-4 text-gray-400" />
+                </div>
+                <span className="text-xs sm:text-sm font-semibold text-gray-600">Обратная связь:</span>
+              </div>
+              <div className="flex flex-wrap gap-3 sm:gap-4 pl-10 sm:pl-0">
+                <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-xs sm:text-sm text-blue-600 hover:underline font-medium">
+                  <Mail className="h-3.5 w-3.5" /> Email
+                </a>
+                <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-violet-600 hover:underline font-medium">
+                  <MessageCircle className="h-3.5 w-3.5" /> Telegram
+                </a>
+                <a href="https://max.ru/u/f9LHodD0cOKIe-cyRoYq_Udu4_b14n0rL0vJ3BA4GWqjW0uOGlGmWjK1Vow" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-sky-600 hover:underline font-medium">
+                  <MessageCircle className="h-3.5 w-3.5" /> MAX
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
