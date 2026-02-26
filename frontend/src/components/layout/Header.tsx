@@ -37,7 +37,7 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 glass-strong border-b border-gray-100/50">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
           {showBack && (
             <button

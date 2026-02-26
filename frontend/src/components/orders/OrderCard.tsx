@@ -27,10 +27,10 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
   const responsesCount = order._count?.responses || 0;
 
   return (
-    <Card className={`${cardClassName} overflow-hidden max-w-full`}>
+    <Card className={`${cardClassName} overflow-hidden w-full max-w-full box-border`}>
       <CardHeader className="pb-2 px-3 pt-3 sm:px-6 sm:pt-6 sm:pb-3">
-        <div className="flex justify-between items-start">
-          <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start min-w-0 w-full">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
               <span 
                 className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold text-white shadow-sm"
@@ -62,8 +62,8 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
         </div>
       </CardHeader>
 
-      <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
-        <div className="space-y-2 sm:space-y-3">
+      <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6 overflow-hidden">
+        <div className="space-y-2 sm:space-y-3 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
               <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />

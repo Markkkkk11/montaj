@@ -56,10 +56,10 @@ export default function OrdersPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50/50 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50/50 w-full max-w-[100vw] overflow-x-hidden">
       <Header showBack />
 
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 page-enter">
+      <main className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 page-enter box-border overflow-hidden">
         <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
           <div>
             <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-0.5 sm:mb-1">
@@ -121,12 +121,12 @@ export default function OrdersPage() {
           </div>
         )}
 
-        <div className="grid lg:grid-cols-4 gap-3 sm:gap-6">
-          <div className="lg:col-span-1">
+        <div className="grid lg:grid-cols-4 gap-3 sm:gap-6 w-full min-w-0">
+          <div className="lg:col-span-1 min-w-0">
             <OrderFilters onApply={handleApplyFilters} initialFilters={filters} />
           </div>
 
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 min-w-0">
             {isLoading ? (
               <div className="space-y-3 sm:space-y-4">
                 {[1, 2, 3].map(i => (

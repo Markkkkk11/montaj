@@ -42,7 +42,7 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
   const activeFiltersCount = [filters.category, filters.region, filters.sortBy !== 'createdAt' ? filters.sortBy : null, filters.sortOrder !== 'desc' ? filters.sortOrder : null].filter(Boolean).length;
 
   return (
-    <Card className="lg:sticky lg:top-20 overflow-hidden">
+    <Card className="lg:sticky lg:top-20 overflow-hidden w-full max-w-full box-border">
       <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6 cursor-pointer lg:cursor-default" onClick={() => setIsOpen(!isOpen)}>
         <CardTitle className="text-sm sm:text-base flex items-center gap-2">
           <SlidersHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Фильтры
