@@ -249,14 +249,16 @@ function RegisterContent() {
                 </div>
 
                 <div>
-                  <Label htmlFor="email">Email <span className="text-xs text-muted-foreground font-normal">(необязательно)</span></Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
                     type="email"
+                    required
                     value={formData.email || ''}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="example@mail.ru"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">На него будут приходить чеки оплат и рассылка</p>
                 </div>
 
                 <div>

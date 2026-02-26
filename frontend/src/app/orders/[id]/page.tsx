@@ -351,7 +351,7 @@ export default function OrderDetailPage() {
               </div>
             )}
 
-            {isCustomer && order.executor && (
+            {isCustomer && order.executor && order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
               <div className="p-5 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
                 <h3 className="font-bold text-emerald-900 mb-3">Контакты исполнителя</h3>
                 <p className="text-sm mb-2">

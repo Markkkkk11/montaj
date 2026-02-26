@@ -21,8 +21,9 @@ export const registerSchema = Joi.object({
     'any.only': 'Роль должна быть CUSTOMER или EXECUTOR',
   }),
   phone: phoneValidator,
-  email: Joi.string().email().optional().allow('', null).messages({
+  email: Joi.string().email().required().messages({
     'string.email': 'Неверный формат email',
+    'any.required': 'Email обязателен',
   }),
   password: Joi.string().min(6).required().messages({
     'string.min': 'Пароль должен содержать минимум 6 символов',

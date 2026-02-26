@@ -35,7 +35,8 @@ export default function ExecutorDashboard() {
       return;
     }
     
-    const closedBanners = localStorage.getItem('closedBanners');
+    const bannerKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(bannerKey);
     if (closedBanners) {
       try {
         const banners = JSON.parse(closedBanners);
@@ -67,7 +68,9 @@ export default function ExecutorDashboard() {
 
   const handleCloseBonusBanner = () => {
     setBonusBannerClosed(true);
-    const closedBanners = localStorage.getItem('closedBanners');
+    if (!user) return;
+    const bannerKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(bannerKey);
     let banners = {};
     if (closedBanners) {
       try {
@@ -77,12 +80,14 @@ export default function ExecutorDashboard() {
       }
     }
     banners = { ...banners, bonusBanner: true };
-    localStorage.setItem('closedBanners', JSON.stringify(banners));
+    localStorage.setItem(bannerKey, JSON.stringify(banners));
   };
 
   const handleCloseBalanceInfo = () => {
     setBalanceInfoClosed(true);
-    const closedBanners = localStorage.getItem('closedBanners');
+    if (!user) return;
+    const bannerKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(bannerKey);
     let banners: any = {};
     if (closedBanners) {
       try {
@@ -90,7 +95,7 @@ export default function ExecutorDashboard() {
       } catch (e) {}
     }
     banners = { ...banners, balanceInfo: true };
-    localStorage.setItem('closedBanners', JSON.stringify(banners));
+    localStorage.setItem(bannerKey, JSON.stringify(banners));
   };
 
   if (!isHydrated || !user) {
