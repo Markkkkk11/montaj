@@ -135,7 +135,7 @@ export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
                 <p style="margin: 8px 0;"><strong>Адрес:</strong> ${order.address}</p>
                 <p style="margin: 8px 0;">${order.description.substring(0, 100)}${order.description.length > 100 ? '...' : ''}</p>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-                  <span style="font-weight: bold; color: ${CATEGORY_COLORS[order.category] || '#2563eb'}; font-size: 16px;">${parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
+                  <span style="font-weight: bold; color: ${CATEGORY_COLORS[order.category] || '#2563eb'}; font-size: 16px;">${Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽</span>
                   <button 
                     id="order-details-${order.id}"
                     style="background: ${CATEGORY_COLORS[order.category] || '#2563eb'}; color: white; padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;"

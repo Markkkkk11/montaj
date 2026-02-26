@@ -398,7 +398,7 @@ export default function CustomerDashboard() {
                               <div className="flex items-center gap-2 sm:gap-3 mt-1.5 flex-wrap">
                                 <span className="text-[10px] sm:text-xs text-muted-foreground">{order.region}</span>
                                 <span className="text-[10px] sm:text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('ru-RU')}</span>
-                                <span className="text-[10px] sm:text-xs font-bold text-blue-600">{parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
+                                <span className="text-[10px] sm:text-xs font-bold text-blue-600">{Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽</span>
                               </div>
                             </div>
                             <span className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-lg flex-shrink-0 border ${

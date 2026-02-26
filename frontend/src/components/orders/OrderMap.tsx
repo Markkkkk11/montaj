@@ -91,7 +91,7 @@ export function OrderMap({ orders, onOrderSelect, center = [55.75, 37.57], zoom 
                 <p style="margin-bottom: 4px;"><strong>Бюджет:</strong> ${
                   order.budgetType === 'negotiable'
                     ? 'Договорная'
-                    : `${parseFloat(order.budget).toLocaleString()} ₽`
+                    : `${Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽`
                 }</p>
                 <p style="margin-bottom: 4px;"><strong>Адрес:</strong> ${order.address}</p>
                 <p style="margin-bottom: 4px;"><strong>Начало:</strong> ${new Date(

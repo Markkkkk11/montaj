@@ -211,7 +211,7 @@ export default function OrderDetailPage() {
   const isExecutor = user.role === 'EXECUTOR';
   const isAssignedExecutor = order.executorId === user.id;
   const canRespond = isExecutor && order.status === 'PUBLISHED' && !isAssignedExecutor;
-  const budget = order.budgetType === 'negotiable' ? 'Договорная' : `${parseFloat(order.budget).toLocaleString()} ₽`;
+  const budget = order.budgetType === 'negotiable' ? 'Договорная' : `${Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽`;
 
   return (
     <div className="min-h-screen bg-gray-50/50">

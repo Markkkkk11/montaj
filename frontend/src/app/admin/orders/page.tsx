@@ -188,7 +188,7 @@ export default function AdminOrdersPage() {
                     <TableCell className="font-medium">{order.title}</TableCell>
                     <TableCell>{order.category}</TableCell>
                     <TableCell>{order.region}</TableCell>
-                    <TableCell>{parseFloat(order.budget.toString()).toFixed(2)} ₽</TableCell>
+                    <TableCell>{Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽</TableCell>
                     <TableCell>
                       <div className="text-sm">
                         <div>{order.customer.fullName}</div>

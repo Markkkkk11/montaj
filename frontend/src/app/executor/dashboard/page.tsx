@@ -562,7 +562,7 @@ export default function ExecutorDashboard() {
                             <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
                               <span className="text-xs text-muted-foreground">{order.region}</span>
                               <span className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('ru-RU')}</span>
-                              <span className="text-xs font-bold text-blue-600">{parseFloat(order.budget.toString()).toLocaleString('ru-RU')} ₽</span>
+                              <span className="text-xs font-bold text-blue-600">{Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽</span>
                             </div>
                           </div>
                           <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg flex-shrink-0">Завершён</span>

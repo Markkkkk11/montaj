@@ -16,7 +16,7 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
   const budget =
     order.budgetType === 'negotiable'
       ? 'Договорная'
-      : `${parseFloat(order.budget).toLocaleString()} ₽`;
+      : `${Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽`;
 
   const startDate = new Date(order.startDate).toLocaleDateString('ru-RU');
 
