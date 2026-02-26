@@ -35,7 +35,8 @@ export default function ExecutorDashboard() {
       return;
     }
     
-    const closedBanners = localStorage.getItem('closedBanners');
+    const storageKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(storageKey);
     if (closedBanners) {
       try {
         const banners = JSON.parse(closedBanners);
@@ -44,6 +45,9 @@ export default function ExecutorDashboard() {
       } catch (e) {
         console.error('Error parsing closedBanners:', e);
       }
+    } else {
+      setBonusBannerClosed(false);
+      setBalanceInfoClosed(false);
     }
     
     loadData();
@@ -66,8 +70,10 @@ export default function ExecutorDashboard() {
   };
 
   const handleCloseBonusBanner = () => {
+    if (!user) return;
     setBonusBannerClosed(true);
-    const closedBanners = localStorage.getItem('closedBanners');
+    const storageKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(storageKey);
     let banners = {};
     if (closedBanners) {
       try {
@@ -77,12 +83,14 @@ export default function ExecutorDashboard() {
       }
     }
     banners = { ...banners, bonusBanner: true };
-    localStorage.setItem('closedBanners', JSON.stringify(banners));
+    localStorage.setItem(storageKey, JSON.stringify(banners));
   };
 
   const handleCloseBalanceInfo = () => {
+    if (!user) return;
     setBalanceInfoClosed(true);
-    const closedBanners = localStorage.getItem('closedBanners');
+    const storageKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(storageKey);
     let banners: any = {};
     if (closedBanners) {
       try {
@@ -90,7 +98,7 @@ export default function ExecutorDashboard() {
       } catch (e) {}
     }
     banners = { ...banners, balanceInfo: true };
-    localStorage.setItem('closedBanners', JSON.stringify(banners));
+    localStorage.setItem(storageKey, JSON.stringify(banners));
   };
 
   if (!isHydrated || !user) {

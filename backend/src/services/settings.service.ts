@@ -35,13 +35,21 @@ export class SettingsService {
    * Инициализация дефолтных настроек (вызывается при старте)
    */
   async seedDefaults() {
+    const FORCE_UPDATE_KEYS = ['premiumSpecializations'];
+
     for (const [key, { value, section }] of Object.entries(DEFAULT_SETTINGS)) {
+      const shouldForceUpdate = FORCE_UPDATE_KEYS.includes(key);
       await prisma.platformSetting.upsert({
         where: { key },
-        update: {},           // Не перезаписываем, если уже есть
+        update: shouldForceUpdate ? { value } : {},
         create: { key, value, section },
       });
     }
+    await prisma.subscription.updateMany({
+      where: { tariffType: 'PREMIUM', specializationCount: { gt: 3 } },
+      data: { specializationCount: 3 },
+    });
+
     console.log('⚙️  Настройки платформы инициализированы');
   }
 
