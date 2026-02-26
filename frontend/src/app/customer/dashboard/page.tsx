@@ -97,7 +97,10 @@ export default function CustomerDashboard() {
 
         {/* Stats — 4 блока */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-5 sm:mb-8 stagger-children">
-          <Card className="overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+          <Card
+            className="cursor-pointer overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5"
+            onClick={() => document.getElementById('section-active')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          >
             <CardContent className="p-3 sm:pt-5 sm:px-5">
               <div className="flex items-center gap-2.5 sm:gap-3">
                 <div className="w-9 h-9 sm:w-11 sm:h-11 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -111,7 +114,10 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+          <Card
+            className="cursor-pointer overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5"
+            onClick={() => document.getElementById('section-responses')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          >
             <CardContent className="p-3 sm:pt-5 sm:px-5">
               <div className="flex items-center gap-2.5 sm:gap-3">
                 <div className="w-9 h-9 sm:w-11 sm:h-11 bg-violet-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -125,7 +131,10 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+          <Card
+            className="cursor-pointer overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5"
+            onClick={() => document.getElementById('section-inprogress')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          >
             <CardContent className="p-3 sm:pt-5 sm:px-5">
               <div className="flex items-center gap-2.5 sm:gap-3">
                 <div className="w-9 h-9 sm:w-11 sm:h-11 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -139,7 +148,10 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5">
+          <Card
+            className="cursor-pointer overflow-hidden hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5"
+            onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          >
             <CardContent className="p-3 sm:pt-5 sm:px-5">
               <div className="flex items-center gap-2.5 sm:gap-3">
                 <div className="w-9 h-9 sm:w-11 sm:h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -212,7 +224,7 @@ export default function CustomerDashboard() {
         <div className="space-y-6 sm:space-y-8">
 
           {/* 1. Активные заказы */}
-          <section>
+          <section id="section-active" className="scroll-mt-20">
             <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
               <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
                 <Package className="h-4 w-4 text-blue-600" />
@@ -286,7 +298,7 @@ export default function CustomerDashboard() {
 
           {/* 2. Отклики — заказы с откликами, исполнитель не выбран */}
           {(responseOrders.length > 0 || !isLoading) && (
-            <section>
+            <section id="section-responses" className="scroll-mt-20">
               <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
                 <div className="w-8 h-8 bg-violet-50 rounded-lg flex items-center justify-center">
                   <Users className="h-4 w-4 text-violet-600" />
@@ -329,7 +341,7 @@ export default function CustomerDashboard() {
 
           {/* 3. В работе */}
           {(inProgressOrders.length > 0 || !isLoading) && (
-            <section>
+            <section id="section-inprogress" className="scroll-mt-20">
               <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
                 <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
                   <Hammer className="h-4 w-4 text-amber-600" />
@@ -372,7 +384,7 @@ export default function CustomerDashboard() {
 
           {/* 4. Завершено */}
           {(completedOrders.length > 0 || !isLoading) && (
-            <section>
+            <section id="section-completed" className="scroll-mt-20">
               <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
                 <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
