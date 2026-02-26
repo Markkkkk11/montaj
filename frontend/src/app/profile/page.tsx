@@ -178,35 +178,43 @@ export default function ProfilePage() {
 
                   {/* Lightbox */}
                   {lightboxPhoto !== null && (
-                    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightboxPhoto(null)}>
-                      <button className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors z-10" onClick={() => setLightboxPhoto(null)}>
-                        <X className="h-8 w-8" />
+                    <div
+                      className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+                      onClick={() => setLightboxPhoto(null)}
+                    >
+                      <button
+                        className="absolute top-3 right-3 sm:top-5 sm:right-5 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-colors"
+                        onClick={() => setLightboxPhoto(null)}
+                      >
+                        <X className="h-6 w-6" />
                       </button>
                       {user.executorProfile.workPhotos.length > 1 && (
                         <>
                           <button
-                            className="absolute left-2 sm:left-4 p-2 text-white/70 hover:text-white transition-colors z-10"
+                            className="absolute left-2 sm:left-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-colors"
                             onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto - 1 + user.executorProfile!.workPhotos.length) % user.executorProfile!.workPhotos.length); }}
                           >
-                            <ChevronLeft className="h-8 w-8" />
+                            <ChevronLeft className="h-6 w-6" />
                           </button>
                           <button
-                            className="absolute right-2 sm:right-4 p-2 text-white/70 hover:text-white transition-colors z-10"
+                            className="absolute right-2 sm:right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-colors"
                             onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto + 1) % user.executorProfile!.workPhotos.length); }}
                           >
-                            <ChevronRight className="h-8 w-8" />
+                            <ChevronRight className="h-6 w-6" />
                           </button>
                         </>
                       )}
                       <img
                         src={(() => { const p = user.executorProfile!.workPhotos[lightboxPhoto]; return p.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${p}` : p; })()}
                         alt={`Работа ${lightboxPhoto + 1}`}
-                        className="max-w-full max-h-[85vh] object-contain rounded-lg"
+                        className="max-w-full max-h-full object-contain"
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <div className="absolute bottom-4 text-white/60 text-sm font-medium">
-                        {lightboxPhoto + 1} / {user.executorProfile.workPhotos.length}
-                      </div>
+                      {user.executorProfile.workPhotos.length > 1 && (
+                        <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white/80 text-xs font-medium">
+                          {lightboxPhoto + 1} / {user.executorProfile.workPhotos.length}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
