@@ -56,10 +56,10 @@ export default function OrdersPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-gray-50/50 overflow-x-hidden">
       <Header showBack />
 
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 page-enter overflow-x-hidden">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 page-enter">
         <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
           <div>
             <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-0.5 sm:mb-1">

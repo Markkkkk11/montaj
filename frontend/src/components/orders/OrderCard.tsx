@@ -27,7 +27,7 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
   const responsesCount = order._count?.responses || 0;
 
   return (
-    <Card className={`${cardClassName} overflow-hidden`}>
+    <Card className={`${cardClassName} overflow-hidden max-w-full`}>
       <CardHeader className="pb-2 px-3 pt-3 sm:px-6 sm:pt-6 sm:pb-3">
         <div className="flex justify-between items-start">
           <div className="flex-1 min-w-0">
@@ -131,14 +131,14 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
             </div>
           )}
 
-          <div className="flex gap-2 pt-1 sm:pt-2">
-            <Link href={`/orders/${order.id}`} className="flex-1">
-              <Button variant="outline" className="w-full gap-1 text-xs sm:text-sm" size="sm">
+          <div className={`flex pt-1 sm:pt-2 ${showActions && onSelect ? 'flex-col sm:flex-row gap-2' : 'gap-2'}`}>
+            <Link href={`/orders/${order.id}`} className={showActions && onSelect ? 'w-full sm:flex-1' : 'flex-1'}>
+              <Button variant="outline" className="w-full gap-1 text-xs sm:text-sm h-9" size="sm">
                 Подробнее <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
             </Link>
             {showActions && onSelect && (
-              <Button onClick={() => onSelect(order.id)} className="flex-1 text-xs sm:text-sm" size="sm">
+              <Button onClick={() => onSelect(order.id)} className="w-full sm:flex-1 text-xs sm:text-sm h-9" size="sm">
                 Откликнуться
               </Button>
             )}
