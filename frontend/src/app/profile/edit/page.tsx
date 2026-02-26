@@ -180,11 +180,11 @@ export default function EditProfilePage() {
           <Card className="mb-6 border-blue-100 bg-blue-50/40">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center gap-3 text-sm">
-                <span className="badge-primary">Шаг 1</span>
+                <span className="px-4 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap flex-shrink-0">Шаг 1</span>
                 <span className="text-blue-900">Сначала заполните и сохраните «Основная информация».</span>
               </div>
               <div className="flex items-center gap-3 text-sm mt-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${executorSectionUnlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>Шаг 2</span>
+                <span className={`px-4 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${executorSectionUnlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>Шаг 2</span>
                 <span className={executorSectionUnlocked ? 'text-emerald-800' : 'text-gray-600'}>
                   {executorSectionUnlocked ? 'Теперь заполните «Профиль исполнителя».' : 'Профиль исполнителя откроется после сохранения шага 1.'}
                 </span>

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { SPECIALIZATION_LABELS, getTimeSinceRegistration } from '@/lib/utils';
 import api from '@/lib/api';
 import Link from 'next/link';
-import { Star, ArrowLeft, Globe, Building, MapPin } from 'lucide-react';
+import { Star, ArrowLeft, Globe, Building, MapPin, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PublicProfile {
   id: string;
@@ -41,6 +41,7 @@ export default function PublicProfilePage() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lightboxPhoto, setLightboxPhoto] = useState<number | null>(null);
 
   useEffect(() => {
     loadProfile();
@@ -228,7 +229,7 @@ export default function PublicProfilePage() {
                   <p className="text-sm text-muted-foreground mb-2">Портфолио ({profile.executorProfile.workPhotos.length} фото)</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {profile.executorProfile.workPhotos.map((photo, i) => (
-                      <div key={i} className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                      <div key={i} className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm cursor-pointer" onClick={() => setLightboxPhoto(i)}>
                         <img
                           src={photo.startsWith('/') ? `${API_URL}${photo}` : photo}
                           alt={`Работа ${i + 1}`}
@@ -237,6 +238,40 @@ export default function PublicProfilePage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Lightbox */}
+                  {lightboxPhoto !== null && (
+                    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightboxPhoto(null)}>
+                      <button className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors z-10" onClick={() => setLightboxPhoto(null)}>
+                        <X className="h-8 w-8" />
+                      </button>
+                      {profile.executorProfile.workPhotos.length > 1 && (
+                        <>
+                          <button
+                            className="absolute left-2 sm:left-4 p-2 text-white/70 hover:text-white transition-colors z-10"
+                            onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto - 1 + profile.executorProfile!.workPhotos.length) % profile.executorProfile!.workPhotos.length); }}
+                          >
+                            <ChevronLeft className="h-8 w-8" />
+                          </button>
+                          <button
+                            className="absolute right-2 sm:right-4 p-2 text-white/70 hover:text-white transition-colors z-10"
+                            onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto + 1) % profile.executorProfile!.workPhotos.length); }}
+                          >
+                            <ChevronRight className="h-8 w-8" />
+                          </button>
+                        </>
+                      )}
+                      <img
+                        src={(() => { const p = profile.executorProfile!.workPhotos[lightboxPhoto]; return p.startsWith('/') ? `${API_URL}${p}` : p; })()}
+                        alt={`Работа ${lightboxPhoto + 1}`}
+                        className="max-w-full max-h-[85vh] object-contain rounded-lg"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="absolute bottom-4 text-white/60 text-sm font-medium">
+                        {lightboxPhoto + 1} / {profile.executorProfile.workPhotos.length}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

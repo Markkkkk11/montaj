@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Header } from '@/components/layout/Header';
 import { USER_STATUS_LABELS, SPECIALIZATION_LABELS, getTimeSinceRegistration } from '@/lib/utils';
 import Link from 'next/link';
-import { Star, Edit, Phone, Mail, MapPin, Building2, Clock, ChevronRight, Shield, Briefcase } from 'lucide-react';
+import { Star, Edit, Phone, Mail, MapPin, Building2, Clock, ChevronRight, ChevronLeft, Shield, Briefcase, X } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, isHydrated } = useAuthStore();
   const router = useRouter();
+  const [lightboxPhoto, setLightboxPhoto] = useState<number | null>(null);
 
   useEffect(() => {
     if (isHydrated && !user) {
@@ -168,12 +169,46 @@ export default function ProfilePage() {
                     {user.executorProfile.workPhotos.map((photo: string, idx: number) => {
                       const photoSrc = photo.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${photo}` : photo;
                       return (
-                        <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                        <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm cursor-pointer" onClick={() => setLightboxPhoto(idx)}>
                           <img src={photoSrc} alt={`Работа ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                         </div>
                       );
                     })}
                   </div>
+
+                  {/* Lightbox */}
+                  {lightboxPhoto !== null && (
+                    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setLightboxPhoto(null)}>
+                      <button className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors z-10" onClick={() => setLightboxPhoto(null)}>
+                        <X className="h-8 w-8" />
+                      </button>
+                      {user.executorProfile.workPhotos.length > 1 && (
+                        <>
+                          <button
+                            className="absolute left-2 sm:left-4 p-2 text-white/70 hover:text-white transition-colors z-10"
+                            onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto - 1 + user.executorProfile!.workPhotos.length) % user.executorProfile!.workPhotos.length); }}
+                          >
+                            <ChevronLeft className="h-8 w-8" />
+                          </button>
+                          <button
+                            className="absolute right-2 sm:right-4 p-2 text-white/70 hover:text-white transition-colors z-10"
+                            onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto + 1) % user.executorProfile!.workPhotos.length); }}
+                          >
+                            <ChevronRight className="h-8 w-8" />
+                          </button>
+                        </>
+                      )}
+                      <img
+                        src={(() => { const p = user.executorProfile!.workPhotos[lightboxPhoto]; return p.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${p}` : p; })()}
+                        alt={`Работа ${lightboxPhoto + 1}`}
+                        className="max-w-full max-h-[85vh] object-contain rounded-lg"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="absolute bottom-4 text-white/60 text-sm font-medium">
+                        {lightboxPhoto + 1} / {user.executorProfile.workPhotos.length}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

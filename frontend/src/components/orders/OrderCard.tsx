@@ -27,19 +27,19 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
   const responsesCount = order._count?.responses || 0;
 
   return (
-    <Card className={cardClassName}>
-      <CardHeader className="pb-3">
+    <Card className={`${cardClassName} overflow-hidden`}>
+      <CardHeader className="pb-2 px-3 pt-3 sm:px-6 sm:pt-6 sm:pb-3">
         <div className="flex justify-between items-start">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
               <span 
-                className="px-3 py-1 rounded-xl text-xs font-bold text-white shadow-sm"
+                className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold text-white shadow-sm"
                 style={{ backgroundColor: SPECIALIZATION_COLORS[order.category] || '#6b7280' }}
               >
                 {SPECIALIZATION_LABELS[order.category]}
               </span>
               {order.status !== 'PUBLISHED' && (
-                <span className={`px-3 py-1 rounded-xl text-xs font-semibold ${
+                <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold ${
                   order.status === 'PENDING' ? 'bg-orange-50 text-orange-700 border border-orange-100' :
                   order.status === 'IN_PROGRESS' && !order.workStartedAt ? 'bg-amber-50 text-amber-700 border border-amber-100' :
                   order.status === 'IN_PROGRESS' && order.workStartedAt ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
@@ -54,48 +54,50 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
                 </span>
               )}
             </div>
-            <CardTitle className="text-lg mb-1.5 truncate">
+            <CardTitle className="text-sm sm:text-lg mb-1 sm:mb-1.5 truncate">
               {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
             </CardTitle>
-            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{order.description}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">{order.description}</p>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4 text-sm">
+      <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
-              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
               <span className="truncate">{order.region}, {order.address}</span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground flex-shrink-0">
-              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+              <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
               <span>{startDate}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-xl">
-              <Wallet className="h-4 w-4 text-blue-600" />
-              <span className="font-bold text-blue-700 text-sm">{budget}</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-50 rounded-lg sm:rounded-xl">
+              <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
+              <span className="font-bold text-blue-700 text-xs sm:text-sm">{budget}</span>
             </div>
           </div>
 
           {/* Отклики для заказчика */}
           {isCustomer && order.status === 'PUBLISHED' && (
-            <div className={`p-3 rounded-xl border ${responsesCount > 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className={`h-4 w-4 ${responsesCount > 0 ? 'text-emerald-600' : 'text-gray-400'}`} />
-                  <span className={`text-sm font-semibold ${responsesCount > 0 ? 'text-emerald-800' : 'text-gray-600'}`}>
+            <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border ${responsesCount > 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <Users className={`h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 ${responsesCount > 0 ? 'text-emerald-600' : 'text-gray-400'}`} />
+                  <span className={`text-xs sm:text-sm font-semibold truncate ${responsesCount > 0 ? 'text-emerald-800' : 'text-gray-600'}`}>
                     {responsesCount === 0 ? 'Нет откликов' : `${responsesCount} ${responsesCount === 1 ? 'отклик' : responsesCount < 5 ? 'отклика' : 'откликов'}`}
                   </span>
                 </div>
                 {responsesCount > 0 && (
                   <Link href={`/orders/${order.id}`}>
-                    <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-100 gap-1 h-8">
-                      Смотреть <ChevronRight className="h-3.5 w-3.5" />
+                    <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-100 gap-0.5 sm:gap-1 h-7 sm:h-8 text-[10px] sm:text-xs px-2 sm:px-3 flex-shrink-0">
+                      <span className="hidden sm:inline">Смотреть</span>
+                      <span className="sm:hidden">Открыть</span>
+                      <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     </Button>
                   </Link>
                 )}
@@ -105,15 +107,15 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
 
           {/* Просто счётчик для исполнителя */}
           {!isCustomer && responsesCount > 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
               <Users className="h-3.5 w-3.5" />
               <span>{responsesCount} откликов</span>
             </div>
           )}
 
           {order.customer && (
-            <div className="pt-3 border-t border-gray-50">
-              <p className="text-xs text-muted-foreground">
+            <div className="pt-2 sm:pt-3 border-t border-gray-50">
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                 Заказчик: <span className="font-semibold text-gray-700">{order.customer.fullName}</span>
                 {order.customer.organization && ` (${order.customer.organization})`}
               </p>
@@ -121,22 +123,22 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
           )}
 
           {order.executor && (
-            <div className="pt-3 border-t border-gray-50">
-              <p className="text-xs text-muted-foreground">
+            <div className="pt-2 sm:pt-3 border-t border-gray-50">
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                 Исполнитель: <span className="font-semibold text-gray-700">{order.executor.fullName}</span>
                 <span className="ml-2">⭐ {order.executor.rating.toFixed(1)}</span>
               </p>
             </div>
           )}
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-1 sm:pt-2">
             <Link href={`/orders/${order.id}`} className="flex-1">
-              <Button variant="outline" className="w-full gap-1" size="sm">
-                Подробнее <ChevronRight className="h-4 w-4" />
+              <Button variant="outline" className="w-full gap-1 text-xs sm:text-sm" size="sm">
+                Подробнее <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
             </Link>
             {showActions && onSelect && (
-              <Button onClick={() => onSelect(order.id)} className="flex-1" size="sm">
+              <Button onClick={() => onSelect(order.id)} className="flex-1 text-xs sm:text-sm" size="sm">
                 Откликнуться
               </Button>
             )}
