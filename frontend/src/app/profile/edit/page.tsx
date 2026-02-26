@@ -15,6 +15,8 @@ import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Specialization } from '@/lib/types';
 import { Camera, Save, User, Briefcase, ImagePlus, X as XIcon, Loader2 } from 'lucide-react';
 
+const FORM_STORAGE_KEY = 'editProfileForm';
+
 export default function EditProfilePage() {
   const { user, getCurrentUser, isHydrated } = useAuthStore();
   const router = useRouter();
@@ -22,6 +24,7 @@ export default function EditProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const initializedRef = useRef(false);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -70,24 +73,45 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (!isHydrated) return;
     if (!user) { router.push('/login'); return; }
-    setFullName(user.fullName || '');
-    setEmail(user.email || '');
-    setOrganization(user.organization || '');
-    setCity(user.city || '');
-    setAddress(user.address || '');
-    setMaxMessenger(user.messengers?.max || '');
-    setTelegram(user.messengers?.telegram || '');
-    setAbout(user.about || '');
-    setWebsite(user.website || '');
-    setInn(user.inn || '');
-    setOgrn(user.ogrn || '');
-    if (user.role === 'EXECUTOR' && user.executorProfile) {
-      setRegion(user.executorProfile.region || '');
-      setShortDescription(user.executorProfile.shortDescription || '');
-      setFullDescription(user.executorProfile.fullDescription || '');
-      setIsSelfEmployed(user.executorProfile.isSelfEmployed || false);
-      setWorkPhotos(user.executorProfile.workPhotos || []);
-      setExecutorSectionUnlocked(false);
+
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+
+      // Check if returning from specializations page with saved form data
+      let savedForm: any = null;
+      try {
+        const raw = sessionStorage.getItem(FORM_STORAGE_KEY);
+        if (raw) {
+          savedForm = JSON.parse(raw);
+          sessionStorage.removeItem(FORM_STORAGE_KEY);
+        }
+      } catch (e) { /* ignore */ }
+
+      setFullName(savedForm?.fullName ?? user.fullName ?? '');
+      setEmail(savedForm?.email ?? user.email ?? '');
+      setOrganization(savedForm?.organization ?? user.organization ?? '');
+      setCity(savedForm?.city ?? user.city ?? '');
+      setAddress(savedForm?.address ?? user.address ?? '');
+      setMaxMessenger(savedForm?.maxMessenger ?? user.messengers?.max ?? '');
+      setTelegram(savedForm?.telegram ?? user.messengers?.telegram ?? '');
+      setAbout(savedForm?.about ?? user.about ?? '');
+      setWebsite(savedForm?.website ?? user.website ?? '');
+      setInn(savedForm?.inn ?? user.inn ?? '');
+      setOgrn(savedForm?.ogrn ?? user.ogrn ?? '');
+
+      if (user.role === 'EXECUTOR' && user.executorProfile) {
+        setRegion(savedForm?.region ?? user.executorProfile.region ?? '');
+        setShortDescription(savedForm?.shortDescription ?? user.executorProfile.shortDescription ?? '');
+        setFullDescription(savedForm?.fullDescription ?? user.executorProfile.fullDescription ?? '');
+        setIsSelfEmployed(savedForm?.isSelfEmployed ?? user.executorProfile.isSelfEmployed ?? false);
+        setWorkPhotos(user.executorProfile.workPhotos || []);
+        setExecutorSectionUnlocked(savedForm?.executorSectionUnlocked ?? false);
+      }
+    } else {
+      // Subsequent user updates (e.g. after photo upload / save) — only refresh work photos
+      if (user.role === 'EXECUTOR' && user.executorProfile) {
+        setWorkPhotos(user.executorProfile.workPhotos || []);
+      }
     }
   }, [user, router, isHydrated]);
 
@@ -296,7 +320,7 @@ export default function EditProfilePage() {
             </div>
 
             <Button onClick={handleSaveBasicProfile} disabled={isSaving || !fullName || !city} className="w-full gap-2">
-              <Save className="h-4 w-4" /> {isSaving ? 'Сохранение...' : user.role === 'EXECUTOR' ? 'Сохранить и перейти к профилю исполнителя' : 'Сохранить основную информацию'}
+              <Save className="h-4 w-4" /> {isSaving ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </CardContent>
         </Card>
@@ -329,7 +353,16 @@ export default function EditProfilePage() {
                 <div className="p-4 bg-blue-50/80 rounded-2xl border border-blue-100">
                   <p className="text-sm text-blue-900 mb-2">
                     Для изменения специализаций перейдите в{' '}
-                    <Button variant="link" className="p-0 h-auto font-semibold text-blue-700" onClick={() => router.push('/profile/specializations')}>
+                    <Button variant="link" className="p-0 h-auto font-semibold text-blue-700" onClick={() => {
+                      // Save current form data before navigating away
+                      sessionStorage.setItem(FORM_STORAGE_KEY, JSON.stringify({
+                        fullName, email, organization, about, website, city, address,
+                        maxMessenger, telegram, inn, ogrn,
+                        region, shortDescription, fullDescription, isSelfEmployed,
+                        executorSectionUnlocked: true
+                      }));
+                      router.push('/profile/specializations');
+                    }}>
                       раздел управления специализациями
                     </Button>
                   </p>
@@ -416,7 +449,7 @@ export default function EditProfilePage() {
                 disabled={isSaving || !region || !user.executorProfile?.specializations?.length || !shortDescription}
                 className="w-full gap-2"
               >
-                <Save className="h-4 w-4" /> {isSaving ? 'Сохранение...' : 'Сохранить профиль исполнителя'}
+                <Save className="h-4 w-4" /> {isSaving ? 'Сохранение...' : 'Сохранить'}
               </Button>
               
               {(!region || !user.executorProfile?.specializations?.length || !shortDescription) && (

@@ -52,7 +52,7 @@ export default function SpecializationsPage() {
       await api.put('/users/executor-profile', { specializations: selected });
       toast({ variant: 'success', title: '✅ Специализации обновлены!' });
       await getCurrentUser();
-      setTimeout(() => router.push('/orders'), 1500);
+      setTimeout(() => router.back(), 800);
     } catch (error: any) {
       toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось сохранить' });
     } finally {
