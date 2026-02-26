@@ -86,7 +86,7 @@ export default function PublicProfilePage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <img src="/logo.jpg" alt="SVMontaj" className="h-10 w-10 sm:h-14 sm:w-14 rounded-full object-cover" />
+          <img src="/logo.jpg" alt="SVMontaj" className="h-10 w-10 sm:h-14 sm:w-14 rounded-full object-contain bg-white" />
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Назад

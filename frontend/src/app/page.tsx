@@ -164,7 +164,7 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/20">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
-            <img src="/logo.jpg" alt="SVMontaj" className="h-11 w-11 rounded-full object-cover ring-2 ring-white shadow-soft transition-transform duration-300 group-hover:scale-105" />
+            <img src="/logo.jpg" alt="SVMontaj" className="h-11 w-11 rounded-full object-contain bg-white ring-2 ring-white shadow-soft transition-transform duration-300 group-hover:scale-105" />
             <span className="text-xl font-bold hidden sm:inline">
               <span className="text-blue-600">SV</span><span className="text-red-500">Montaj</span>
             </span>
@@ -501,7 +501,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.jpg" alt="SVMontaj" className="h-8 w-8 rounded-full object-cover" />
+              <img src="/logo.jpg" alt="SVMontaj" className="h-8 w-8 rounded-full object-contain bg-white" />
               <span className="font-bold"><span className="text-blue-600">SV</span><span className="text-red-500">Montaj</span></span>
             </div>
             <div className="text-sm text-muted-foreground text-center sm:text-right">

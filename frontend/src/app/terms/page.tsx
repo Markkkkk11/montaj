@@ -12,7 +12,7 @@ export default function TermsPage() {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/">
-            <img src="/logo.jpg" alt="SVMontaj" className="h-14 w-14 rounded-full object-cover" />
+            <img src="/logo.jpg" alt="SVMontaj" className="h-14 w-14 rounded-full object-contain bg-white" />
           </Link>
           <Link href="/">
             <Button variant="ghost">

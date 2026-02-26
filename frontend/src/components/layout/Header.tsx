@@ -55,7 +55,7 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
             <img
               src="/logo.jpg"
               alt="SVMontaj"
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-white shadow-soft transition-transform duration-300 group-hover:scale-105"
+              className="h-10 w-10 rounded-full object-contain bg-white ring-2 ring-white shadow-soft transition-transform duration-300 group-hover:scale-105"
             />
             <span className="text-lg font-bold hidden sm:inline">
               <span className="text-blue-600">SV</span><span className="text-red-500">Montaj</span>
