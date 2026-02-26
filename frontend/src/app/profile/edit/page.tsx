@@ -11,8 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Header } from '@/components/layout/Header';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { SPECIALIZATION_LABELS } from '@/lib/utils';
-import { Specialization } from '@/lib/types';
+
 import { Camera, Save, User, Briefcase, ImagePlus, X as XIcon, Loader2 } from 'lucide-react';
 
 const FORM_STORAGE_KEY = 'editProfileForm';
@@ -349,36 +348,6 @@ export default function EditProfilePage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>Специализации *</Label>
-                <div className="p-4 bg-blue-50/80 rounded-2xl border border-blue-100">
-                  <p className="text-sm text-blue-900 mb-2">
-                    Для изменения специализаций перейдите в{' '}
-                    <Button variant="link" className="p-0 h-auto font-semibold text-blue-700" onClick={() => {
-                      // Save current form data before navigating away
-                      sessionStorage.setItem(FORM_STORAGE_KEY, JSON.stringify({
-                        fullName, email, organization, about, website, city, address,
-                        maxMessenger, telegram, inn, ogrn,
-                        region, shortDescription, fullDescription, isSelfEmployed,
-                        executorSectionUnlocked: true
-                      }));
-                      router.push('/profile/specializations');
-                    }}>
-                      раздел управления специализациями
-                    </Button>
-                  </p>
-                  {user.executorProfile?.specializations && user.executorProfile.specializations.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {user.executorProfile.specializations.map((spec) => (
-                        <span key={spec} className="badge-primary">{SPECIALIZATION_LABELS[spec]}</span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-red-500 font-medium">⚠️ Не выбраны (обязательно)</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
                 <Label htmlFor="shortDescription">Краткое описание * (до 500 символов)</Label>
                 <Textarea id="shortDescription" value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} placeholder="Кратко опишите свой опыт и навыки..." maxLength={500} rows={3} />
                 <p className="text-xs text-muted-foreground text-right">{shortDescription.length} / 500</p>
@@ -446,13 +415,13 @@ export default function EditProfilePage() {
 
               <Button
                 onClick={handleSaveExecutorProfile}
-                disabled={isSaving || !region || !user.executorProfile?.specializations?.length || !shortDescription}
+                disabled={isSaving || !region || !shortDescription}
                 className="w-full gap-2"
               >
                 <Save className="h-4 w-4" /> {isSaving ? 'Сохранение...' : 'Сохранить'}
               </Button>
               
-              {(!region || !user.executorProfile?.specializations?.length || !shortDescription) && (
+              {(!region || !shortDescription) && (
                 <p className="text-sm text-amber-600 mt-2">⚠️ Заполните все обязательные поля (*) чтобы снять ограничения профиля</p>
               )}
             </CardContent>

@@ -175,7 +175,6 @@ export class UserService {
       user.fullName.length > 0 &&
       user.city.length > 0 &&
       profile.region.length > 0 &&
-      profile.specializations.length > 0 &&
       (profile.shortDescription?.length || 0) > 0;
 
     // Если профиль заполнен и еще не активирован - отправляем на модерацию

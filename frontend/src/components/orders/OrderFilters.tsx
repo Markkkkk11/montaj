@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Specialization, OrderFilters as Filters } from '@/lib/types';
 import { useAuthStore } from '@/stores/authStore';
-import { SlidersHorizontal, RotateCcw, ChevronDown } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import api from '@/lib/api';
+import { SlidersHorizontal, RotateCcw, ChevronDown, Save, CheckCircle, Loader2 } from 'lucide-react';
 
 const AVAILABLE_REGIONS = [
   'Москва и обл.',
@@ -17,13 +19,64 @@ const AVAILABLE_REGIONS = [
 
 interface OrderFiltersProps {
   onApply: (filters: Filters) => void;
+  onSpecializationsSaved?: () => void;
   initialFilters?: Filters;
 }
 
-export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps) {
-  const { user } = useAuthStore();
+export function OrderFilters({ onApply, onSpecializationsSaved, initialFilters = {} }: OrderFiltersProps) {
+  const { user, getCurrentUser } = useAuthStore();
+  const { toast } = useToast();
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [isOpen, setIsOpen] = useState(false);
+
+  const [selectedSpecs, setSelectedSpecs] = useState<Specialization[]>([]);
+  const [isSavingSpecs, setIsSavingSpecs] = useState(false);
+  const [maxSpecializations, setMaxSpecializations] = useState(3);
+
+  useEffect(() => {
+    if (user?.executorProfile) {
+      setSelectedSpecs(user.executorProfile.specializations || []);
+    }
+    if (user?.subscription) {
+      setMaxSpecializations(user.subscription.specializationCount || 3);
+    }
+  }, [user]);
+
+  const handleToggleSpec = (spec: Specialization) => {
+    if (selectedSpecs.includes(spec)) {
+      setSelectedSpecs(selectedSpecs.filter(s => s !== spec));
+    } else {
+      if (selectedSpecs.length >= maxSpecializations) {
+        toast({ variant: 'destructive', title: '❌ Лимит', description: `Максимум ${maxSpecializations} специализаций` });
+        return;
+      }
+      setSelectedSpecs([...selectedSpecs, spec]);
+    }
+  };
+
+  const specsChanged = (() => {
+    const current = user?.executorProfile?.specializations || [];
+    if (current.length !== selectedSpecs.length) return true;
+    return !current.every(s => selectedSpecs.includes(s));
+  })();
+
+  const handleSaveSpecs = async () => {
+    if (selectedSpecs.length === 0) {
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: 'Выберите хотя бы одну специализацию' });
+      return;
+    }
+    try {
+      setIsSavingSpecs(true);
+      await api.put('/users/executor-profile', { specializations: selectedSpecs });
+      toast({ variant: 'success', title: '✅ Специализации сохранены!' });
+      await getCurrentUser();
+      onSpecializationsSaved?.();
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось сохранить' });
+    } finally {
+      setIsSavingSpecs(false);
+    }
+  };
 
   const handleApply = () => {
     onApply(filters);
@@ -74,28 +127,52 @@ export function OrderFilters({ onApply, initialFilters = {} }: OrderFiltersProps
           </div>
         )}
 
-        {isExecutor && user.executorProfile && (
-          <div className="p-3 sm:p-4 bg-blue-50/80 rounded-xl sm:rounded-2xl border border-blue-100">
-            <p className="text-[10px] sm:text-xs font-bold text-blue-900 mb-1.5 sm:mb-2">Ваши специализации</p>
-            {user.executorProfile.specializations.length > 0 ? (
-              <div className="flex flex-wrap gap-1 sm:gap-1.5">
-                {user.executorProfile.specializations.map((spec) => (
-                  <span key={spec} className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                    {SPECIALIZATION_LABELS[spec]}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[10px] sm:text-xs text-blue-700">Не указаны. Заполните профиль!</p>
+        {isExecutor && (
+          <div>
+            <Label className="text-[10px] sm:text-xs font-bold">
+              Специализации: <span className="text-primary">{selectedSpecs.length}</span> из {maxSpecializations}
+            </Label>
+            <div className="grid grid-cols-1 gap-1.5 mt-1.5">
+              {Object.entries(SPECIALIZATION_LABELS).map(([key, label]) => {
+                const spec = key as Specialization;
+                const isSelected = selectedSpecs.includes(spec);
+                const isDisabled = !isSelected && selectedSpecs.length >= maxSpecializations;
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => !isDisabled && handleToggleSpec(spec)}
+                    disabled={isDisabled}
+                    className={`relative px-3 py-2 rounded-lg sm:rounded-xl border text-left transition-all duration-200 text-xs sm:text-sm ${
+                      isSelected
+                        ? 'border-primary bg-blue-50/80 shadow-sm'
+                        : isDisabled
+                          ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-40'
+                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`font-semibold ${isSelected ? 'text-primary' : 'text-gray-700'}`}>{label}</span>
+                      {isSelected && <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {specsChanged && (
+              <Button
+                onClick={handleSaveSpecs}
+                disabled={isSavingSpecs || selectedSpecs.length === 0}
+                className="w-full mt-2 gap-2 text-xs sm:text-sm h-8 sm:h-9"
+                size="sm"
+              >
+                {isSavingSpecs ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Сохранение...</>
+                ) : (
+                  <><Save className="h-3.5 w-3.5" /> Сохранить специализации</>
+                )}
+              </Button>
             )}
-            <Button
-              variant="link"
-              size="sm"
-              className="mt-1.5 sm:mt-2 p-0 h-auto text-blue-600 text-[10px] sm:text-xs"
-              onClick={() => window.location.href = '/profile/specializations'}
-            >
-              Изменить →
-            </Button>
           </div>
         )}
 

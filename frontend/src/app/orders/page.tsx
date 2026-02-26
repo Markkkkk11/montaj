@@ -106,29 +106,9 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Предупреждение */}
-        {user.role === 'EXECUTOR' && 
-         user.executorProfile && 
-         user.executorProfile.specializations.length === 0 && (
-          <div className="mb-4 sm:mb-6 p-3 sm:p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl sm:rounded-2xl flex items-start gap-3 sm:gap-4 animate-fade-in">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
-              <span className="text-lg sm:text-2xl">⚠️</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-amber-900 text-sm sm:text-base">Специализации не выбраны</h3>
-              <p className="text-xs sm:text-sm text-amber-700 mt-0.5 sm:mt-1">
-                Выберите специализации в профиле, чтобы видеть подходящие заказы.
-              </p>
-              <Button onClick={() => router.push('/profile/specializations')} size="sm" className="mt-2 sm:mt-3 text-xs sm:text-sm h-8 sm:h-9">
-                Выбрать специализации
-              </Button>
-            </div>
-          </div>
-        )}
-
         <div className="grid lg:grid-cols-4 gap-3 sm:gap-6 w-full min-w-0">
           <div className="lg:col-span-1 min-w-0">
-            <OrderFilters onApply={handleApplyFilters} initialFilters={filters} />
+            <OrderFilters onApply={handleApplyFilters} onSpecializationsSaved={loadOrders} initialFilters={filters} />
           </div>
 
           <div className="lg:col-span-3 min-w-0">
