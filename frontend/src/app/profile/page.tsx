@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -176,47 +177,6 @@ export default function ProfilePage() {
                     })}
                   </div>
 
-                  {/* Lightbox */}
-                  {lightboxPhoto !== null && (
-                    <div
-                      className="fixed inset-0 z-50 bg-black flex items-center justify-center"
-                      onClick={() => setLightboxPhoto(null)}
-                    >
-                      <button
-                        className="absolute top-3 right-3 sm:top-5 sm:right-5 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-colors"
-                        onClick={() => setLightboxPhoto(null)}
-                      >
-                        <X className="h-6 w-6" />
-                      </button>
-                      {user.executorProfile.workPhotos.length > 1 && (
-                        <>
-                          <button
-                            className="absolute left-2 sm:left-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-colors"
-                            onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto - 1 + user.executorProfile!.workPhotos.length) % user.executorProfile!.workPhotos.length); }}
-                          >
-                            <ChevronLeft className="h-6 w-6" />
-                          </button>
-                          <button
-                            className="absolute right-2 sm:right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white/80 hover:text-white hover:bg-black/70 transition-colors"
-                            onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto + 1) % user.executorProfile!.workPhotos.length); }}
-                          >
-                            <ChevronRight className="h-6 w-6" />
-                          </button>
-                        </>
-                      )}
-                      <img
-                        src={(() => { const p = user.executorProfile!.workPhotos[lightboxPhoto]; return p.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${p}` : p; })()}
-                        alt={`Работа ${lightboxPhoto + 1}`}
-                        className="max-w-full max-h-full object-contain"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      {user.executorProfile.workPhotos.length > 1 && (
-                        <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white/80 text-xs font-medium">
-                          {lightboxPhoto + 1} / {user.executorProfile.workPhotos.length}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -253,6 +213,50 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Lightbox — rendered via portal to body */}
+      {lightboxPhoto !== null && user.executorProfile?.workPhotos && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+          onClick={() => setLightboxPhoto(null)}
+        >
+          <button
+            className="absolute top-3 right-3 sm:top-5 sm:right-5 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+            onClick={() => setLightboxPhoto(null)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+          {user.executorProfile.workPhotos.length > 1 && (
+            <>
+              <button
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto - 1 + user.executorProfile!.workPhotos.length) % user.executorProfile!.workPhotos.length); }}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                onClick={(e) => { e.stopPropagation(); setLightboxPhoto((lightboxPhoto + 1) % user.executorProfile!.workPhotos.length); }}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
+          <img
+            src={(() => { const p = user.executorProfile!.workPhotos[lightboxPhoto]; return p.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${p}` : p; })()}
+            alt={`Работа ${lightboxPhoto + 1}`}
+            className="max-w-[90vw] max-h-[90vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {user.executorProfile.workPhotos.length > 1 && (
+            <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-medium">
+              {lightboxPhoto + 1} / {user.executorProfile.workPhotos.length}
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
