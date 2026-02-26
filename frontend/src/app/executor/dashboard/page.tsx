@@ -35,8 +35,8 @@ export default function ExecutorDashboard() {
       return;
     }
     
-    const bannerKey = `closedBanners_${user.id}`;
-    const closedBanners = localStorage.getItem(bannerKey);
+    const storageKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(storageKey);
     if (closedBanners) {
       try {
         const banners = JSON.parse(closedBanners);
@@ -45,6 +45,9 @@ export default function ExecutorDashboard() {
       } catch (e) {
         console.error('Error parsing closedBanners:', e);
       }
+    } else {
+      setBonusBannerClosed(false);
+      setBalanceInfoClosed(false);
     }
     
     loadData();
@@ -67,10 +70,10 @@ export default function ExecutorDashboard() {
   };
 
   const handleCloseBonusBanner = () => {
-    setBonusBannerClosed(true);
     if (!user) return;
-    const bannerKey = `closedBanners_${user.id}`;
-    const closedBanners = localStorage.getItem(bannerKey);
+    setBonusBannerClosed(true);
+    const storageKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(storageKey);
     let banners = {};
     if (closedBanners) {
       try {
@@ -80,14 +83,14 @@ export default function ExecutorDashboard() {
       }
     }
     banners = { ...banners, bonusBanner: true };
-    localStorage.setItem(bannerKey, JSON.stringify(banners));
+    localStorage.setItem(storageKey, JSON.stringify(banners));
   };
 
   const handleCloseBalanceInfo = () => {
-    setBalanceInfoClosed(true);
     if (!user) return;
-    const bannerKey = `closedBanners_${user.id}`;
-    const closedBanners = localStorage.getItem(bannerKey);
+    setBalanceInfoClosed(true);
+    const storageKey = `closedBanners_${user.id}`;
+    const closedBanners = localStorage.getItem(storageKey);
     let banners: any = {};
     if (closedBanners) {
       try {
@@ -95,7 +98,7 @@ export default function ExecutorDashboard() {
       } catch (e) {}
     }
     banners = { ...banners, balanceInfo: true };
-    localStorage.setItem(bannerKey, JSON.stringify(banners));
+    localStorage.setItem(storageKey, JSON.stringify(banners));
   };
 
   if (!isHydrated || !user) {
