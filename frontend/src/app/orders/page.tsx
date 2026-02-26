@@ -59,36 +59,36 @@ export default function OrdersPage() {
     <div className="min-h-screen bg-gray-50/50">
       <Header showBack />
 
-      <main className="container mx-auto px-3 sm:px-4 py-5 sm:py-8 page-enter overflow-x-hidden">
-        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 page-enter overflow-x-hidden">
+        <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
+            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-0.5 sm:mb-1">
               {user.role === 'CUSTOMER' ? 'Все заказы' : 'Доступные заказы'}
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2">
-              <Search className="h-4 w-4" />
+            <p className="text-xs sm:text-base text-muted-foreground flex items-center gap-1.5 sm:gap-2">
+              <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Найдено: <strong>{total}</strong>
             </p>
           </div>
           <div className="flex gap-2 sm:gap-3 items-center w-full sm:w-auto">
             {user.role === 'EXECUTOR' && (
-              <div className="flex bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
+              <div className="flex bg-white border border-gray-200 p-0.5 sm:p-1 rounded-lg sm:rounded-xl shadow-sm">
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="gap-1.5 sm:gap-2 rounded-lg text-xs sm:text-sm px-2.5 sm:px-3"
+                  className="gap-1 sm:gap-2 rounded-md sm:rounded-lg text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
                 >
-                  <List className="w-4 h-4" />
+                  <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">Список</span>
                 </Button>
                 <Button
                   variant={viewMode === 'map' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('map')}
-                  className="gap-1.5 sm:gap-2 rounded-lg text-xs sm:text-sm px-2.5 sm:px-3"
+                  className="gap-1 sm:gap-2 rounded-md sm:rounded-lg text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9"
                 >
-                  <Map className="w-4 h-4" />
+                  <Map className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">Карта</span>
                 </Button>
               </div>
@@ -105,41 +105,41 @@ export default function OrdersPage() {
         {user.role === 'EXECUTOR' && 
          user.executorProfile && 
          user.executorProfile.specializations.length === 0 && (
-          <div className="mb-6 p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl flex items-start gap-4 animate-fade-in">
-            <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">⚠️</span>
+          <div className="mb-4 sm:mb-6 p-3 sm:p-5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl sm:rounded-2xl flex items-start gap-3 sm:gap-4 animate-fade-in">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span className="text-lg sm:text-2xl">⚠️</span>
             </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-amber-900">Специализации не выбраны</h3>
-              <p className="text-sm text-amber-700 mt-1">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-amber-900 text-sm sm:text-base">Специализации не выбраны</h3>
+              <p className="text-xs sm:text-sm text-amber-700 mt-0.5 sm:mt-1">
                 Выберите специализации в профиле, чтобы видеть подходящие заказы.
               </p>
-              <Button onClick={() => router.push('/profile/specializations')} size="sm" className="mt-3">
+              <Button onClick={() => router.push('/profile/specializations')} size="sm" className="mt-2 sm:mt-3 text-xs sm:text-sm h-8 sm:h-9">
                 Выбрать специализации
               </Button>
             </div>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-4 gap-6">
+        <div className="grid lg:grid-cols-4 gap-3 sm:gap-6">
           <div className="lg:col-span-1">
             <OrderFilters onApply={handleApplyFilters} initialFilters={filters} />
           </div>
 
           <div className="lg:col-span-3">
             {isLoading ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="h-48 skeleton rounded-2xl" />
+                  <div key={i} className="h-36 sm:h-48 skeleton rounded-xl sm:rounded-2xl" />
                 ))}
               </div>
             ) : orders.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Package className="h-10 w-10 text-gray-300" />
+              <div className="text-center py-10 sm:py-16">
+                <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gray-50 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Package className="h-7 w-7 sm:h-10 sm:w-10 text-gray-300" />
                 </div>
-                <p className="text-lg font-semibold text-gray-900 mb-1">Заказы не найдены</p>
-                <p className="text-muted-foreground">Попробуйте изменить фильтры</p>
+                <p className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Заказы не найдены</p>
+                <p className="text-xs sm:text-base text-muted-foreground">Попробуйте изменить фильтры</p>
               </div>
             ) : viewMode === 'map' ? (
               <OrdersMap 
@@ -148,7 +148,7 @@ export default function OrdersPage() {
                 onOrderSelect={(orderId) => router.push(`/orders/${orderId}`)}
               />
             ) : (
-              <div className="space-y-4 stagger-children">
+              <div className="space-y-3 sm:space-y-4 stagger-children">
                 {orders.map((order) => (
                   <OrderCard
                     key={order.id}
@@ -159,17 +159,17 @@ export default function OrdersPage() {
                 ))}
 
                 {total > 20 && (
-                  <div className="flex justify-center items-center gap-3 pt-4">
+                  <div className="flex justify-center items-center gap-2 sm:gap-3 pt-3 sm:pt-4">
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={page === 1}
                       onClick={() => setPage(page - 1)}
-                      className="gap-1"
+                      className="gap-0.5 sm:gap-1 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                     >
-                      <ChevronLeft className="h-4 w-4" /> Назад
+                      <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Назад</span>
                     </Button>
-                    <div className="px-4 py-2 bg-white rounded-xl border text-sm font-medium">
+                    <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white rounded-lg sm:rounded-xl border text-xs sm:text-sm font-medium">
                       {page} / {Math.ceil(total / 20)}
                     </div>
                     <Button
@@ -177,9 +177,9 @@ export default function OrdersPage() {
                       size="sm"
                       disabled={page >= Math.ceil(total / 20)}
                       onClick={() => setPage(page + 1)}
-                      className="gap-1"
+                      className="gap-0.5 sm:gap-1 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                     >
-                      Вперёд <ChevronRight className="h-4 w-4" />
+                      <span className="hidden sm:inline">Вперёд</span> <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 )}
