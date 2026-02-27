@@ -36,7 +36,8 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 glass-strong border-b border-gray-100/50">
+    <>
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100/30" style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
           {showBack && (
@@ -93,6 +94,8 @@ export function Header({ showBack = false, backHref }: HeaderProps) {
         </div>
       </div>
     </header>
+    <div className="h-16" />
+    </>
   );
 }
 
