@@ -506,7 +506,7 @@ export default function Home() {
             </div>
             <div className="text-sm text-muted-foreground text-center sm:text-right">
               <p>&copy; 2026 SVMontaj. Все права защищены.</p>
-              <p className="text-xs mt-1">ИНН 502715051593</p>
+              <p className="text-xs mt-1">ИП Сосновцев Сергей Геннадьевич, ИНН 502715051593</p>
             </div>
           </div>
         </div>

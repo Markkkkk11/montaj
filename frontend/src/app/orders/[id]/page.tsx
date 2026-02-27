@@ -241,7 +241,10 @@ export default function OrderDetailPage() {
                     {order.status === 'CANCELLED' && 'Отменён'}
                   </span>
                 </div>
-                <CardTitle className="text-xl sm:text-2xl font-extrabold">{order.title}</CardTitle>
+                <CardTitle className="text-xl sm:text-2xl font-extrabold">
+                  {order.orderNumber ? <span className="text-muted-foreground font-bold">#{order.orderNumber}</span> : null}
+                  {order.orderNumber ? ' — ' : ''}{order.title}
+                </CardTitle>
               </div>
             </div>
           </CardHeader>
