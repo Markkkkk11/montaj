@@ -22,14 +22,15 @@ export class AdminController {
    */
   async getUsersForModeration(req: AuthRequest, res: Response) {
     try {
-      const { status } = req.query;
+      const { status, role } = req.query;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
       const result = await adminService.getUsersForModeration(
         status as string,
         page,
-        limit
+        limit,
+        role as string
       );
 
       res.json({
@@ -208,6 +209,19 @@ export class AdminController {
         success: false,
         error: error.message,
       });
+    }
+  }
+
+  /**
+   * Получить статистику активности пользователя
+   */
+  async getUserActivity(req: AuthRequest, res: Response) {
+    try {
+      const { userId } = req.params;
+      const result = await adminService.getUserActivityStats(userId);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   }
 

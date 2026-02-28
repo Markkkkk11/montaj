@@ -27,6 +27,7 @@ router.put('/settings/:section', settingsController.updateSection);
 
 // Управление пользователями
 router.get('/users', adminController.getUsersForModeration);
+router.get('/users/:userId/activity', adminController.getUserActivity);
 router.get('/users/:userId', adminController.getUser);
 router.patch('/users/:userId', adminController.updateUser);
 router.delete('/users/:userId', adminController.deleteUser);

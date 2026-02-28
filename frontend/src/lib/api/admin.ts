@@ -43,6 +43,11 @@ export const adminApi = {
     return data;
   },
 
+  async getUserActivity(userId: string) {
+    const { data } = await api.get(`/admin/users/${userId}/activity`);
+    return data;
+  },
+
   async updateUser(userId: string, updates: any) {
     const { data } = await api.patch(`/admin/users/${userId}`, updates);
     return data;

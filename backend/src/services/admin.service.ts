@@ -82,12 +82,15 @@ export class AdminService {
   /**
    * Получить пользователей для модерации
    */
-  async getUsersForModeration(status?: string, page: number = 1, limit: number = 20) {
+  async getUsersForModeration(status?: string, page: number = 1, limit: number = 20, role?: string) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
     if (status) {
       where.status = status;
+    }
+    if (role) {
+      where.role = role;
     }
 
     const [users, total] = await Promise.all([
@@ -506,6 +509,81 @@ export class AdminService {
         0
       ),
     };
+  }
+
+  /**
+   * Получить статистику активности пользователя
+   */
+  async getUserActivityStats(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true, phone: true, email: true, fullName: true, city: true, messengers: true, createdAt: true, status: true },
+    });
+
+    if (!user) {
+      throw new Error('Пользователь не найден');
+    }
+
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    if (user.role === 'CUSTOMER') {
+      // Для заказчика: размещённые заказы за месяц + все время
+      const [ordersThisMonth, ordersTotal, activeOrders, completedOrders] = await Promise.all([
+        prisma.order.count({
+          where: { customerId: userId, createdAt: { gte: oneMonthAgo } },
+        }),
+        prisma.order.count({
+          where: { customerId: userId },
+        }),
+        prisma.order.count({
+          where: { customerId: userId, status: { in: ['PUBLISHED', 'IN_PROGRESS'] } },
+        }),
+        prisma.order.count({
+          where: { customerId: userId, status: 'COMPLETED' },
+        }),
+      ]);
+
+      return {
+        user,
+        stats: {
+          ordersThisMonth,
+          ordersTotal,
+          activeOrders,
+          completedOrders,
+        },
+      };
+    } else {
+      // Для исполнителя: выполненные заказы за месяц + все время
+      const [completedThisMonth, completedTotal, inProgressOrders, responsesThisMonth, responsesTotal] = await Promise.all([
+        prisma.order.count({
+          where: { executorId: userId, status: 'COMPLETED', updatedAt: { gte: oneMonthAgo } },
+        }),
+        prisma.order.count({
+          where: { executorId: userId, status: 'COMPLETED' },
+        }),
+        prisma.order.count({
+          where: { executorId: userId, status: 'IN_PROGRESS' },
+        }),
+        prisma.response.count({
+          where: { executorId: userId, createdAt: { gte: oneMonthAgo } },
+        }),
+        prisma.response.count({
+          where: { executorId: userId },
+        }),
+      ]);
+
+      return {
+        user,
+        stats: {
+          completedThisMonth,
+          completedTotal,
+          inProgressOrders,
+          responsesThisMonth,
+          responsesTotal,
+        },
+      };
+    }
   }
 
   /**
