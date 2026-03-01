@@ -290,7 +290,7 @@ export default function CustomerDashboard() {
                       : 'Пока нет откликов'}
                   </p>
                 </div>
-              </div>
+          </div>
 
               {responseOrders.length === 0 ? (
                 <div className="p-4 sm:p-6 text-center bg-violet-50/30 border border-dashed border-violet-200 rounded-xl">
@@ -325,7 +325,7 @@ export default function CustomerDashboard() {
                 <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
                   <Hammer className="h-4 w-4 text-amber-600" />
                 </div>
-                <div>
+            <div>
                   <h2 className="text-base sm:text-lg font-bold text-gray-900">В работе</h2>
                   <p className="text-[10px] sm:text-xs text-muted-foreground">
                     {inProgressOrders.length > 0
@@ -385,16 +385,16 @@ export default function CustomerDashboard() {
                 </div>
               ) : (
                 <>
-                  <div className="space-y-2 stagger-children">
+                <div className="space-y-2 stagger-children">
                     {(showAllCompleted ? completedOrders : completedOrders.slice(0, 4)).map((order) => (
                       <Link key={order.id} href={`/orders/${order.id}`}>
                         <div className="p-3 bg-white rounded-xl border border-gray-100 hover:border-emerald-200 hover:shadow-soft transition-all duration-200">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-gray-900 text-sm truncate">
-                                {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{order.description}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm truncate">
+                            {order.orderNumber ? `#${order.orderNumber} — ` : ''}{order.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{order.description}</p>
                               <div className="flex items-center gap-2 sm:gap-3 mt-1.5 flex-wrap">
                                 <span className="text-[10px] sm:text-xs text-muted-foreground">{order.region}</span>
                                 <span className="text-[10px] sm:text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('ru-RU')}</span>
@@ -411,16 +411,16 @@ export default function CustomerDashboard() {
                           </div>
                         </div>
                       </Link>
-                    ))}
-                  </div>
+                  ))}
+                </div>
                   {completedOrders.length > 4 && (
-                    <button
-                      onClick={() => setShowAllCompleted(!showAllCompleted)}
+              <button
+                onClick={() => setShowAllCompleted(!showAllCompleted)}
                       className="w-full mt-3 py-2.5 flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-emerald-600 bg-emerald-50/80 hover:bg-emerald-100 rounded-xl transition-all duration-300 group"
-                    >
-                      {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
+              >
+                {showAllCompleted ? 'Скрыть' : `Показать все (${completedOrders.length})`}
                       <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${showAllCompleted ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
-                    </button>
+              </button>
                   )}
                 </>
               )}
@@ -439,9 +439,6 @@ export default function CustomerDashboard() {
               <div className="flex flex-wrap gap-3 sm:gap-4 pl-10 sm:pl-0">
                 <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-xs sm:text-sm text-blue-600 hover:underline font-medium">
                   <Mail className="h-3.5 w-3.5" /> Email
-                </a>
-                <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-violet-600 hover:underline font-medium">
-                  <MessageCircle className="h-3.5 w-3.5" /> Telegram
                 </a>
                 <a href="https://max.ru/u/f9LHodD0cOKIe-cyRoYq_Udu4_b14n0rL0vJ3BA4GWqjW0uOGlGmWjK1Vow" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs sm:text-sm text-sky-600 hover:underline font-medium">
                   <MessageCircle className="h-3.5 w-3.5" /> MAX

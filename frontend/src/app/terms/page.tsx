@@ -170,10 +170,10 @@ export default function TermsPage() {
                 <h3 className="text-lg font-bold text-gray-900">8. Обратная связь</h3>
               </div>
               <div className="pl-12 space-y-2">
-                <p className="text-muted-foreground">
+              <p className="text-muted-foreground">
                   По всем вопросам обращайтесь:{' '}
                   <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="text-primary hover:underline font-semibold">SVMontaj24@mail.ru</a>
-                </p>
+              </p>
                 <p className="text-sm text-gray-400">
                   Пользователь выражает своё согласие на получение личных сообщений от Администрации в любое время и любого характера, в том числе и информационно-рекламного.
                 </p>

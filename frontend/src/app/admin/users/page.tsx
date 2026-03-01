@@ -35,7 +35,7 @@ interface User {
   completedOrders: number;
   ordersCount?: number;
   createdAt: string;
-  messengers?: { max?: string; telegram?: string };
+  messengers?: { max?: string };
   balance?: {
     amount: number;
     bonusAmount: number;

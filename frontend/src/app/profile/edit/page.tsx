@@ -33,7 +33,6 @@ export default function EditProfilePage() {
   const [city, setCity] = useState('');
   const [address, setAddress] = useState('');
   const [maxMessenger, setMaxMessenger] = useState('');
-  const [telegram, setTelegram] = useState('');
   const [inn, setInn] = useState('');
   const [ogrn, setOgrn] = useState('');
 
@@ -92,7 +91,6 @@ export default function EditProfilePage() {
       setCity(savedForm?.city ?? user.city ?? '');
       setAddress(savedForm?.address ?? user.address ?? '');
       setMaxMessenger(savedForm?.maxMessenger ?? user.messengers?.max ?? '');
-      setTelegram(savedForm?.telegram ?? user.messengers?.telegram ?? '');
       setAbout(savedForm?.about ?? user.about ?? '');
       setWebsite(savedForm?.website ?? user.website ?? '');
       setInn(savedForm?.inn ?? user.inn ?? '');
@@ -121,7 +119,7 @@ export default function EditProfilePage() {
         fullName, email: email || undefined, organization: organization || undefined,
         about: about || undefined, website: website || undefined, city,
         address: address || undefined,
-        messengers: { max: maxMessenger || undefined, telegram: telegram || undefined },
+        messengers: { max: maxMessenger || undefined },
         inn: inn || undefined, ogrn: ogrn || undefined,
       });
       toast({ variant: 'success', title: '✅ Профиль обновлен!' });
@@ -179,9 +177,9 @@ export default function EditProfilePage() {
         fullDescription: fullDescription || undefined, isSelfEmployed,
       });
       toast({ variant: 'success', title: '✅ Профиль исполнителя обновлен!' });
-      const cn = fullName, ce = email, co = organization, cc = city, ca = address, cm = maxMessenger, ct = telegram, ci = inn, cg = ogrn;
+      const cn = fullName, ce = email, co = organization, cc = city, ca = address, cm = maxMessenger, ci = inn, cg = ogrn;
       await getCurrentUser();
-      setFullName(cn); setEmail(ce); setOrganization(co); setCity(cc); setAddress(ca); setMaxMessenger(cm); setTelegram(ct); setInn(ci); setOgrn(cg);
+      setFullName(cn); setEmail(ce); setOrganization(co); setCity(cc); setAddress(ca); setMaxMessenger(cm); setInn(ci); setOgrn(cg);
     } catch (error: any) {
       toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось сохранить' });
     } finally { setIsSaving(false); }
@@ -310,10 +308,6 @@ export default function EditProfilePage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="maxMessenger">MAX</Label>
                   <Input id="maxMessenger" value={maxMessenger} onChange={(e) => setMaxMessenger(e.target.value)} placeholder="max.ru/username" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="telegram">Telegram</Label>
-                  <Input id="telegram" value={telegram} onChange={(e) => setTelegram(e.target.value)} placeholder="@username" />
                 </div>
               </div>
             </div>

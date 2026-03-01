@@ -19,7 +19,6 @@ export interface User {
   address?: string;
   messengers?: {
     max?: string;
-    telegram?: string;
   };
   photo?: string;
   about?: string;
@@ -81,7 +80,6 @@ export interface RegisterData {
   address?: string;
   messengers?: {
     max?: string;
-    telegram?: string;
   };
   inn?: string;
   ogrn?: string;

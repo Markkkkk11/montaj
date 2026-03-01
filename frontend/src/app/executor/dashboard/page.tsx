@@ -604,9 +604,6 @@ export default function ExecutorDashboard() {
               <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
                 <Mail className="h-4 w-4" /> Email
               </a>
-              <a href="https://t.me/SVMontaj24" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-violet-600 hover:underline font-medium">
-                <MessageCircle className="h-4 w-4" /> Telegram
-              </a>
               <a href="https://max.ru/u/f9LHodD0cOKIe-cyRoYq_Udu4_b14n0rL0vJ3BA4GWqjW0uOGlGmWjK1Vow" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-sky-600 hover:underline font-medium">
                 <MessageCircle className="h-4 w-4" /> MAX
               </a>
