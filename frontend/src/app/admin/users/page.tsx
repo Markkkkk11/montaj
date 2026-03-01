@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
-import { Search, Edit, Trash2, ChevronDown, ChevronUp, Phone, Mail, MapPin, Calendar, Briefcase, FileText, MessageSquare, User as UserIcon, Users, Hammer } from 'lucide-react';
+import { Search, Edit, Trash2, ChevronDown, ChevronUp, Phone, Mail, MapPin, Calendar, Briefcase, FileText, MessageSquare, User as UserIcon, Users, Hammer, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -33,6 +33,7 @@ interface User {
   status: string;
   rating: number;
   completedOrders: number;
+  ordersCount?: number;
   createdAt: string;
   messengers?: { max?: string; telegram?: string };
   balance?: {
@@ -43,6 +44,15 @@ interface User {
     tariffType: string;
     expiresAt: string;
   };
+}
+
+interface FinancialEntry {
+  id: string;
+  amount: number | string;
+  description: string;
+  createdAt: string;
+  purpose?: string;
+  type?: string;
 }
 
 interface UserActivity {
@@ -58,17 +68,21 @@ interface UserActivity {
     status: string;
   };
   stats: {
-    // Customer stats
     ordersThisMonth?: number;
     ordersTotal?: number;
     activeOrders?: number;
     completedOrders?: number;
-    // Executor stats
     completedThisMonth?: number;
     completedTotal?: number;
     inProgressOrders?: number;
     responsesThisMonth?: number;
     responsesTotal?: number;
+  };
+  financial?: {
+    payments: FinancialEntry[];
+    transactions: FinancialEntry[];
+    totalTopUps: number;
+    totalSpent: number;
   };
 }
 
@@ -123,7 +137,6 @@ export default function AdminUsersPage() {
 
     setExpandedUserId(userId);
 
-    // Load activity if not already loaded
     if (!activityData[userId]) {
       try {
         setLoadingActivity(userId);
@@ -176,8 +189,18 @@ export default function AdminUsersPage() {
     return 'Заблокирован';
   };
 
-  // Summary stats
-  const totalCount = filteredUsers.length;
+  const getTransactionTypeLabel = (type: string) => {
+    const labels: any = {
+      TOP_UP: 'Пополнение',
+      RESPONSE_FEE: 'Отклик на заказ',
+      ORDER_FEE: 'Комиссия за заказ',
+      SUBSCRIPTION: 'Подписка',
+      BONUS: 'Бонус',
+      REFUND: 'Возврат',
+    };
+    return labels[type] || type;
+  };
+
   const executorCount = filteredUsers.filter(u => u.role === 'EXECUTOR').length;
   const customerCount = filteredUsers.filter(u => u.role === 'CUSTOMER').length;
 
@@ -284,6 +307,7 @@ export default function AdminUsersPage() {
                   <TableHead>Роль</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Город</TableHead>
+                  <TableHead>Заказы</TableHead>
                   <TableHead>Рейтинг</TableHead>
                   <TableHead>Регистрация</TableHead>
                   <TableHead>Действия</TableHead>
@@ -316,6 +340,14 @@ export default function AdminUsersPage() {
                         </span>
                       </TableCell>
                       <TableCell>{user.city}</TableCell>
+                      <TableCell>
+                        <span className="font-semibold text-sm">
+                          {user.ordersCount ?? '—'}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-1">
+                          {user.role === 'CUSTOMER' ? 'разм.' : user.role === 'EXECUTOR' ? 'вып.' : ''}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         {user.role === 'EXECUTOR' && (
                           <div className="flex items-center gap-1">
@@ -350,7 +382,7 @@ export default function AdminUsersPage() {
                     {/* Expanded Detail Row */}
                     {expandedUserId === user.id && (
                       <TableRow key={`${user.id}-detail`} className="bg-gray-50/80 hover:bg-gray-50/80">
-                        <TableCell colSpan={8} className="p-0">
+                        <TableCell colSpan={9} className="p-0">
                           <div className="px-6 py-4">
                             {loadingActivity === user.id ? (
                               <div className="flex items-center justify-center py-6">
@@ -358,7 +390,7 @@ export default function AdminUsersPage() {
                                 <span className="text-sm text-muted-foreground">Загрузка...</span>
                               </div>
                             ) : (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                                 {/* Contacts */}
                                 <div className="bg-white rounded-xl border p-4 space-y-3">
                                   <h4 className="font-semibold text-sm flex items-center gap-2 text-gray-700">
@@ -384,22 +416,6 @@ export default function AdminUsersPage() {
                                       <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                                       <span>Регистрация: {new Date(user.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                                     </div>
-                                    {activityData[user.id]?.user?.messengers && (
-                                      <>
-                                        {(activityData[user.id].user.messengers as any)?.telegram && (
-                                          <div className="flex items-center gap-2">
-                                            <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                                            <span>Telegram: {(activityData[user.id].user.messengers as any).telegram}</span>
-                                          </div>
-                                        )}
-                                        {(activityData[user.id].user.messengers as any)?.max && (
-                                          <div className="flex items-center gap-2">
-                                            <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                                            <span>MAX: {(activityData[user.id].user.messengers as any).max}</span>
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
                                     {user.balance && (
                                       <div className="pt-2 border-t mt-2">
                                         <div className="flex items-center gap-2">
@@ -481,17 +497,85 @@ export default function AdminUsersPage() {
                                           </div>
                                           <div className="text-xs text-violet-600 mt-1">Откликов за месяц</div>
                                         </div>
-                                        <div className="col-span-2 bg-purple-50 rounded-lg p-3 text-center">
-                                          <div className="text-2xl font-bold text-purple-700">
-                                            {activityData[user.id].stats.responsesTotal ?? 0}
-                                          </div>
-                                          <div className="text-xs text-purple-600 mt-1">Откликов всего</div>
-                                        </div>
                                       </div>
                                     )
                                   ) : (
                                     <div className="text-sm text-muted-foreground py-4 text-center">
                                       Не удалось загрузить статистику
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Financial History */}
+                                <div className="bg-white rounded-xl border p-4 space-y-3">
+                                  <h4 className="font-semibold text-sm flex items-center gap-2 text-gray-700">
+                                    <DollarSign className="h-4 w-4 text-green-500" />
+                                    Финансы
+                                  </h4>
+                                  {activityData[user.id]?.financial ? (
+                                    <>
+                                      <div className="grid grid-cols-2 gap-2 mb-3">
+                                        <div className="bg-green-50 rounded-lg p-2 text-center">
+                                          <div className="text-lg font-bold text-green-700">
+                                            {activityData[user.id].financial!.totalTopUps.toFixed(0)} ₽
+                                          </div>
+                                          <div className="text-[10px] text-green-600">Пополнено</div>
+                                        </div>
+                                        <div className="bg-red-50 rounded-lg p-2 text-center">
+                                          <div className="text-lg font-bold text-red-700">
+                                            {activityData[user.id].financial!.totalSpent.toFixed(0)} ₽
+                                          </div>
+                                          <div className="text-[10px] text-red-600">Потрачено</div>
+                                        </div>
+                                      </div>
+                                      <div className="max-h-48 overflow-y-auto space-y-1.5">
+                                        {/* Combine and sort by date */}
+                                        {[
+                                          ...activityData[user.id].financial!.payments.map(p => ({
+                                            ...p,
+                                            isPayment: true,
+                                            amt: parseFloat(p.amount.toString()),
+                                            date: new Date(p.createdAt),
+                                          })),
+                                          ...activityData[user.id].financial!.transactions.map(t => ({
+                                            ...t,
+                                            isPayment: false,
+                                            amt: parseFloat(t.amount.toString()),
+                                            date: new Date(t.createdAt),
+                                          })),
+                                        ]
+                                          .sort((a, b) => b.date.getTime() - a.date.getTime())
+                                          .slice(0, 20)
+                                          .map((entry, idx) => (
+                                            <div key={idx} className="flex items-center justify-between text-xs py-1.5 border-b border-gray-50 last:border-0">
+                                              <div className="flex items-center gap-1.5 min-w-0">
+                                                {entry.amt > 0 ? (
+                                                  <ArrowUpRight className="h-3 w-3 text-green-500 flex-shrink-0" />
+                                                ) : (
+                                                  <ArrowDownRight className="h-3 w-3 text-red-500 flex-shrink-0" />
+                                                )}
+                                                <span className="truncate">
+                                                  {entry.isPayment ? 'Пополнение' : getTransactionTypeLabel((entry as any).type || '')}
+                                                </span>
+                                              </div>
+                                              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                <span className={`font-medium ${entry.amt > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                                  {entry.amt > 0 ? '+' : ''}{entry.amt.toFixed(0)} ₽
+                                                </span>
+                                                <span className="text-muted-foreground text-[10px]">
+                                                  {entry.date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        {activityData[user.id].financial!.payments.length === 0 && activityData[user.id].financial!.transactions.length === 0 && (
+                                          <div className="text-muted-foreground text-center py-3 text-xs">Нет операций</div>
+                                        )}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <div className="text-sm text-muted-foreground py-4 text-center">
+                                      Нет данных
                                     </div>
                                   )}
                                 </div>

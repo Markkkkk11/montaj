@@ -102,4 +102,10 @@ export const adminApi = {
     const { data } = await api.post(`/admin/reviews/${reviewId}/moderate`, { action, note });
     return data;
   },
+
+  // История пополнений
+  async getPaymentHistory(params?: { startDate?: string; endDate?: string; page?: number; limit?: number }) {
+    const { data } = await api.get('/admin/payments', { params });
+    return data;
+  },
 };

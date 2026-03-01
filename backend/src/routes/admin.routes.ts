@@ -52,5 +52,8 @@ router.get('/logs', adminController.getAdminLogs);
 // Финансовая аналитика
 router.get('/analytics/financial', adminController.getFinancialAnalytics);
 
+// История пополнений
+router.get('/payments', adminController.getPaymentHistory);
+
 export default router;
 

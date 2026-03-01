@@ -74,10 +74,11 @@ export class AdminController {
    */
   async getOrdersForModeration(req: AuthRequest, res: Response) {
     try {
+      const { status } = req.query;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const result = await adminService.getOrdersForModeration(page, limit);
+      const result = await adminService.getOrdersForModeration(page, limit, status as string);
 
       res.json({
         success: true,
@@ -209,6 +210,28 @@ export class AdminController {
         success: false,
         error: error.message,
       });
+    }
+  }
+
+  /**
+   * Получить историю пополнений
+   */
+  async getPaymentHistory(req: AuthRequest, res: Response) {
+    try {
+      const { startDate, endDate } = req.query;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const result = await adminService.getPaymentHistory(
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined,
+        page,
+        limit
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   }
 

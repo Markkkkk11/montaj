@@ -100,6 +100,12 @@ export class AdminService {
           executorProfile: true,
           balance: true,
           subscription: true,
+          _count: {
+            select: {
+              createdOrders: true,
+              assignedOrders: true,
+            },
+          },
         },
         orderBy: {
           createdAt: 'desc',
@@ -110,10 +116,13 @@ export class AdminService {
       prisma.user.count({ where }),
     ]);
 
-    // Убрать пароли
+    // Убрать пароли, добавить ordersCount
     const usersWithoutPasswords = users.map((user) => {
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+      const { password, _count, ...userWithoutPassword } = user;
+      return {
+        ...userWithoutPassword,
+        ordersCount: user.role === 'CUSTOMER' ? _count.createdOrders : _count.assignedOrders,
+      };
     });
 
     return {
@@ -192,11 +201,17 @@ export class AdminService {
   /**
    * Получить заказы для модерации
    */
-  async getOrdersForModeration(page: number = 1, limit: number = 20) {
+  async getOrdersForModeration(page: number = 1, limit: number = 20, status?: string) {
     const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (status) {
+      where.status = status;
+    }
 
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
+        where,
         include: {
           customer: {
             select: {
@@ -229,7 +244,7 @@ export class AdminService {
         skip,
         take: limit,
       }),
-      prisma.order.count(),
+      prisma.order.count({ where }),
     ]);
 
     return {
@@ -527,8 +542,28 @@ export class AdminService {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
+    // Общие данные — история пополнений и трат
+    const [payments, transactions] = await Promise.all([
+      prisma.payment.findMany({
+        where: { userId, status: 'SUCCEEDED' },
+        select: { id: true, amount: true, purpose: true, description: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+      prisma.transaction.findMany({
+        where: { userId },
+        select: { id: true, amount: true, type: true, description: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+    ]);
+
+    const totalTopUps = payments.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
+    const totalSpent = transactions
+      .filter(t => parseFloat(t.amount.toString()) < 0)
+      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount.toString())), 0);
+
     if (user.role === 'CUSTOMER') {
-      // Для заказчика: размещённые заказы за месяц + все время
       const [ordersThisMonth, ordersTotal, activeOrders, completedOrders] = await Promise.all([
         prisma.order.count({
           where: { customerId: userId, createdAt: { gte: oneMonthAgo } },
@@ -552,9 +587,9 @@ export class AdminService {
           activeOrders,
           completedOrders,
         },
+        financial: { payments, transactions, totalTopUps, totalSpent },
       };
     } else {
-      // Для исполнителя: выполненные заказы за месяц + все время
       const [completedThisMonth, completedTotal, inProgressOrders, responsesThisMonth, responsesTotal] = await Promise.all([
         prisma.order.count({
           where: { executorId: userId, status: 'COMPLETED', updatedAt: { gte: oneMonthAgo } },
@@ -582,8 +617,59 @@ export class AdminService {
           responsesThisMonth,
           responsesTotal,
         },
+        financial: { payments, transactions, totalTopUps, totalSpent },
       };
     }
+  }
+
+  /**
+   * Получить историю пополнений (все пользователи)
+   */
+  async getPaymentHistory(startDate?: Date, endDate?: Date, page: number = 1, limit: number = 50) {
+    const skip = (page - 1) * limit;
+
+    const where: any = { status: 'SUCCEEDED' };
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = startDate;
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    const [payments, total, totalSum] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              phone: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.payment.count({ where }),
+      prisma.payment.aggregate({
+        where,
+        _sum: { amount: true },
+      }),
+    ]);
+
+    return {
+      payments,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      totalSum: parseFloat(totalSum._sum.amount?.toString() || '0'),
+    };
   }
 
   /**
