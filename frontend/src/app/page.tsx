@@ -461,7 +461,7 @@ export default function Home() {
                 <CardDescription className="text-sm sm:text-base">Есть вопросы? Свяжитесь с нами</CardDescription>
               </CardHeader>
               <CardContent className="px-4 sm:px-8 pb-6 sm:pb-8">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
                   <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-all duration-200 group hover:shadow-soft">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
                       <Mail className="h-5 w-5 text-blue-600" />
