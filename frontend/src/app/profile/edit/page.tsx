@@ -106,8 +106,8 @@ export default function EditProfilePage() {
       }
     } else {
       // Subsequent user updates (e.g. after photo upload / save) — only refresh work photos
-      if (user.role === 'EXECUTOR' && user.executorProfile) {
-        setWorkPhotos(user.executorProfile.workPhotos || []);
+    if (user.role === 'EXECUTOR' && user.executorProfile) {
+      setWorkPhotos(user.executorProfile.workPhotos || []);
       }
     }
   }, [user, router, isHydrated]);

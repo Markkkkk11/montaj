@@ -79,7 +79,7 @@ echo "⚙️ Настройка Nginx..."
 cat > /etc/nginx/sites-available/svmontaj << 'NGINX_CONF'
 server {
     listen 80;
-    server_name 217.198.13.3;
+    server_name 37.252.20.208;
 
     # Максимальный размер загружаемых файлов
     client_max_body_size 20M;
@@ -163,9 +163,9 @@ REDIS_URL="redis://127.0.0.1:6379"
 JWT_SECRET="sosnovtsev_montaj_jun_writer"
 NODE_ENV="production"
 PORT=5000
-CORS_ORIGINS="http://217.198.13.3"
+CORS_ORIGINS="http://37.252.20.208"
 UPLOAD_DIR="/var/www/svmontaj/uploads"
-FRONTEND_URL="http://217.198.13.3"
+FRONTEND_URL="http://37.252.20.208"
 
 # SMS
 SMSC_LOGIN="demo"
@@ -194,7 +194,7 @@ ENV_BACKEND
 # --- 13. Настройка окружения фронтенда ---
 echo "⚙️ Создание .env.local для фронтенда..."
 cat > /var/www/svmontaj/frontend/.env.local << 'ENV_FRONTEND'
-NEXT_PUBLIC_API_URL=http://217.198.13.3
+NEXT_PUBLIC_API_URL=http://37.252.20.208
 NEXT_PUBLIC_YANDEX_MAPS_API_KEY=58dcae52-7fa8-4802-a613-df0baddf9c66
 ENV_FRONTEND
 
@@ -275,9 +275,9 @@ echo "=============================================="
 echo "✅ SVMontaj успешно развёрнут!"
 echo "=============================================="
 echo ""
-echo "🌐 Сайт: http://217.198.13.3"
-echo "🔧 API:  http://217.198.13.3/api/"
-echo "❤️ Health: http://217.198.13.3/health"
+echo "🌐 Сайт: http://37.252.20.208"
+echo "🔧 API:  http://37.252.20.208/api/"
+echo "❤️ Health: http://37.252.20.208/health"
 echo ""
 echo "📋 Полезные команды:"
 echo "  pm2 status          — статус приложений"

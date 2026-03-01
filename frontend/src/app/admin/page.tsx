@@ -122,17 +122,17 @@ export default function AdminDashboard() {
 
         <Link href="/admin/payments">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">Доход</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalRevenue?.toFixed(0) || '0'} ₽</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Мес: {stats?.monthlyRevenue?.toFixed(0) || '0'} ₽
-              </p>
-            </CardContent>
-          </Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Доход</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalRevenue?.toFixed(0) || '0'} ₽</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Мес: {stats?.monthlyRevenue?.toFixed(0) || '0'} ₽
+            </p>
+          </CardContent>
+        </Card>
         </Link>
 
         <Card>

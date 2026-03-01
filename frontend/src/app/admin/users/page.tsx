@@ -327,19 +327,19 @@ export default function AdminUsersPage() {
                         ) : (
                           <ChevronDown className="h-4 w-4 text-muted-foreground" />
                         )}
-                      </TableCell>
+                    </TableCell>
                       <TableCell className="font-medium">{user.fullName}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadge(user.role)}`}>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadge(user.role)}`}>
                           {getRoleLabel(user.role)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(user.status)}`}>
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(user.status)}`}>
                           {getStatusLabel(user.status)}
-                        </span>
-                      </TableCell>
-                      <TableCell>{user.city}</TableCell>
+                      </span>
+                    </TableCell>
+                    <TableCell>{user.city}</TableCell>
                       <TableCell>
                         <span className="font-semibold text-sm">
                           {user.ordersCount ?? '—'}
@@ -348,36 +348,36 @@ export default function AdminUsersPage() {
                           {user.role === 'CUSTOMER' ? 'разм.' : user.role === 'EXECUTOR' ? 'вып.' : ''}
                         </span>
                       </TableCell>
-                      <TableCell>
-                        {user.role === 'EXECUTOR' && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-yellow-500">★</span>
-                            <span>{user.rating.toFixed(1)}</span>
-                          </div>
-                        )}
-                      </TableCell>
+                    <TableCell>
+                      {user.role === 'EXECUTOR' && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-yellow-500">★</span>
+                          <span>{user.rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                    </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(user.createdAt).toLocaleDateString('ru-RU')}
-                      </TableCell>
-                      <TableCell>
+                    </TableCell>
+                    <TableCell>
                         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push(`/admin/users/${user.id}`)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteUser(user.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.push(`/admin/users/${user.id}`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
 
                     {/* Expanded Detail Row */}
                     {expandedUserId === user.id && (
