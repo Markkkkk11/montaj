@@ -190,8 +190,8 @@ export class PaymentService {
       return payment; // Уже обработан (например, через webhook)
     }
 
-    // Если есть yookassaPaymentId — проверяем статус в ЮKassa
-    if (payment.yookassaPaymentId && !payment.yookassaPaymentId.startsWith('mock_')) {
+    // Проверяем статус в ЮKassa перед зачислением
+    if (payment.yookassaPaymentId) {
       const yookassaStatus = await yookassa.getPayment(payment.yookassaPaymentId);
 
       if (yookassaStatus.status !== 'succeeded') {
@@ -200,7 +200,7 @@ export class PaymentService {
       }
     }
 
-    // Mock-режим или ЮKassa подтвердила — зачисляем
+    // ЮKassa подтвердила — зачисляем
     return await this.processSuccessfulPayment(paymentId);
   }
 

@@ -13,7 +13,7 @@ export class YooKassaClient {
     this.secretKey = process.env.YOOKASSA_SECRET_KEY || '';
 
     if (!this.shopId || !this.secretKey) {
-      console.warn('⚠️  ЮKassa credentials not configured. Using mock mode.');
+      console.error('❌ ЮKassa credentials not configured! Payments will not work.');
     }
 
     // Создаём axios instance с базовой аутентификацией
@@ -39,11 +39,6 @@ export class YooKassaClient {
     returnUrl: string;
     metadata?: any;
   }) {
-    // Mock режим для разработки
-    if (!this.shopId || !this.secretKey) {
-      return this.createMockPayment(data);
-    }
-
     try {
       const idempotenceKey = crypto.randomUUID();
       const response = await this.client.post('/payments', {
@@ -75,11 +70,6 @@ export class YooKassaClient {
    * Получить информацию о платеже
    */
   async getPayment(paymentId: string) {
-    // Mock режим
-    if (!this.shopId || !this.secretKey) {
-      return this.getMockPayment(paymentId);
-    }
-
     try {
       const response = await this.client.get(`/payments/${paymentId}`);
       return response.data;
@@ -93,11 +83,6 @@ export class YooKassaClient {
    * Создать возврат платежа
    */
   async createRefund(paymentId: string, amount: number) {
-    // Mock режим
-    if (!this.shopId || !this.secretKey) {
-      return this.createMockRefund(paymentId, amount);
-    }
-
     try {
       const response = await this.client.post('/refunds', {
         payment_id: paymentId,
@@ -113,58 +98,6 @@ export class YooKassaClient {
       throw new Error('Ошибка создания возврата');
     }
   }
-
-  /**
-   * Mock методы для разработки без реальных ключей
-   */
-  private createMockPayment(data: any) {
-    const mockPaymentId = `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // returnUrl уже содержит ?payment_id=<dbId>, не добавляем свой
-    return {
-      id: mockPaymentId,
-      status: 'pending',
-      amount: {
-        value: data.amount.toFixed(2),
-        currency: data.currency || 'RUB',
-      },
-      confirmation: {
-        type: 'redirect',
-        confirmation_url: data.returnUrl,
-      },
-      created_at: new Date().toISOString(),
-      description: data.description,
-      metadata: data.metadata,
-      paid: false,
-    };
-  }
-
-  private getMockPayment(paymentId: string) {
-    return {
-      id: paymentId,
-      status: 'succeeded',
-      amount: {
-        value: '1000.00',
-        currency: 'RUB',
-      },
-      created_at: new Date().toISOString(),
-      paid: true,
-    };
-  }
-
-  private createMockRefund(paymentId: string, amount: number) {
-    return {
-      id: `refund_${Date.now()}`,
-      payment_id: paymentId,
-      status: 'succeeded',
-      amount: {
-        value: amount.toFixed(2),
-        currency: 'RUB',
-      },
-      created_at: new Date().toISOString(),
-    };
-  }
 }
 
 export default new YooKassaClient();
-
