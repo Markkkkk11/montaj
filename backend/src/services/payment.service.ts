@@ -130,7 +130,7 @@ export class PaymentService {
   }
 
   /**
-   * Обработать успешный платёж
+   * Обработать успешный платёж (вызывается из webhook или callback)
    */
   async processSuccessfulPayment(paymentId: string) {
     const payment = await prisma.payment.findUnique({
@@ -166,6 +166,42 @@ export class PaymentService {
     }
 
     return updatedPayment;
+  }
+
+  /**
+   * Проверить и обработать платёж через callback (после редиректа из ЮKassa)
+   * Проверяет статус в ЮKassa перед зачислением (в реальном режиме)
+   */
+  async verifyAndProcessPayment(paymentId: string, userId: string) {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    if (!payment) {
+      throw new Error('Платёж не найден');
+    }
+
+    // Проверка прав — только владелец платежа
+    if (payment.userId !== userId) {
+      throw new Error('Нет доступа к этому платежу');
+    }
+
+    if (payment.paid) {
+      return payment; // Уже обработан (например, через webhook)
+    }
+
+    // Если есть yookassaPaymentId — проверяем статус в ЮKassa
+    if (payment.yookassaPaymentId && !payment.yookassaPaymentId.startsWith('mock_')) {
+      const yookassaStatus = await yookassa.getPayment(payment.yookassaPaymentId);
+
+      if (yookassaStatus.status !== 'succeeded') {
+        // Платёж ещё не оплачен в ЮKassa — не зачисляем
+        return payment;
+      }
+    }
+
+    // Mock-режим или ЮKassa подтвердила — зачисляем
+    return await this.processSuccessfulPayment(paymentId);
   }
 
   /**

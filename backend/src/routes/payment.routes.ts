@@ -15,14 +15,13 @@ router.post('/top-up', validateBody(createTopUpSchema), paymentController.create
 // Создать платёж для подписки Premium
 router.post('/subscription/premium', paymentController.createSubscriptionPayment);
 
-// Получить информацию о платеже
-router.get('/:id', paymentController.getPayment);
+// Callback после успешной оплаты (ПЕРЕД /:id чтобы не перехватился)
+router.get('/success/callback', paymentController.handlePaymentSuccess);
 
 // Получить историю платежей
 router.get('/', paymentController.getPaymentHistory);
 
-// Callback после успешной оплаты
-router.get('/success/callback', paymentController.handlePaymentSuccess);
+// Получить информацию о платеже (параметризованный роут — в конце)
+router.get('/:id', paymentController.getPayment);
 
 export default router;
-

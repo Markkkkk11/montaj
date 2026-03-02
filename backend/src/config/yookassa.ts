@@ -120,6 +120,7 @@ export class YooKassaClient {
   private createMockPayment(data: any) {
     const mockPaymentId = `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+    // returnUrl уже содержит ?payment_id=<dbId>, не добавляем свой
     return {
       id: mockPaymentId,
       status: 'pending',
@@ -129,7 +130,7 @@ export class YooKassaClient {
       },
       confirmation: {
         type: 'redirect',
-        confirmation_url: `${data.returnUrl}?payment_id=${mockPaymentId}&mock=true`,
+        confirmation_url: data.returnUrl,
       },
       created_at: new Date().toISOString(),
       description: data.description,

@@ -108,22 +108,24 @@ export class PaymentController {
   }
 
   /**
-   * Обработать успешный платёж (callback после оплаты)
+   * Обработать платёж после callback (пользователь вернулся из ЮKassa)
+   * Проверяет статус платежа в ЮKassa перед зачислением
    */
   async handlePaymentSuccess(req: Request, res: Response) {
     try {
       const { payment_id } = req.query;
+      const userId = req.user!.id;
 
       if (!payment_id || typeof payment_id !== 'string') {
         throw new Error('Отсутствует ID платежа');
       }
 
-      const payment = await paymentService.processSuccessfulPayment(payment_id);
+      const payment = await paymentService.verifyAndProcessPayment(payment_id, userId);
 
       res.json({
         success: true,
         payment,
-        message: 'Платёж успешно обработан',
+        message: payment.paid ? 'Платёж успешно обработан' : 'Платёж ожидает подтверждения',
       });
     } catch (error: any) {
       res.status(400).json({
