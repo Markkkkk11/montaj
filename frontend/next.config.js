@@ -2,8 +2,16 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['localhost', '37.252.20.208'],
+    domains: ['localhost', '37.252.20.208', 'svmontaj.ru', 'www.svmontaj.ru'],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'svmontaj.ru',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.svmontaj.ru',
+      },
       {
         protocol: 'http',
         hostname: '37.252.20.208',

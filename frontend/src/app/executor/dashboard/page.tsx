@@ -236,7 +236,7 @@ export default function ExecutorDashboard() {
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
                 <HelpCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-amber-800">
-                  <strong>Как пополнить баланс?</strong> Нажмите на карточку «Баланс» в верхней панели — функция пополнения через платёжную систему скоро будет доступна.
+                  <strong>Как пополнить баланс?</strong> Нажмите на карточку «Баланс» выше или кнопку «Пополнить →» — вы перейдёте на страницу пополнения через ЮKassa (банковские карты, SberPay, ЮMoney и др.).
                 </p>
               </div>
             </CardContent>

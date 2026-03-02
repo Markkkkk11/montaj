@@ -1,4 +1,5 @@
 import axios from 'axios';
+import crypto from 'crypto';
 
 const YOOKASSA_API_URL = 'https://api.yookassa.ru/v3';
 
@@ -44,6 +45,7 @@ export class YooKassaClient {
     }
 
     try {
+      const idempotenceKey = crypto.randomUUID();
       const response = await this.client.post('/payments', {
         amount: {
           value: data.amount.toFixed(2),
@@ -56,6 +58,10 @@ export class YooKassaClient {
         capture: true, // Автоматическое списание
         description: data.description,
         metadata: data.metadata,
+      }, {
+        headers: {
+          'Idempotence-Key': idempotenceKey,
+        },
       });
 
       return response.data;

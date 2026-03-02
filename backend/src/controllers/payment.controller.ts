@@ -11,7 +11,8 @@ export class PaymentController {
       const { amount } = req.body;
       const userId = req.user!.id;
 
-      const returnUrl = `${process.env.FRONTEND_URL}/profile/balance?tab=payments`;
+      // Определяем return URL: исполнители возвращаются на /executor/balance
+      const returnUrl = `${process.env.FRONTEND_URL}/executor/balance`;
 
       const payment = await paymentService.createTopUpPayment(
         userId,

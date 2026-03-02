@@ -57,13 +57,11 @@ function BalanceContent() {
       await processPaymentSuccess(paymentId);
       // Обновить баланс
       await loadBalance();
-      // Показать успех
-      alert('Платёж успешно обработан! Баланс пополнен.');
-      // Очистить URL
+      // Очистить URL и показать историю
+      setActiveTab('history');
       router.replace('/profile/balance?tab=history');
     } catch (error) {
       console.error('Payment processing error:', error);
-      alert('Ошибка обработки платежа');
     }
   };
 
