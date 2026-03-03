@@ -64,7 +64,7 @@ export class UserService {
   ): Promise<any> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { executorProfile: true },
+      include: { executorProfile: true, subscription: true },
     });
 
     if (!user) {
@@ -83,7 +83,37 @@ export class UserService {
 
     if (data.region !== undefined) updateData.region = data.region;
     if (data.specializations !== undefined) {
-      updateData.specializations = data.specializations;
+      const currentSpecializations = user.executorProfile.specializations || [];
+      const nextSpecializations = data.specializations || [];
+
+      const isChanged =
+        currentSpecializations.length !== nextSpecializations.length ||
+        !currentSpecializations.every((spec) => nextSpecializations.includes(spec as any));
+
+      if (isChanged) {
+        const tariffType = user.subscription?.tariffType || 'STANDARD';
+        const isLimitedTariff = tariffType === 'STANDARD' || tariffType === 'COMFORT';
+
+        if (isLimitedTariff && user.executorProfile.specializationsChangedAt) {
+          const now = new Date();
+          const lastChangedAt = new Date(user.executorProfile.specializationsChangedAt);
+          const nextAllowedAt = new Date(lastChangedAt.getTime() + 24 * 60 * 60 * 1000);
+
+          if (now < nextAllowedAt) {
+            const remainingMs = nextAllowedAt.getTime() - now.getTime();
+            const remainingHours = Math.floor(remainingMs / (60 * 60 * 1000));
+            const remainingMinutes = Math.ceil(
+              (remainingMs - remainingHours * 60 * 60 * 1000) / (60 * 1000)
+            );
+            throw new Error(
+              `Для тарифа ${tariffType === 'STANDARD' ? 'Стандарт' : 'Комфорт'} менять специализацию можно только 1 раз в 24 часа. Повторно можно через ${remainingHours}ч ${remainingMinutes}м.`
+            );
+          }
+        }
+
+        updateData.specializations = nextSpecializations;
+        updateData.specializationsChangedAt = new Date();
+      }
     }
     if (data.shortDescription !== undefined) updateData.shortDescription = data.shortDescription;
     if (data.fullDescription !== undefined) updateData.fullDescription = data.fullDescription;
