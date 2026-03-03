@@ -166,11 +166,24 @@ export class SubscriptionService {
       };
     }
 
-    // Comfort - бесплатный отклик, оплата при выборе (500₽)
+    // Comfort - бесплатный отклик, но баланс должен быть >= 500₽
+    // (500₽ списывается только при принятии заказа заказчиком)
     if (tariffType === 'COMFORT') {
+      const comfortFee = 500;
+      const totalBalance = parseFloat(balance?.amount.toString() || '0') + 
+                          parseFloat(balance?.bonusAmount.toString() || '0');
+
+      if (totalBalance < comfortFee) {
+        return {
+          canRespond: false,
+          reason: `Для отклика на тарифе «Комфорт» необходимо минимум ${comfortFee}₽ на балансе`,
+          costPerResponse: 0,
+        };
+      }
+
       return {
         canRespond: true,
-        costPerResponse: 0, // Платят только при выборе
+        costPerResponse: 0, // Платят только при выборе заказчиком
       };
     }
 

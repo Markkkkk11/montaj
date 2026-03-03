@@ -453,7 +453,7 @@ export class OrderService {
       throw new Error('Этот исполнитель не откликался на заказ');
     }
 
-    // Если тариф COMFORT - списать 500₽ при выборе
+    // Если тариф COMFORT - списать 500₽ при выборе (баланс может уйти в минус)
     if (response.tariffType === 'COMFORT') {
       const executor = await prisma.user.findUnique({
         where: { id: executorId },
@@ -461,17 +461,8 @@ export class OrderService {
       });
 
       const orderTakenFee = 500;
-      const totalBalance =
-        parseFloat(executor?.balance?.amount.toString() || '0') +
-        parseFloat(executor?.balance?.bonusAmount.toString() || '0');
 
-      if (totalBalance < orderTakenFee) {
-        throw new Error(
-          `У исполнителя недостаточно средств для оплаты комиссии за взятый заказ (${orderTakenFee}₽)`
-        );
-      }
-
-      // Списать комиссию
+      // Списать комиссию (сначала бонусы, потом основной; баланс может стать отрицательным)
       const bonusBalance = parseFloat(executor?.balance?.bonusAmount.toString() || '0');
       const amountFromBonus = Math.min(bonusBalance, orderTakenFee);
       const amountFromMain = orderTakenFee - amountFromBonus;

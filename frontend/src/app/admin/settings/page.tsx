@@ -318,39 +318,39 @@ export default function AdminSettingsPage() {
                 Стандарт
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
+              <div>
                   <Label htmlFor="standardPrice">Подписка (₽/мес)</Label>
-                  <Input
-                    id="standardPrice"
-                    type="number"
-                    value={tariffSettings.standardPrice}
-                    onChange={(e) =>
-                      setTariffSettings({ ...tariffSettings, standardPrice: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
+                <Input
+                  id="standardPrice"
+                  type="number"
+                  value={tariffSettings.standardPrice}
+                  onChange={(e) =>
+                    setTariffSettings({ ...tariffSettings, standardPrice: e.target.value })
+                  }
+                />
+              </div>
+              <div>
                   <Label htmlFor="standardResponsePrice">Цена за отклик (₽)</Label>
-                  <Input
+                <Input
                     id="standardResponsePrice"
-                    type="number"
+                  type="number"
                     value={tariffSettings.standardResponsePrice}
-                    onChange={(e) =>
+                  onChange={(e) =>
                       setTariffSettings({ ...tariffSettings, standardResponsePrice: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
+                  }
+                />
+              </div>
+              <div>
                   <Label htmlFor="standardSpecializations">Специализаций</Label>
-                  <Input
-                    id="standardSpecializations"
-                    type="number"
-                    value={tariffSettings.standardSpecializations}
-                    onChange={(e) =>
-                      setTariffSettings({ ...tariffSettings, standardSpecializations: e.target.value })
-                    }
-                  />
-                </div>
+                <Input
+                  id="standardSpecializations"
+                  type="number"
+                  value={tariffSettings.standardSpecializations}
+                  onChange={(e) =>
+                    setTariffSettings({ ...tariffSettings, standardSpecializations: e.target.value })
+                  }
+                />
+              </div>
               </div>
             </div>
 
@@ -415,35 +415,35 @@ export default function AdminSettingsPage() {
                     }
                   />
                 </div>
-                <div>
+              <div>
                   <Label htmlFor="premiumSpecializations">Специализаций</Label>
-                  <Input
-                    id="premiumSpecializations"
-                    type="number"
-                    value={tariffSettings.premiumSpecializations}
-                    onChange={(e) =>
-                      setTariffSettings({ ...tariffSettings, premiumSpecializations: e.target.value })
-                    }
-                  />
-                </div>
+                <Input
+                  id="premiumSpecializations"
+                  type="number"
+                  value={tariffSettings.premiumSpecializations}
+                  onChange={(e) =>
+                    setTariffSettings({ ...tariffSettings, premiumSpecializations: e.target.value })
+                  }
+                />
+              </div>
               </div>
             </div>
 
             {/* Общие */}
             <div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="trialDays">Пробный период (дней)</Label>
-                  <Input
-                    id="trialDays"
-                    type="number"
-                    value={tariffSettings.trialDays}
-                    onChange={(e) =>
-                      setTariffSettings({ ...tariffSettings, trialDays: e.target.value })
-                    }
-                  />
-                </div>
+              <div>
+                <Label htmlFor="trialDays">Пробный период (дней)</Label>
+                <Input
+                  id="trialDays"
+                  type="number"
+                  value={tariffSettings.trialDays}
+                  onChange={(e) =>
+                    setTariffSettings({ ...tariffSettings, trialDays: e.target.value })
+                  }
+                />
               </div>
+            </div>
             </div>
 
             <SaveButton section="tariffs" data={tariffSettings} />

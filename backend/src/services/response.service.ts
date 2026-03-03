@@ -62,12 +62,20 @@ export class ResponseService {
     const tariff = await subscriptionService.getCurrentTariff(executorId);
     const commission = await subscriptionService.getResponseCost(executorId);
 
-    // Проверить баланс (если требуется оплата)
-    if (commission > 0) {
-      const totalBalance =
-        parseFloat(executor.balance?.amount.toString() || '0') +
-        parseFloat(executor.balance?.bonusAmount.toString() || '0');
+    const totalBalance =
+      parseFloat(executor.balance?.amount.toString() || '0') +
+      parseFloat(executor.balance?.bonusAmount.toString() || '0');
 
+    // Для тарифа Комфорт: проверить баланс >= 500₽ (списание при принятии заказа)
+    if (tariff.tariffType === 'COMFORT') {
+      const comfortMinBalance = 500;
+      if (totalBalance < comfortMinBalance) {
+        throw new Error(`Для отклика на тарифе «Комфорт» необходимо минимум ${comfortMinBalance}₽ на балансе`);
+      }
+    }
+
+    // Проверить баланс и списать комиссию (Standard — 150₽ за отклик)
+    if (commission > 0) {
       if (totalBalance < commission) {
         throw new Error(`Недостаточно средств на балансе. Необходимо ${commission}₽`);
       }
@@ -238,23 +246,18 @@ export class ResponseService {
       throw new Error('Отклик не найден');
     }
 
-    // Если тариф COMFORT, списать 500₽ сейчас
+    // Если тариф COMFORT, списать 500₽ сейчас (баланс может уйти в минус)
     if (response.tariffType === 'COMFORT') {
-      const balance = response.executor.balance?.amount || 0;
       const fee = 500;
-
-      if (parseFloat(balance.toString()) < fee) {
-        throw new Error(
-          `У исполнителя недостаточно средств для завершения сделки. Необходимо ${fee}₽`
-        );
-      }
+      const bonusBalance = parseFloat(response.executor.balance?.bonusAmount.toString() || '0');
+      const amountFromBonus = Math.min(bonusBalance, fee);
+      const amountFromMain = fee - amountFromBonus;
 
       await prisma.balance.update({
         where: { userId: executorId },
         data: {
-          amount: {
-            decrement: fee,
-          },
+          bonusAmount: { decrement: amountFromBonus },
+          amount: { decrement: amountFromMain },
         },
       });
 
