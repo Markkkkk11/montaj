@@ -409,8 +409,8 @@ function RegisterContent() {
                             <p className="text-xs text-gray-500 mt-0.5">150 ₽ за каждый отклик. 1 специализация (свободный выбор).</p>
                           </div>
                           <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-                            <p className="text-sm font-semibold text-blue-800">Комфорт</p>
-                            <p className="text-xs text-blue-600/70 mt-0.5">500 ₽ только за взятый заказ. 1 специализация (свободный выбор). Возврат при отмене заказчиком.</p>
+                            <p className="text-sm font-semibold text-blue-800">Комфорт — 500 ₽/мес</p>
+                            <p className="text-xs text-blue-600/70 mt-0.5">Бесплатные отклики. 500 ₽ списывается при выборе заказчиком. 1 специализация.</p>
                           </div>
                           <div className="p-3 bg-violet-50/50 rounded-xl border border-violet-100">
                             <p className="text-sm font-semibold text-violet-800">Премиум</p>

@@ -19,7 +19,7 @@ const DEFAULT_SETTINGS: Record<string, { value: string; section: string }> = {
   // Тарифы
   standardPrice:            { value: '0',    section: 'tariffs' },
   standardResponsePrice:    { value: '150',  section: 'tariffs' },
-  comfortPrice:             { value: '0',    section: 'tariffs' },
+  comfortPrice:             { value: '500',  section: 'tariffs' },
   comfortOrderTakenPrice:   { value: '500',  section: 'tariffs' },
   premiumPrice:             { value: '5000', section: 'tariffs' },
   premiumSpecializations:   { value: '3',    section: 'tariffs' },
@@ -39,7 +39,7 @@ export class SettingsService {
    * Инициализация дефолтных настроек (вызывается при старте)
    */
   async seedDefaults() {
-    const FORCE_UPDATE_KEYS = ['premiumSpecializations'];
+    const FORCE_UPDATE_KEYS = ['premiumSpecializations', 'comfortPrice'];
 
     for (const [key, { value, section }] of Object.entries(DEFAULT_SETTINGS)) {
       const shouldForceUpdate = FORCE_UPDATE_KEYS.includes(key);

@@ -453,14 +453,15 @@ export class OrderService {
       throw new Error('Этот исполнитель не откликался на заказ');
     }
 
-    // Если тариф COMFORT - списать 500₽ при выборе (баланс может уйти в минус)
+    // Если тариф COMFORT - списать комиссию за взятый заказ (баланс может уйти в минус)
     if (response.tariffType === 'COMFORT') {
       const executor = await prisma.user.findUnique({
         where: { id: executorId },
         include: { balance: true },
       });
 
-      const orderTakenFee = 500;
+      const tariffSettings = await settingsService.getBySection('tariffs');
+      const orderTakenFee = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
 
       // Списать комиссию (сначала бонусы, потом основной; баланс может стать отрицательным)
       const bonusBalance = parseFloat(executor?.balance?.bonusAmount.toString() || '0');

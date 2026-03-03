@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import subscriptionService from './subscription.service';
 import notificationService from './notification.service';
+import settingsService from './settings.service';
 
 export class ResponseService {
   /**
@@ -66,9 +67,10 @@ export class ResponseService {
       parseFloat(executor.balance?.amount.toString() || '0') +
       parseFloat(executor.balance?.bonusAmount.toString() || '0');
 
-    // Для тарифа Комфорт: проверить баланс >= 500₽ (списание при принятии заказа)
+    // Для тарифа Комфорт: проверить баланс >= comfortOrderTakenPrice (списание при принятии заказа)
     if (tariff.tariffType === 'COMFORT') {
-      const comfortMinBalance = 500;
+      const tariffSettings = await settingsService.getBySection('tariffs');
+      const comfortMinBalance = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
       if (totalBalance < comfortMinBalance) {
         throw new Error(`Для отклика на тарифе «Комфорт» необходимо минимум ${comfortMinBalance}₽ на балансе`);
       }
@@ -246,9 +248,10 @@ export class ResponseService {
       throw new Error('Отклик не найден');
     }
 
-    // Если тариф COMFORT, списать 500₽ сейчас (баланс может уйти в минус)
+    // Если тариф COMFORT, списать комиссию за взятый заказ (баланс может уйти в минус)
     if (response.tariffType === 'COMFORT') {
-      const fee = 500;
+      const tariffSettings = await settingsService.getBySection('tariffs');
+      const fee = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
       const bonusBalance = parseFloat(response.executor.balance?.bonusAmount.toString() || '0');
       const amountFromBonus = Math.min(bonusBalance, fee);
       const amountFromMain = fee - amountFromBonus;

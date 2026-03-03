@@ -35,14 +35,24 @@ export async function createTopUpPayment(amount: number): Promise<{
 }
 
 /**
- * Создать платёж для подписки Premium
+ * Создать платёж для подписки (Comfort / Premium)
+ */
+export async function createSubscriptionPayment(tariffType: 'COMFORT' | 'PREMIUM'): Promise<{
+  payment: Payment;
+  confirmationUrl: string;
+}> {
+  const { data } = await api.post('/payments/subscription', { tariffType });
+  return data;
+}
+
+/**
+ * Обратная совместимость
  */
 export async function createPremiumSubscriptionPayment(): Promise<{
   payment: Payment;
   confirmationUrl: string;
 }> {
-  const { data } = await api.post('/payments/subscription/premium');
-  return data;
+  return createSubscriptionPayment('PREMIUM');
 }
 
 /**

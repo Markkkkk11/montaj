@@ -14,7 +14,7 @@ import {
   changeTariff,
   TariffInfo,
 } from '@/lib/api/subscriptions';
-import { createPremiumSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
+import { createSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
 
 export default function TariffsPage() {
   return (
@@ -70,7 +70,7 @@ function TariffsContent() {
       await getCurrentUser();
       toast({
         title: 'Подписка активирована!',
-        description: 'Тариф Премиум успешно подключён на 30 дней.',
+        description: 'Тариф успешно подключён на 30 дней.',
       });
       router.replace('/executor/tariffs');
     } catch (error: any) {
@@ -86,6 +86,7 @@ function TariffsContent() {
   if (!isHydrated || !user) return null;
 
   const stdResponsePrice = tariffInfo.STANDARD?.responsePrice ?? 150;
+  const comfortPrice = tariffInfo.COMFORT?.price ?? 500;
   const comfortOrderPrice = tariffInfo.COMFORT?.orderTakenPrice ?? 500;
   const premiumPrice = tariffInfo.PREMIUM?.price ?? 5000;
   const stdSpecs = tariffInfo.STANDARD?.specializationCount ?? 1;
@@ -96,10 +97,11 @@ function TariffsContent() {
     {
       id: 'STANDARD',
       name: 'Стандарт',
-      price: `${stdResponsePrice} ₽`,
-      period: 'за отклик',
+      price: 'Бесплатно',
+      period: '',
       description: 'Оплата за каждый отклик на заказ',
       icon: Shield,
+      isPaid: false,
       features: [
         `${stdSpecs === 1 ? 'Доступ к 1 специализации' : `До ${stdSpecs} специализаций`}`,
         'Переключение между специализациями',
@@ -114,14 +116,15 @@ function TariffsContent() {
     {
       id: 'COMFORT',
       name: 'Комфорт',
-      price: `${comfortOrderPrice} ₽`,
-      period: 'за взятый заказ',
-      description: 'Платите только когда заказчик выбрал вас',
+      price: `${comfortPrice.toLocaleString('ru-RU')} ₽`,
+      period: 'в месяц',
+      description: 'Бесплатные отклики, платите только за взятые заказы',
       icon: Zap,
+      isPaid: true,
       features: [
         `${comfortSpecs === 1 ? 'Доступ к 1 специализации' : `До ${comfortSpecs} специализаций`}`,
         'Бесплатные отклики на заказы',
-        `${comfortOrderPrice} ₽ только при выборе заказчиком`,
+        `${comfortOrderPrice} ₽ при выборе заказчиком`,
         `Минимум ${comfortOrderPrice} ₽ на балансе для отклика`,
         'Приоритет в списке откликов',
       ],
@@ -134,9 +137,10 @@ function TariffsContent() {
       id: 'PREMIUM',
       name: 'Премиум',
       price: `${premiumPrice.toLocaleString('ru-RU')} ₽`,
-      period: 'за 30 дней',
+      period: 'в месяц',
       description: 'Максимум возможностей для профессионалов',
       icon: Crown,
+      isPaid: true,
       features: [
         `До ${premiumSpecs} специализаций одновременно`,
         'Безлимитные отклики',
@@ -158,9 +162,9 @@ function TariffsContent() {
     try {
       setChangingTariff(tariffId);
 
-      if (tariffId === 'PREMIUM') {
-        // Для Premium — создаём платёж через ЮKassa
-        const { confirmationUrl } = await createPremiumSubscriptionPayment();
+      if (tariffId === 'COMFORT' || tariffId === 'PREMIUM') {
+        // Comfort и Premium — оплата через ЮKassa
+        const { confirmationUrl } = await createSubscriptionPayment(tariffId as 'COMFORT' | 'PREMIUM');
         if (confirmationUrl) {
           window.location.href = confirmationUrl;
         } else {
@@ -171,13 +175,13 @@ function TariffsContent() {
           });
         }
       } else {
-        // Standard и Comfort — бесплатная смена тарифа
-        await changeTariff(tariffId as 'STANDARD' | 'COMFORT');
+        // Standard — бесплатная смена тарифа
+        await changeTariff('STANDARD');
         await loadTariffData();
         await getCurrentUser();
         toast({
           title: 'Тариф изменён!',
-          description: `Вы перешли на тариф «${tariffId === 'STANDARD' ? 'Стандарт' : 'Комфорт'}»`,
+          description: 'Вы перешли на тариф «Стандарт»',
         });
       }
     } catch (error: any) {
@@ -213,7 +217,7 @@ function TariffsContent() {
                     <p className="font-bold text-emerald-900">
                       Текущий тариф: {currentTariffType === 'STANDARD' ? 'Стандарт' : currentTariffType === 'COMFORT' ? 'Комфорт' : 'Премиум'}
                     </p>
-                {user.subscription.expiresAt && currentTariffType === 'PREMIUM' && (
+                {user.subscription.expiresAt && (currentTariffType === 'PREMIUM' || currentTariffType === 'COMFORT') && (
                       <p className="text-sm text-emerald-700">до {new Date(user.subscription.expiresAt).toLocaleDateString('ru-RU')}</p>
                 )}
                   </div>
@@ -265,17 +269,17 @@ function TariffsContent() {
                 ) : (
                     <Button
                       className="w-full"
-                      variant={tariff.recommended ? 'default' : 'outline'}
+                      variant={tariff.recommended || tariff.isPaid ? 'default' : 'outline'}
                       onClick={() => handleSelectTariff(tariff.id)}
                       disabled={isChanging || changingTariff !== null}
                     >
                       {isChanging ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          {tariff.id === 'PREMIUM' ? 'Переход к оплате...' : 'Смена тарифа...'}
+                          {tariff.isPaid ? 'Переход к оплате...' : 'Смена тарифа...'}
                         </span>
                       ) : (
-                        tariff.id === 'PREMIUM' ? 'Оплатить и подключить' : 'Выбрать тариф'
+                        tariff.isPaid ? 'Оплатить и подключить' : 'Выбрать тариф'
                       )}
                   </Button>
                 )}
@@ -291,9 +295,9 @@ function TariffsContent() {
           </CardHeader>
           <CardContent className="space-y-5">
             {[
-              { q: 'Как работает тариф «Стандарт»?', a: `При тарифе «Стандарт» с вашего баланса списывается ${stdResponsePrice} ₽ за каждый отклик на заказ. Вы можете работать с одной специализацией, но можете переключаться между ними.` },
-              { q: 'Как работает тариф «Комфорт»?', a: `При тарифе «Комфорт» отклики бесплатны, но на балансе должно быть не менее ${comfortOrderPrice} ₽. Оплата ${comfortOrderPrice} ₽ списывается только когда заказчик выбирает вас исполнителем. Баланс может уйти в минус, если вас выбрали по нескольким заказам.` },
-              { q: 'Что даёт тариф «Премиум»?', a: `Тариф «Премиум» за ${premiumPrice.toLocaleString('ru-RU')} ₽ в месяц даёт безлимитные отклики на заказы, возможность работать с ${premiumSpecs} специализациями одновременно, приоритетное размещение в списке исполнителей и персонального менеджера.` },
+              { q: 'Как работает тариф «Стандарт»?', a: `Тариф «Стандарт» — бесплатный. С вашего баланса списывается ${stdResponsePrice} ₽ за каждый отклик на заказ. Вы можете работать с одной специализацией, но можете переключаться между ними.` },
+              { q: 'Как работает тариф «Комфорт»?', a: `Тариф «Комфорт» стоит ${comfortPrice.toLocaleString('ru-RU')} ₽/мес. Отклики бесплатны, но на балансе должно быть не менее ${comfortOrderPrice} ₽. Оплата ${comfortOrderPrice} ₽ списывается с баланса когда заказчик выбирает вас исполнителем. Баланс может уйти в минус, если вас выбрали по нескольким заказам.` },
+              { q: 'Что даёт тариф «Премиум»?', a: `Тариф «Премиум» за ${premiumPrice.toLocaleString('ru-RU')} ₽/мес даёт безлимитные отклики на заказы, возможность работать с ${premiumSpecs} специализациями одновременно, приоритетное размещение в списке исполнителей и персонального менеджера.` },
               { q: 'Бонус при регистрации', a: 'Новые исполнители получают тариф «Премиум» на 1 месяц бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течение 30 дней после регистрации.' },
             ].map((item, idx) => (
               <div key={idx} className="p-4 bg-gray-50 rounded-xl">

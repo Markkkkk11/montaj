@@ -34,12 +34,16 @@ export class PaymentController {
   }
 
   /**
-   * Создать платёж для подписки Premium
+   * Создать платёж для подписки (Comfort / Premium)
    */
   async createSubscriptionPayment(req: Request, res: Response) {
     try {
       const userId = req.user!.id;
-      const tariffType = 'PREMIUM';
+      const { tariffType } = req.body;
+
+      if (!tariffType || !['COMFORT', 'PREMIUM'].includes(tariffType)) {
+        throw new Error('Укажите тариф: COMFORT или PREMIUM');
+      }
 
       const returnUrl = `${process.env.FRONTEND_URL}/executor/tariffs`;
 

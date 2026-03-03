@@ -89,34 +89,33 @@ export class SubscriptionService {
   }
 
   /**
-   * Сменить тариф
+   * Сменить тариф (бесплатно — только на Standard)
    */
   async changeTariff(userId: string, newTariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM') {
-    const currentSubscription = await this.getUserSubscription(userId);
-
-    // Если переходим на Premium, требуется оплата
+    // Переход на Comfort и Premium требует оплаты через ЮKassa
     if (newTariffType === 'PREMIUM') {
-      // Это будет обработано через payment service
-      throw new Error('Для перехода на Premium требуется оплата подписки');
+      throw new Error('Для перехода на Премиум требуется оплата подписки');
     }
 
-    // Для Standard и Comfort просто меняем тариф
+    if (newTariffType === 'COMFORT') {
+      throw new Error('Для перехода на Комфорт требуется оплата подписки');
+    }
+
+    // Только Standard — бесплатная смена
     const tariffSettings = await settingsService.getBySection('tariffs');
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
-    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
-    const specCount = newTariffType === 'COMFORT' ? comfortSpecs : standardSpecs;
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
       create: {
         userId,
-        tariffType: newTariffType,
+        tariffType: 'STANDARD',
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 год для бесплатных
-        specializationCount: specCount,
+        specializationCount: standardSpecs,
       },
       update: {
-        tariffType: newTariffType,
-        specializationCount: specCount,
+        tariffType: 'STANDARD',
+        specializationCount: standardSpecs,
       },
     });
 
@@ -166,10 +165,11 @@ export class SubscriptionService {
       };
     }
 
-    // Comfort - бесплатный отклик, но баланс должен быть >= 500₽
-    // (500₽ списывается только при принятии заказа заказчиком)
+    // Comfort - бесплатный отклик, но баланс должен быть >= comfortOrderTakenPrice
+    // (списывается только при принятии заказа заказчиком)
     if (tariffType === 'COMFORT') {
-      const comfortFee = 500;
+      const tariffSettings = await settingsService.getBySection('tariffs');
+      const comfortFee = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
       const totalBalance = parseFloat(balance?.amount.toString() || '0') + 
                           parseFloat(balance?.bonusAmount.toString() || '0');
 
@@ -262,9 +262,9 @@ export class SubscriptionService {
   async getTariffInfo() {
     const tariffSettings = await settingsService.getBySection('tariffs');
 
-    const standardPrice = parseInt(tariffSettings.standardPrice || '0', 10);
+    const standardPrice = 0; // Стандарт бесплатный
     const standardResponsePrice = parseInt(tariffSettings.standardResponsePrice || '150', 10);
-    const comfortPrice = parseInt(tariffSettings.comfortPrice || '0', 10);
+    const comfortPrice = parseInt(tariffSettings.comfortPrice || '500', 10);
     const comfortOrderTakenPrice = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
     const premiumPrice = parseInt(tariffSettings.premiumPrice || '5000', 10);
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
@@ -277,7 +277,7 @@ export class SubscriptionService {
         price: standardPrice,
         responsePrice: standardResponsePrice,
         orderTakenPrice: 0,
-        description: `Оплата за каждый отклик - ${standardResponsePrice}₽`,
+        description: `Бесплатный тариф, ${standardResponsePrice}₽ за каждый отклик`,
         specializationCount: standardSpecs,
         features: [
           `Платный отклик ${standardResponsePrice}₽`,
@@ -290,13 +290,14 @@ export class SubscriptionService {
         price: comfortPrice,
         responsePrice: 0,
         orderTakenPrice: comfortOrderTakenPrice,
-        description: `Оплата только за взятый заказ - ${comfortOrderTakenPrice}₽`,
+        description: `${comfortPrice}₽/мес, ${comfortOrderTakenPrice}₽ за взятый заказ`,
         specializationCount: comfortSpecs,
         features: [
+          `Подписка ${comfortPrice}₽/мес`,
           'Бесплатные отклики',
-          `Оплата только при выборе - ${comfortOrderTakenPrice}₽`,
+          `${comfortOrderTakenPrice}₽ только при выборе заказчиком`,
           `${comfortSpecs === 1 ? 'Одна специализация' : `До ${comfortSpecs} специализаций`}`,
-          'Доступ к заказам',
+          'Приоритет в откликах',
         ],
       },
       PREMIUM: {
@@ -304,7 +305,7 @@ export class SubscriptionService {
         price: premiumPrice,
         responsePrice: 0,
         orderTakenPrice: 0,
-        description: `Подписка на 30 дней - ${premiumPrice}₽`,
+        description: `Подписка на 30 дней — ${premiumPrice.toLocaleString('ru-RU')}₽`,
         duration: 30,
         specializationCount: premiumSpecs,
         features: [

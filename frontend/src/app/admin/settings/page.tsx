@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
     standardPrice: '0',
     standardResponsePrice: '150',
     standardSpecializations: '1',
-    comfortPrice: '0',
+    comfortPrice: '500',
     comfortOrderTakenPrice: '500',
     comfortSpecializations: '1',
     premiumPrice: '5000',

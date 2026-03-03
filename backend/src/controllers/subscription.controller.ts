@@ -45,15 +45,16 @@ export class SubscriptionController {
   }
 
   /**
-   * Сменить тариф на Standard или Comfort
+   * Сменить тариф на Standard (бесплатно)
+   * Comfort и Premium — через оплату (/payments/subscription)
    */
   async changeTariff(req: Request, res: Response) {
     try {
       const userId = req.user!.id;
       const { tariffType } = req.body;
 
-      if (!['STANDARD', 'COMFORT'].includes(tariffType)) {
-        throw new Error('Можно переключиться только на Standard или Comfort. Для Premium требуется оплата.');
+      if (tariffType !== 'STANDARD') {
+        throw new Error('Бесплатно можно переключиться только на Стандарт. Для Комфорт и Премиум требуется оплата.');
       }
 
       const subscription = await subscriptionService.changeTariff(userId, tariffType);
@@ -61,7 +62,7 @@ export class SubscriptionController {
       res.json({
         success: true,
         subscription,
-        message: `Тариф изменён на ${tariffType}`,
+        message: 'Тариф изменён на Стандарт',
       });
     } catch (error: any) {
       res.status(400).json({

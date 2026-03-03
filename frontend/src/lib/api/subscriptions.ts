@@ -62,9 +62,10 @@ export async function getTariffInfo(): Promise<Record<string, TariffInfo>> {
 }
 
 /**
- * Сменить тариф
+ * Сменить тариф на Standard (бесплатно)
+ * Comfort и Premium — через /payments/subscription
  */
-export async function changeTariff(tariffType: 'STANDARD' | 'COMFORT'): Promise<Subscription> {
+export async function changeTariff(tariffType: 'STANDARD'): Promise<Subscription> {
   const { data } = await api.post('/subscriptions/change-tariff', { tariffType });
   return data.subscription;
 }

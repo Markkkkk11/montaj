@@ -12,8 +12,14 @@ router.use(authenticate);
 // Создать платёж для пополнения
 router.post('/top-up', validateBody(createTopUpSchema), paymentController.createTopUp);
 
-// Создать платёж для подписки Premium
-router.post('/subscription/premium', paymentController.createSubscriptionPayment);
+// Создать платёж для подписки (Comfort / Premium)
+router.post('/subscription', paymentController.createSubscriptionPayment);
+
+// Обратная совместимость: старый роут для Premium
+router.post('/subscription/premium', (req, res, next) => {
+  req.body.tariffType = 'PREMIUM';
+  next();
+}, paymentController.createSubscriptionPayment);
 
 // Callback после успешной оплаты (ПЕРЕД /:id чтобы не перехватился)
 router.get('/success/callback', paymentController.handlePaymentSuccess);

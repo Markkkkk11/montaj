@@ -66,14 +66,15 @@ export class PaymentService {
     tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM',
     returnUrl: string
   ) {
-    // Определить стоимость подписки
-    const prices = {
+    // Определить стоимость подписки из настроек БД
+    const tariffSettings = await settingsService.getBySection('tariffs');
+    const prices: Record<string, number> = {
       STANDARD: 0, // Бесплатный (платят за отклики)
-      COMFORT: 0, // Бесплатный (платят при выборе)
-      PREMIUM: 5000, // 5000₽ на 30 дней
+      COMFORT: parseInt(tariffSettings.comfortPrice || '500', 10),
+      PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
     };
 
-    const amount = prices[tariffType];
+    const amount = prices[tariffType] || 0;
 
     if (amount === 0) {
       throw new Error('Данный тариф не требует оплаты подписки');
@@ -310,12 +311,34 @@ export class PaymentService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + duration);
 
-    // Берём кол-во специализаций и цену из настроек
+    // Берём кол-во специализаций и цены из настроек
     const tariffSettings = await settingsService.getBySection('tariffs');
     const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
-    const premiumPrice = parseInt(tariffSettings.premiumPrice || '5000', 10);
-    const specCount = tariffType === 'PREMIUM' ? premiumSpecs : standardSpecs;
+    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
+
+    // Определяем кол-во специализаций по тарифу
+    const specCounts: Record<string, number> = {
+      STANDARD: standardSpecs,
+      COMFORT: comfortSpecs,
+      PREMIUM: premiumSpecs,
+    };
+    const specCount = specCounts[tariffType] || standardSpecs;
+
+    // Определяем цену по тарифу
+    const prices: Record<string, number> = {
+      STANDARD: 0,
+      COMFORT: parseInt(tariffSettings.comfortPrice || '500', 10),
+      PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
+    };
+    const subscriptionPrice = prices[tariffType] || 0;
+
+    // Тарифные названия для транзакции
+    const tariffNames: Record<string, string> = {
+      STANDARD: 'Стандарт',
+      COMFORT: 'Комфорт',
+      PREMIUM: 'Премиум',
+    };
 
     // Обновить или создать подписку
     await prisma.subscription.upsert({
@@ -334,14 +357,16 @@ export class PaymentService {
     });
 
     // Создать транзакцию
-    await prisma.transaction.create({
-      data: {
-        userId,
-        type: 'SUBSCRIPTION',
-        amount: -premiumPrice,
-        description: `Оплата подписки ${tariffType} на ${duration} дней`,
-      },
-    });
+    if (subscriptionPrice > 0) {
+      await prisma.transaction.create({
+        data: {
+          userId,
+          type: 'SUBSCRIPTION',
+          amount: -subscriptionPrice,
+          description: `Оплата подписки «${tariffNames[tariffType] || tariffType}» на ${duration} дней`,
+        },
+      });
+    }
   }
 
   /**

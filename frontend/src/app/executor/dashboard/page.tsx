@@ -429,7 +429,7 @@ export default function ExecutorDashboard() {
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Стоимость отклика</p>
                 <p className="text-lg sm:text-xl font-extrabold text-blue-600">
-                  {subscription?.tariffType === 'COMFORT' ? '500' : subscription?.tariffType === 'PREMIUM' ? '0' : '150'} ₽
+                  {subscription?.tariffType === 'PREMIUM' || subscription?.tariffType === 'COMFORT' ? '0' : '150'} ₽
                 </p>
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
