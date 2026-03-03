@@ -92,6 +92,33 @@ export class SubscriptionController {
   }
 
   /**
+   * Оплатить подписку с баланса
+   */
+  async payFromBalance(req: Request, res: Response) {
+    try {
+      const userId = req.user!.id;
+      const { tariffType } = req.body;
+
+      if (!tariffType || !['COMFORT', 'PREMIUM'].includes(tariffType)) {
+        throw new Error('Укажите тариф: COMFORT или PREMIUM');
+      }
+
+      const subscription = await subscriptionService.payFromBalance(userId, tariffType);
+
+      res.json({
+        success: true,
+        subscription,
+        message: `Подписка «${tariffType === 'COMFORT' ? 'Комфорт' : 'Премиум'}» активирована на 30 дней`,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  /**
    * Проверить возможность отклика на заказ
    */
   async checkCanRespond(req: Request, res: Response) {

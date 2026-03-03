@@ -18,8 +18,11 @@ router.get('/tariff', subscriptionController.getCurrentTariff);
 // Получить информацию о тарифах
 router.get('/tariffs', subscriptionController.getTariffInfo);
 
-// Сменить тариф (только на Standard/Comfort)
+// Сменить тариф (только на Standard — бесплатно)
 router.post('/change-tariff', validateBody(changeTariffSchema), subscriptionController.changeTariff);
+
+// Оплатить подписку с баланса
+router.post('/pay-from-balance', subscriptionController.payFromBalance);
 
 // Проверить возможность отклика
 router.get('/can-respond', subscriptionController.checkCanRespond);

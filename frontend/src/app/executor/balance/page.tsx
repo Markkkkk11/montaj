@@ -107,14 +107,22 @@ function ExecutorBalanceContent() {
 
   const handlePaymentCallback = async (paymentId: string) => {
     try {
-      await processPaymentSuccess(paymentId);
+      const payment = await processPaymentSuccess(paymentId);
       await loadBalance();
-      setPaymentSuccess(true);
-      toast({
-        title: 'Платёж успешно обработан!',
-        description: 'Баланс пополнен',
-      });
-      // Очистить URL от параметров
+
+      if (payment?.paid) {
+        setPaymentSuccess(true);
+        toast({
+          title: 'Платёж успешно обработан!',
+          description: 'Баланс пополнен',
+        });
+      } else {
+        toast({
+          title: 'Платёж не завершён',
+          description: 'Оплата не была произведена. Попробуйте ещё раз.',
+          variant: 'destructive',
+        });
+      }
       router.replace('/executor/balance');
     } catch (error: any) {
       console.error('Payment processing error:', error);
@@ -123,6 +131,7 @@ function ExecutorBalanceContent() {
         description: error.response?.data?.error || 'Попробуйте позже',
         variant: 'destructive',
       });
+      router.replace('/executor/balance');
     }
   };
 

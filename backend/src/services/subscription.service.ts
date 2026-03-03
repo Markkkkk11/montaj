@@ -257,6 +257,88 @@ export class SubscriptionService {
   }
 
   /**
+   * Оплатить подписку с баланса пользователя
+   */
+  async payFromBalance(userId: string, tariffType: 'COMFORT' | 'PREMIUM') {
+    const tariffSettings = await settingsService.getBySection('tariffs');
+
+    const prices: Record<string, number> = {
+      COMFORT: parseInt(tariffSettings.comfortPrice || '500', 10),
+      PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
+    };
+    const price = prices[tariffType];
+    if (!price) throw new Error('Неизвестный тариф');
+
+    const tariffNames: Record<string, string> = {
+      COMFORT: 'Комфорт',
+      PREMIUM: 'Премиум',
+    };
+
+    // Получить баланс пользователя
+    const balance = await prisma.balance.findUnique({ where: { userId } });
+    const totalBalance = parseFloat(balance?.amount.toString() || '0') +
+                        parseFloat(balance?.bonusAmount.toString() || '0');
+
+    if (totalBalance < price) {
+      throw new Error(`Недостаточно средств на балансе. Нужно ${price}₽, на балансе ${Math.floor(totalBalance)}₽`);
+    }
+
+    // Определить кол-во специализаций
+    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
+    const specCount = tariffType === 'PREMIUM' ? premiumSpecs : comfortSpecs;
+
+    // Списать средства: сначала бонусы, потом основной баланс
+    let remaining = price;
+    const bonusAmount = parseFloat(balance?.bonusAmount.toString() || '0');
+    const mainAmount = parseFloat(balance?.amount.toString() || '0');
+
+    let bonusDeduct = Math.min(bonusAmount, remaining);
+    remaining -= bonusDeduct;
+    let mainDeduct = remaining;
+
+    await prisma.balance.update({
+      where: { userId },
+      data: {
+        amount: { decrement: mainDeduct },
+        bonusAmount: { decrement: bonusDeduct },
+      },
+    });
+
+    // Срок подписки — 30 дней
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    // Активировать подписку
+    const subscription = await prisma.subscription.upsert({
+      where: { userId },
+      create: {
+        userId,
+        tariffType,
+        expiresAt,
+        specializationCount: specCount,
+      },
+      update: {
+        tariffType,
+        expiresAt,
+        specializationCount: specCount,
+      },
+    });
+
+    // Создать транзакцию
+    await prisma.transaction.create({
+      data: {
+        userId,
+        type: 'SUBSCRIPTION',
+        amount: -price,
+        description: `Оплата подписки «${tariffNames[tariffType]}» с баланса на 30 дней`,
+      },
+    });
+
+    return subscription;
+  }
+
+  /**
    * Получить информацию о тарифах (из настроек БД)
    */
   async getTariffInfo() {

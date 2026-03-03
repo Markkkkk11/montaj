@@ -63,10 +63,18 @@ export async function getTariffInfo(): Promise<Record<string, TariffInfo>> {
 
 /**
  * Сменить тариф на Standard (бесплатно)
- * Comfort и Premium — через /payments/subscription
+ * Comfort и Premium — через /payments/subscription или /subscriptions/pay-from-balance
  */
 export async function changeTariff(tariffType: 'STANDARD'): Promise<Subscription> {
   const { data } = await api.post('/subscriptions/change-tariff', { tariffType });
+  return data.subscription;
+}
+
+/**
+ * Оплатить подписку с баланса
+ */
+export async function paySubscriptionFromBalance(tariffType: 'COMFORT' | 'PREMIUM'): Promise<Subscription> {
+  const { data } = await api.post('/subscriptions/pay-from-balance', { tariffType });
   return data.subscription;
 }
 

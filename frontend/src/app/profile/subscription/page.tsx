@@ -53,9 +53,13 @@ function SubscriptionContent() {
 
   const handlePaymentCallback = async (paymentId: string) => {
     try {
-      await processPaymentSuccess(paymentId);
+      const payment = await processPaymentSuccess(paymentId);
       await loadData();
-      alert('Подписка успешно активирована!');
+      if (payment?.paid) {
+        alert('Подписка успешно активирована!');
+      } else {
+        alert('Платёж не завершён. Оплата не была произведена.');
+      }
       router.replace('/profile/subscription');
     } catch (error) {
       console.error('Payment processing error:', error);

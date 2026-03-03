@@ -12,6 +12,7 @@ import {
   getTariffInfo,
   getCurrentTariff,
   changeTariff,
+  paySubscriptionFromBalance,
   TariffInfo,
 } from '@/lib/api/subscriptions';
 import { createSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
@@ -65,13 +66,22 @@ function TariffsContent() {
 
   const handlePaymentCallback = async (paymentId: string) => {
     try {
-      await processPaymentSuccess(paymentId);
+      const payment = await processPaymentSuccess(paymentId);
       await loadTariffData();
       await getCurrentUser();
-      toast({
-        title: 'Подписка активирована!',
-        description: 'Тариф успешно подключён на 30 дней.',
-      });
+
+      if (payment?.paid) {
+        toast({
+          title: 'Подписка активирована!',
+          description: 'Тариф успешно подключён на 30 дней.',
+        });
+      } else {
+        toast({
+          title: 'Платёж не завершён',
+          description: 'Оплата не была произведена. Попробуйте ещё раз.',
+          variant: 'destructive',
+        });
+      }
       router.replace('/executor/tariffs');
     } catch (error: any) {
       console.error('Payment processing error:', error);
@@ -80,6 +90,7 @@ function TariffsContent() {
         description: error.response?.data?.error || 'Попробуйте позже',
         variant: 'destructive',
       });
+      router.replace('/executor/tariffs');
     }
   };
 
@@ -156,44 +167,62 @@ function TariffsContent() {
     },
   ];
 
-  const handleSelectTariff = async (tariffId: string) => {
+  // Оплата через ЮKassa
+  const handlePayViaYookassa = async (tariffId: string) => {
     if (tariffId === currentTariffType) return;
-
     try {
       setChangingTariff(tariffId);
-
-      if (tariffId === 'COMFORT' || tariffId === 'PREMIUM') {
-        // Comfort и Premium — оплата через ЮKassa
-        const { confirmationUrl } = await createSubscriptionPayment(tariffId as 'COMFORT' | 'PREMIUM');
-        if (confirmationUrl) {
-          window.location.href = confirmationUrl;
-        } else {
-          toast({
-            title: 'Ошибка',
-            description: 'Не удалось получить ссылку на оплату',
-            variant: 'destructive',
-          });
-        }
+      const { confirmationUrl } = await createSubscriptionPayment(tariffId as 'COMFORT' | 'PREMIUM');
+      if (confirmationUrl) {
+        window.location.href = confirmationUrl;
       } else {
-        // Standard — бесплатная смена тарифа
-        await changeTariff('STANDARD');
-        await loadTariffData();
-        await getCurrentUser();
-        toast({
-          title: 'Тариф изменён!',
-          description: 'Вы перешли на тариф «Стандарт»',
-        });
+        toast({ title: 'Ошибка', description: 'Не удалось получить ссылку на оплату', variant: 'destructive' });
       }
     } catch (error: any) {
-      toast({
-        title: 'Ошибка смены тарифа',
-        description: error.response?.data?.error || error.message || 'Попробуйте позже',
-        variant: 'destructive',
-      });
+      toast({ title: 'Ошибка', description: error.response?.data?.error || error.message || 'Попробуйте позже', variant: 'destructive' });
     } finally {
       setChangingTariff(null);
     }
   };
+
+  // Оплата с баланса
+  const handlePayFromBalance = async (tariffId: string) => {
+    if (tariffId === currentTariffType) return;
+    try {
+      setChangingTariff(tariffId);
+      await paySubscriptionFromBalance(tariffId as 'COMFORT' | 'PREMIUM');
+      await loadTariffData();
+      await getCurrentUser();
+      toast({
+        title: 'Подписка активирована!',
+        description: 'Тариф успешно подключён на 30 дней.',
+      });
+    } catch (error: any) {
+      toast({ title: 'Ошибка оплаты', description: error.response?.data?.error || error.message || 'Попробуйте позже', variant: 'destructive' });
+    } finally {
+      setChangingTariff(null);
+    }
+  };
+
+  // Бесплатная смена на Стандарт
+  const handleSelectStandard = async () => {
+    if (currentTariffType === 'STANDARD') return;
+    try {
+      setChangingTariff('STANDARD');
+      await changeTariff('STANDARD');
+      await loadTariffData();
+      await getCurrentUser();
+      toast({ title: 'Тариф изменён!', description: 'Вы перешли на тариф «Стандарт»' });
+    } catch (error: any) {
+      toast({ title: 'Ошибка', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    } finally {
+      setChangingTariff(null);
+    }
+  };
+
+  // Общий баланс пользователя
+  const userBalance = parseFloat(user.balance?.amount?.toString() || '0') +
+                     parseFloat(user.balance?.bonusAmount?.toString() || '0');
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -266,20 +295,58 @@ function TariffsContent() {
                 </ul>
                 {isCurrent ? (
                     <Button className="w-full" disabled variant="outline">✓ Текущий тариф</Button>
+                ) : tariff.isPaid ? (
+                  <div className="space-y-2">
+                    {/* Оплата с баланса */}
+                    {userBalance >= (tariff.id === 'COMFORT' ? comfortPrice : premiumPrice) ? (
+                      <Button
+                        className="w-full"
+                        variant="default"
+                        onClick={() => handlePayFromBalance(tariff.id)}
+                        disabled={isChanging || changingTariff !== null}
+                      >
+                        {isChanging && changingTariff === tariff.id ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Оплата...
+                          </span>
+                        ) : (
+                          `Оплатить с баланса (${Math.floor(userBalance)} ₽)`
+                        )}
+                      </Button>
+                    ) : (
+                      <Button className="w-full" variant="outline" disabled>
+                        На балансе {Math.floor(userBalance)} ₽ — недостаточно
+                      </Button>
+                    )}
+                    {/* Оплата через ЮKassa */}
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => handlePayViaYookassa(tariff.id)}
+                      disabled={isChanging || changingTariff !== null}
+                    >
+                      {isChanging && changingTariff === tariff.id ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Переход к оплате...
+                        </span>
+                      ) : (
+                        'Оплатить через ЮKassa'
+                      )}
+                    </Button>
+                  </div>
                 ) : (
                     <Button
                       className="w-full"
-                      variant={tariff.recommended || tariff.isPaid ? 'default' : 'outline'}
-                      onClick={() => handleSelectTariff(tariff.id)}
+                      variant="outline"
+                      onClick={handleSelectStandard}
                       disabled={isChanging || changingTariff !== null}
                     >
-                      {isChanging ? (
+                      {isChanging && changingTariff === 'STANDARD' ? (
                         <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          {tariff.isPaid ? 'Переход к оплате...' : 'Смена тарифа...'}
+                          <Loader2 className="h-4 w-4 animate-spin" /> Смена тарифа...
                         </span>
                       ) : (
-                        tariff.isPaid ? 'Оплатить и подключить' : 'Выбрать тариф'
+                        'Выбрать тариф'
                       )}
                   </Button>
                 )}

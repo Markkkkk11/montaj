@@ -54,11 +54,11 @@ function BalanceContent() {
 
   const handlePaymentCallback = async (paymentId: string) => {
     try {
-      await processPaymentSuccess(paymentId);
-      // Обновить баланс
+      const payment = await processPaymentSuccess(paymentId);
       await loadBalance();
-      // Очистить URL и показать историю
-      setActiveTab('history');
+      if (payment?.paid) {
+        setActiveTab('history');
+      }
       router.replace('/profile/balance?tab=history');
     } catch (error) {
       console.error('Payment processing error:', error);
