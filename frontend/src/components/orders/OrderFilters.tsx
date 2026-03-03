@@ -65,6 +65,7 @@ export function OrderFilters({ onApply, onSpecializationsSaved, initialFilters =
       toast({ variant: 'destructive', title: '❌ Ошибка', description: 'Выберите хотя бы одну специализацию' });
       return;
     }
+    const previousSpecs = user?.executorProfile?.specializations || [];
     try {
       setIsSavingSpecs(true);
       await api.put('/users/executor-profile', { specializations: selectedSpecs });
@@ -72,6 +73,8 @@ export function OrderFilters({ onApply, onSpecializationsSaved, initialFilters =
       await getCurrentUser();
       onSpecializationsSaved?.();
     } catch (error: any) {
+      // При ошибке (например, лимит 1 раз в сутки) откатываем UI к сохранённым значениям.
+      setSelectedSpecs(previousSpecs as Specialization[]);
       toast({ variant: 'destructive', title: '❌ Ошибка', description: error.response?.data?.error || 'Не удалось сохранить' });
     } finally {
       setIsSavingSpecs(false);
