@@ -10,7 +10,7 @@ import {
   changeTariff,
   TariffInfo,
 } from '@/lib/api/subscriptions';
-import { createPremiumSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
+import { createSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
 
 export default function SubscriptionPage() {
   return (
@@ -69,13 +69,13 @@ function SubscriptionContent() {
     try {
       setLoading(true);
 
-      if (tariffKey === 'PREMIUM') {
-        // Создать платёж для Premium
-        const { confirmationUrl } = await createPremiumSubscriptionPayment();
+      if (tariffKey === 'COMFORT' || tariffKey === 'PREMIUM') {
+        // Comfort и Premium — оплата через ЮKassa
+        const { confirmationUrl } = await createSubscriptionPayment(tariffKey as 'COMFORT' | 'PREMIUM');
         window.location.href = confirmationUrl;
       } else {
-        // Сменить на Standard или Comfort
-        await changeTariff(tariffKey as 'STANDARD' | 'COMFORT');
+        // Standard — бесплатная смена
+        await changeTariff('STANDARD');
         await loadData();
         alert(`Тариф изменён на ${tariffs[tariffKey]?.name}`);
       }
@@ -125,10 +125,10 @@ function SubscriptionContent() {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-2">Комфорт</h4>
+              <h4 className="font-semibold mb-2">Комфорт — 500 ₽/мес</h4>
               <p className="text-gray-600">
-                Бесплатные отклики. Оплата 500₽ только если вас выбрали. Одна
-                специализация.
+                Подписка 500₽/мес. Бесплатные отклики. 500₽ списывается при выборе
+                заказчиком. Одна специализация.
               </p>
             </div>
             <div>

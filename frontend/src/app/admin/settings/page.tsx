@@ -39,7 +39,6 @@ export default function AdminSettingsPage() {
   });
 
   const [tariffSettings, setTariffSettings] = useState({
-    standardPrice: '0',
     standardResponsePrice: '150',
     standardSpecializations: '1',
     comfortPrice: '500',
@@ -47,7 +46,6 @@ export default function AdminSettingsPage() {
     comfortSpecializations: '1',
     premiumPrice: '5000',
     premiumSpecializations: '3',
-    trialDays: '7',
   });
 
   const [emailSettings, setEmailSettings] = useState({
@@ -315,20 +313,9 @@ export default function AdminSettingsPage() {
             <div>
               <h4 className="font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
                 <Shield className="h-4 w-4 text-gray-500" />
-                Стандарт
+                Стандарт (бесплатный)
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                  <Label htmlFor="standardPrice">Подписка (₽/мес)</Label>
-                <Input
-                  id="standardPrice"
-                  type="number"
-                  value={tariffSettings.standardPrice}
-                  onChange={(e) =>
-                    setTariffSettings({ ...tariffSettings, standardPrice: e.target.value })
-                  }
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                   <Label htmlFor="standardResponsePrice">Цена за отклик (₽)</Label>
                 <Input
@@ -427,23 +414,6 @@ export default function AdminSettingsPage() {
                 />
               </div>
               </div>
-            </div>
-
-            {/* Общие */}
-            <div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="trialDays">Пробный период (дней)</Label>
-                <Input
-                  id="trialDays"
-                  type="number"
-                  value={tariffSettings.trialDays}
-                  onChange={(e) =>
-                    setTariffSettings({ ...tariffSettings, trialDays: e.target.value })
-                  }
-                />
-              </div>
-            </div>
             </div>
 
             <SaveButton section="tariffs" data={tariffSettings} />
