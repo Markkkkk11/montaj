@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
+import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { Search, Eye, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -82,10 +83,12 @@ export default function AdminOrdersPage() {
 
   const filteredOrders = orders.filter((order) => {
     const query = searchQuery.toLowerCase();
+    const categoryLabel = (SPECIALIZATION_LABELS[order.category] || order.category).toLowerCase();
     return (
       order.title.toLowerCase().includes(query) ||
       order.customer.fullName.toLowerCase().includes(query) ||
       order.region.toLowerCase().includes(query) ||
+      categoryLabel.includes(query) ||
       (order.orderNumber && order.orderNumber.toString().includes(query))
     );
   });
@@ -186,7 +189,7 @@ export default function AdminOrdersPage() {
                       {order.orderNumber ? `#${order.orderNumber}` : '—'}
                     </TableCell>
                     <TableCell className="font-medium">{order.title}</TableCell>
-                    <TableCell>{order.category}</TableCell>
+                    <TableCell>{SPECIALIZATION_LABELS[order.category] || order.category}</TableCell>
                     <TableCell>{order.region}</TableCell>
                     <TableCell>{Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽</TableCell>
                     <TableCell>

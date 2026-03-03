@@ -1,24 +1,87 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Header } from '@/components/layout/Header';
-import { Check, Crown, Zap, Shield } from 'lucide-react';
+import { Check, Crown, Zap, Shield, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  getTariffInfo,
+  getCurrentTariff,
+  changeTariff,
+  TariffInfo,
+} from '@/lib/api/subscriptions';
+import { createPremiumSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
 
 export default function TariffsPage() {
-  const { user, isHydrated } = useAuthStore();
+  return (
+    <Suspense fallback={null}>
+      <TariffsContent />
+    </Suspense>
+  );
+}
+
+function TariffsContent() {
+  const { user, isHydrated, getCurrentUser } = useAuthStore();
   const router = useRouter();
-  const [selectedTariff, setSelectedTariff] = useState<string>('');
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const [currentTariffType, setCurrentTariffType] = useState<string>('STANDARD');
+  const [tariffInfo, setTariffInfo] = useState<Record<string, TariffInfo>>({});
+  const [changingTariff, setChangingTariff] = useState<string | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
     if (!isHydrated) return;
     if (!user) { router.push('/login'); return; }
     if (user.role !== 'EXECUTOR') { router.push('/customer/dashboard'); return; }
-    setSelectedTariff(user.subscription?.tariffType || 'STANDARD');
-  }, [user, router, isHydrated]);
+
+    loadTariffData();
+
+    // Обработать callback после оплаты Premium
+    const paymentId = searchParams?.get('payment_id');
+    if (paymentId) {
+      handlePaymentCallback(paymentId);
+    }
+  }, [user, router, isHydrated, searchParams]);
+
+  const loadTariffData = async () => {
+    try {
+      const [tariffsData, currentTariff] = await Promise.all([
+        getTariffInfo(),
+        getCurrentTariff(),
+      ]);
+      setTariffInfo(tariffsData);
+      setCurrentTariffType(currentTariff.tariffType);
+    } catch (error) {
+      console.error('Failed to load tariffs:', error);
+    } finally {
+      setPageLoading(false);
+    }
+  };
+
+  const handlePaymentCallback = async (paymentId: string) => {
+    try {
+      await processPaymentSuccess(paymentId);
+      await loadTariffData();
+      await getCurrentUser();
+      toast({
+        title: 'Подписка активирована!',
+        description: 'Тариф Премиум успешно подключён на 30 дней.',
+      });
+      router.replace('/executor/tariffs');
+    } catch (error: any) {
+      console.error('Payment processing error:', error);
+      toast({
+        title: 'Ошибка обработки платежа',
+        description: error.response?.data?.error || 'Попробуйте позже',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (!isHydrated || !user) return null;
 
@@ -64,7 +127,7 @@ export default function TariffsPage() {
     {
       id: 'PREMIUM',
       name: 'Премиум',
-      price: '5000 ₽',
+      price: tariffInfo.PREMIUM ? `${tariffInfo.PREMIUM.price.toLocaleString('ru-RU')} ₽` : '5000 ₽',
       period: 'за 30 дней',
       description: 'Максимум возможностей для профессионалов',
       icon: Crown,
@@ -83,8 +146,43 @@ export default function TariffsPage() {
     },
   ];
 
-  const handleSelectTariff = (tariffId: string) => {
-    alert(`Смена тарифа на ${tariffId} будет доступна после интеграции с платежной системой`);
+  const handleSelectTariff = async (tariffId: string) => {
+    if (tariffId === currentTariffType) return;
+
+    try {
+      setChangingTariff(tariffId);
+
+      if (tariffId === 'PREMIUM') {
+        // Для Premium — создаём платёж через ЮKassa
+        const { confirmationUrl } = await createPremiumSubscriptionPayment();
+        if (confirmationUrl) {
+          window.location.href = confirmationUrl;
+        } else {
+          toast({
+            title: 'Ошибка',
+            description: 'Не удалось получить ссылку на оплату',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        // Standard и Comfort — бесплатная смена тарифа
+        await changeTariff(tariffId as 'STANDARD' | 'COMFORT');
+        await loadTariffData();
+        await getCurrentUser();
+        toast({
+          title: 'Тариф изменён!',
+          description: `Вы перешли на тариф «${tariffId === 'STANDARD' ? 'Стандарт' : 'Комфорт'}»`,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Ошибка смены тарифа',
+        description: error.response?.data?.error || error.message || 'Попробуйте позже',
+        variant: 'destructive',
+      });
+    } finally {
+      setChangingTariff(null);
+    }
   };
 
   return (
@@ -107,9 +205,9 @@ export default function TariffsPage() {
                   </div>
                   <div>
                     <p className="font-bold text-emerald-900">
-                      Текущий тариф: {user.subscription.tariffType === 'STANDARD' ? 'Стандарт' : user.subscription.tariffType === 'COMFORT' ? 'Комфорт' : 'Премиум'}
+                      Текущий тариф: {currentTariffType === 'STANDARD' ? 'Стандарт' : currentTariffType === 'COMFORT' ? 'Комфорт' : 'Премиум'}
                     </p>
-                {user.subscription.expiresAt && (
+                {user.subscription.expiresAt && currentTariffType === 'PREMIUM' && (
                       <p className="text-sm text-emerald-700">до {new Date(user.subscription.expiresAt).toLocaleDateString('ru-RU')}</p>
                 )}
                   </div>
@@ -122,11 +220,13 @@ export default function TariffsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
           {tariffs.map((tariff) => {
             const Icon = tariff.icon;
+            const isCurrent = currentTariffType === tariff.id;
+            const isChanging = changingTariff === tariff.id;
             return (
             <Card
               key={tariff.id}
                 className={`relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg bg-gradient-to-br ${tariff.gradient} ${tariff.border} ${
-                  selectedTariff === tariff.id ? 'ring-2 ring-primary shadow-soft-lg' : ''
+                  isCurrent ? 'ring-2 ring-primary shadow-soft-lg' : ''
               }`}
             >
               {tariff.recommended && (
@@ -154,11 +254,23 @@ export default function TariffsPage() {
                     </li>
                   ))}
                 </ul>
-                {selectedTariff === tariff.id ? (
+                {isCurrent ? (
                     <Button className="w-full" disabled variant="outline">✓ Текущий тариф</Button>
                 ) : (
-                    <Button className="w-full" variant={tariff.recommended ? 'default' : 'outline'} onClick={() => handleSelectTariff(tariff.id)}>
-                    Выбрать тариф
+                    <Button
+                      className="w-full"
+                      variant={tariff.recommended ? 'default' : 'outline'}
+                      onClick={() => handleSelectTariff(tariff.id)}
+                      disabled={isChanging || changingTariff !== null}
+                    >
+                      {isChanging ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {tariff.id === 'PREMIUM' ? 'Переход к оплате...' : 'Смена тарифа...'}
+                        </span>
+                      ) : (
+                        tariff.id === 'PREMIUM' ? 'Оплатить и подключить' : 'Выбрать тариф'
+                      )}
                   </Button>
                 )}
               </CardContent>

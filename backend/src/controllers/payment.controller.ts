@@ -41,7 +41,7 @@ export class PaymentController {
       const userId = req.user!.id;
       const tariffType = 'PREMIUM';
 
-      const returnUrl = `${process.env.FRONTEND_URL}/profile/subscription`;
+      const returnUrl = `${process.env.FRONTEND_URL}/executor/tariffs`;
 
       const payment = await paymentService.createSubscriptionPayment(
         userId,

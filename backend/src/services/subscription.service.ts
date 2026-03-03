@@ -103,6 +103,8 @@ export class SubscriptionService {
     // Для Standard и Comfort просто меняем тариф
     const tariffSettings = await settingsService.getBySection('tariffs');
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
+    const specCount = newTariffType === 'COMFORT' ? comfortSpecs : standardSpecs;
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
@@ -110,11 +112,11 @@ export class SubscriptionService {
         userId,
         tariffType: newTariffType,
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 год для бесплатных
-        specializationCount: standardSpecs,
+        specializationCount: specCount,
       },
       update: {
         tariffType: newTariffType,
-        specializationCount: standardSpecs,
+        specializationCount: specCount,
       },
     });
 
@@ -248,35 +250,39 @@ export class SubscriptionService {
     const tariffSettings = await settingsService.getBySection('tariffs');
 
     const standardPrice = parseInt(tariffSettings.standardPrice || '0', 10);
+    const standardResponsePrice = parseInt(tariffSettings.standardResponsePrice || '150', 10);
+    const comfortPrice = parseInt(tariffSettings.comfortPrice || '0', 10);
+    const comfortOrderTakenPrice = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
     const premiumPrice = parseInt(tariffSettings.premiumPrice || '5000', 10);
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
     const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
 
     return {
       STANDARD: {
         name: 'Стандарт',
         price: standardPrice,
-        responsePrice: 150,
+        responsePrice: standardResponsePrice,
         orderTakenPrice: 0,
-        description: 'Оплата за каждый отклик - 150₽',
+        description: `Оплата за каждый отклик - ${standardResponsePrice}₽`,
         specializationCount: standardSpecs,
         features: [
-          'Платный отклик 150₽',
+          `Платный отклик ${standardResponsePrice}₽`,
           `${standardSpecs === 1 ? 'Одна специализация' : `До ${standardSpecs} специализаций`}`,
           'Доступ к заказам',
         ],
       },
       COMFORT: {
         name: 'Комфорт',
-        price: 0,
+        price: comfortPrice,
         responsePrice: 0,
-        orderTakenPrice: 500,
-        description: 'Оплата только за взятый заказ - 500₽',
-        specializationCount: standardSpecs,
+        orderTakenPrice: comfortOrderTakenPrice,
+        description: `Оплата только за взятый заказ - ${comfortOrderTakenPrice}₽`,
+        specializationCount: comfortSpecs,
         features: [
           'Бесплатные отклики',
-          'Оплата только при выборе - 500₽',
-          `${standardSpecs === 1 ? 'Одна специализация' : `До ${standardSpecs} специализаций`}`,
+          `Оплата только при выборе - ${comfortOrderTakenPrice}₽`,
+          `${comfortSpecs === 1 ? 'Одна специализация' : `До ${comfortSpecs} специализаций`}`,
           'Доступ к заказам',
         ],
       },

@@ -17,11 +17,15 @@ const DEFAULT_SETTINGS: Record<string, { value: string; section: string }> = {
   minReviewLength:    { value: '10',    section: 'moderation' },
 
   // Тарифы
-  standardPrice:            { value: '0',   section: 'tariffs' },
-  premiumPrice:             { value: '990', section: 'tariffs' },
-  premiumSpecializations:   { value: '3',   section: 'tariffs' },
-  standardSpecializations:  { value: '1',   section: 'tariffs' },
-  trialDays:                { value: '7',   section: 'tariffs' },
+  standardPrice:            { value: '0',    section: 'tariffs' },
+  standardResponsePrice:    { value: '150',  section: 'tariffs' },
+  comfortPrice:             { value: '0',    section: 'tariffs' },
+  comfortOrderTakenPrice:   { value: '500',  section: 'tariffs' },
+  premiumPrice:             { value: '5000', section: 'tariffs' },
+  premiumSpecializations:   { value: '3',    section: 'tariffs' },
+  standardSpecializations:  { value: '1',    section: 'tariffs' },
+  comfortSpecializations:   { value: '1',    section: 'tariffs' },
+  trialDays:                { value: '7',    section: 'tariffs' },
 
   // Email
   emailEnabled: { value: 'true',              section: 'email' },
@@ -94,7 +98,8 @@ export class SettingsService {
   async getPublicSettings(): Promise<Record<string, string>> {
     const publicKeys = [
       'platformName', 'supportEmail', 'supportPhone', 'defaultRegion',
-      'standardPrice', 'premiumPrice', 'premiumSpecializations',
+      'standardPrice', 'standardResponsePrice', 'comfortPrice', 'comfortOrderTakenPrice',
+      'premiumPrice', 'premiumSpecializations', 'comfortSpecializations',
       'standardSpecializations', 'trialDays', 'maxWorkPhotos', 'maxFileSize',
     ];
     
@@ -157,6 +162,16 @@ export class SettingsService {
         await prisma.subscription.updateMany({
           where: { tariffType: 'STANDARD' },
           data: { specializationCount: standardSpecs },
+        });
+      }
+    }
+
+    if (data.comfortSpecializations) {
+      const comfortSpecs = parseInt(data.comfortSpecializations, 10);
+      if (!isNaN(comfortSpecs) && comfortSpecs > 0) {
+        await prisma.subscription.updateMany({
+          where: { tariffType: 'COMFORT' },
+          data: { specializationCount: comfortSpecs },
         });
       }
     }

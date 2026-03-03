@@ -40,9 +40,13 @@ export default function AdminSettingsPage() {
 
   const [tariffSettings, setTariffSettings] = useState({
     standardPrice: '0',
-    premiumPrice: '990',
-    premiumSpecializations: '3',
+    standardResponsePrice: '150',
     standardSpecializations: '1',
+    comfortPrice: '0',
+    comfortOrderTakenPrice: '500',
+    comfortSpecializations: '1',
+    premiumPrice: '5000',
+    premiumSpecializations: '3',
     trialDays: '7',
   });
 
@@ -306,64 +310,142 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="standardPrice">Стандарт — цена (₽/мес)</Label>
-                <Input
-                  id="standardPrice"
-                  type="number"
-                  value={tariffSettings.standardPrice}
-                  onChange={(e) =>
-                    setTariffSettings({ ...tariffSettings, standardPrice: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="premiumPrice">Премиум — цена (₽/мес)</Label>
-                <Input
-                  id="premiumPrice"
-                  type="number"
-                  value={tariffSettings.premiumPrice}
-                  onChange={(e) =>
-                    setTariffSettings({ ...tariffSettings, premiumPrice: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="standardSpecializations">Стандарт — специализаций</Label>
-                <Input
-                  id="standardSpecializations"
-                  type="number"
-                  value={tariffSettings.standardSpecializations}
-                  onChange={(e) =>
-                    setTariffSettings({ ...tariffSettings, standardSpecializations: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="premiumSpecializations">Премиум — специализаций</Label>
-                <Input
-                  id="premiumSpecializations"
-                  type="number"
-                  value={tariffSettings.premiumSpecializations}
-                  onChange={(e) =>
-                    setTariffSettings({ ...tariffSettings, premiumSpecializations: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="trialDays">Пробный период (дней)</Label>
-                <Input
-                  id="trialDays"
-                  type="number"
-                  value={tariffSettings.trialDays}
-                  onChange={(e) =>
-                    setTariffSettings({ ...tariffSettings, trialDays: e.target.value })
-                  }
-                />
+          <CardContent className="space-y-6">
+            {/* Стандарт */}
+            <div>
+              <h4 className="font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+                <Shield className="h-4 w-4 text-gray-500" />
+                Стандарт
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="standardPrice">Подписка (₽/мес)</Label>
+                  <Input
+                    id="standardPrice"
+                    type="number"
+                    value={tariffSettings.standardPrice}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, standardPrice: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="standardResponsePrice">Цена за отклик (₽)</Label>
+                  <Input
+                    id="standardResponsePrice"
+                    type="number"
+                    value={tariffSettings.standardResponsePrice}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, standardResponsePrice: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="standardSpecializations">Специализаций</Label>
+                  <Input
+                    id="standardSpecializations"
+                    type="number"
+                    value={tariffSettings.standardSpecializations}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, standardSpecializations: e.target.value })
+                    }
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Комфорт */}
+            <div>
+              <h4 className="font-semibold text-sm text-blue-700 mb-3 flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-blue-500" />
+                Комфорт
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="comfortPrice">Подписка (₽/мес)</Label>
+                  <Input
+                    id="comfortPrice"
+                    type="number"
+                    value={tariffSettings.comfortPrice}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, comfortPrice: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="comfortOrderTakenPrice">Цена за взятый заказ (₽)</Label>
+                  <Input
+                    id="comfortOrderTakenPrice"
+                    type="number"
+                    value={tariffSettings.comfortOrderTakenPrice}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, comfortOrderTakenPrice: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="comfortSpecializations">Специализаций</Label>
+                  <Input
+                    id="comfortSpecializations"
+                    type="number"
+                    value={tariffSettings.comfortSpecializations}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, comfortSpecializations: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Премиум */}
+            <div>
+              <h4 className="font-semibold text-sm text-amber-700 mb-3 flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-amber-500" />
+                Премиум
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="premiumPrice">Подписка (₽/мес)</Label>
+                  <Input
+                    id="premiumPrice"
+                    type="number"
+                    value={tariffSettings.premiumPrice}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, premiumPrice: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="premiumSpecializations">Специализаций</Label>
+                  <Input
+                    id="premiumSpecializations"
+                    type="number"
+                    value={tariffSettings.premiumSpecializations}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, premiumSpecializations: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Общие */}
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="trialDays">Пробный период (дней)</Label>
+                  <Input
+                    id="trialDays"
+                    type="number"
+                    value={tariffSettings.trialDays}
+                    onChange={(e) =>
+                      setTariffSettings({ ...tariffSettings, trialDays: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
             <SaveButton section="tariffs" data={tariffSettings} />
           </CardContent>
         </Card>
