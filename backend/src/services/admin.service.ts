@@ -551,7 +551,12 @@ export class AdminService {
         take: 50,
       }),
       prisma.transaction.findMany({
-        where: { userId },
+        // TOP_UP исключаем, т.к. пополнения уже приходят из payments
+        // иначе одно пополнение отображается дважды в админской вкладке "Финансы".
+        where: {
+          userId,
+          type: { not: 'TOP_UP' },
+        },
         select: { id: true, amount: true, type: true, description: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
         take: 50,
