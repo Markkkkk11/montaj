@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Shield, Users, Hammer, CreditCard, Eye, Scale, ScrollText, Mail } from 'lucide-react';
+import { ArrowLeft, Shield, Users, Hammer, CreditCard, Eye, Scale, ScrollText, Mail, Banknote } from 'lucide-react';
 
 export default function TermsPage() {
   return (
@@ -161,13 +161,34 @@ export default function TermsPage() {
               </p>
             </section>
 
-            {/* 8. Обратная связь */}
+            {/* 8. Возврат денежных средств */}
+            <section>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Banknote className="h-4 w-4 text-green-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">8. Возврат денежных средств</h3>
+              </div>
+              <div className="text-muted-foreground leading-relaxed space-y-3 pl-12">
+                <p>Возврат денежных средств с баланса осуществляется путём направления заявки на электронную почту.</p>
+                <p>В заявке указать в строке темы: <span className="font-semibold">«Заявка на возврат денежных средств»</span>.</p>
+                <p>В заявке указать точные данные заявителя (ФИО — должны соответствовать данным, как в личном кабинете пользователя), контактный номер телефона, реквизиты карты банка, серия и номер паспорта, дата выдачи, кем выдан.</p>
+                <p>В ответ на заявку придёт уведомление о приёме заявки и присвоят номер.</p>
+                <p>Средства переводятся после идентификации заявителя в течение пяти рабочих дней за вычетом банковской комиссии.</p>
+                <p className="mt-2">
+                  Почта для заявок:{' '}
+                  <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="text-primary hover:underline font-semibold">SVMontaj24@mail.ru</a>
+                </p>
+              </div>
+            </section>
+
+            {/* 9. Обратная связь */}
             <section>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Mail className="h-4 w-4 text-teal-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">8. Обратная связь</h3>
+                <h3 className="text-lg font-bold text-gray-900">9. Обратная связь</h3>
               </div>
               <div className="pl-12 space-y-2">
               <p className="text-muted-foreground">

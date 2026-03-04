@@ -256,7 +256,7 @@ export default function AdminUserEditPage() {
                   />
                 </div>
 
-                {user.subscription?.expiresAt && (
+                {user.subscription?.expiresAt && tariffType !== 'STANDARD' && (
                   <div>
                     <Label>Действует до</Label>
                     <Input

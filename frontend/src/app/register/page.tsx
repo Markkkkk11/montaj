@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
 import { RegisterData } from '@/lib/types';
-import { ArrowLeft, UserPlus, Briefcase, Wrench, ChevronRight, ScrollText, Shield, Users, Hammer, CreditCard, Eye, Scale, Mail, X } from 'lucide-react';
+import { ArrowLeft, UserPlus, Briefcase, Wrench, ChevronRight, ScrollText, Shield, Users, Hammer, CreditCard, Eye, Scale, Mail, Banknote, X } from 'lucide-react';
 
 export default function RegisterPage() {
   return (
@@ -323,7 +323,7 @@ function RegisterContent() {
 
                 {/* Модальное окно с правилами */}
                 <Dialog open={showRules} onOpenChange={setShowRules}>
-                  <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0">
+                  <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 [&>button:last-child]:hidden">
                     {/* Шапка */}
                     <div className="bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-5 text-white relative flex-shrink-0">
                       <button
@@ -469,13 +469,34 @@ function RegisterContent() {
                         </p>
                       </section>
 
-                      {/* 8. Обратная связь */}
+                      {/* 8. Возврат денежных средств */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Banknote className="h-3.5 w-3.5 text-green-600" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">8. Возврат денежных средств</h3>
+                        </div>
+                        <div className="text-sm text-gray-600 leading-relaxed space-y-2 pl-9">
+                          <p>Возврат денежных средств с баланса осуществляется путём направления заявки на электронную почту.</p>
+                          <p>В заявке указать в строке темы: <span className="font-semibold">«Заявка на возврат денежных средств»</span>.</p>
+                          <p>В заявке указать точные данные заявителя (ФИО — должны соответствовать данным, как в личном кабинете пользователя), контактный номер телефона, реквизиты карты банка, серия и номер паспорта, дата выдачи, кем выдан.</p>
+                          <p>В ответ на заявку придёт уведомление о приёме заявки и присвоят номер.</p>
+                          <p>Средства переводятся после идентификации заявителя в течение пяти рабочих дней за вычетом банковской комиссии.</p>
+                          <p>
+                            Почта для заявок:{' '}
+                            <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="text-primary hover:underline font-semibold">SVMontaj24@mail.ru</a>
+                          </p>
+                        </div>
+                      </section>
+
+                      {/* 9. Обратная связь */}
                       <section>
                         <div className="flex items-center gap-2.5 mb-2">
                           <div className="w-7 h-7 bg-teal-50 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Mail className="h-3.5 w-3.5 text-teal-600" />
                           </div>
-                          <h3 className="text-sm font-bold text-gray-900">8. Обратная связь</h3>
+                          <h3 className="text-sm font-bold text-gray-900">9. Обратная связь</h3>
                         </div>
                         <div className="pl-9 space-y-1.5">
                           <p className="text-sm text-gray-600">

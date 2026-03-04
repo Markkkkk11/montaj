@@ -14,8 +14,10 @@ export class SubscriptionService {
       return null;
     }
 
-    // Проверить, не истекла ли подписка
-    const isActive = new Date() < new Date(subscription.expiresAt);
+    // Стандарт — бессрочный, остальные — проверяем дату
+    const isActive = subscription.tariffType === 'STANDARD'
+      ? true
+      : new Date() < new Date(subscription.expiresAt);
 
     return {
       ...subscription,
@@ -40,7 +42,7 @@ export class SubscriptionService {
     if (!subscription || !subscription.isActive) {
       return {
         tariffType: 'STANDARD',
-        isActive: false,
+        isActive: true, // Стандарт — бессрочный
         expiresAt: null,
         specializationCount: 1,
       };
