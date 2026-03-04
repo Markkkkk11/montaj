@@ -126,7 +126,7 @@ export class SMSService {
       },
       body: JSON.stringify({
         to: phone,
-        from: 'SVMONTAJ.ru',
+        // from: 'SVMONTAJ.ru', // TODO: раскомментировать после одобрения имени отправителя в GreenSMS
         txt: `Ваш код подтверждения: ${code}`,
       }),
     });
@@ -158,7 +158,7 @@ export class SMSService {
         },
         body: JSON.stringify({
           to: cleanPhone,
-          from: 'SVMONTAJ.ru',
+          // from: 'SVMONTAJ.ru', // TODO: раскомментировать после одобрения имени отправителя в GreenSMS
           txt: message,
         }),
       });
