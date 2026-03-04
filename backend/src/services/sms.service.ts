@@ -23,26 +23,26 @@ export class SMSService {
     const cleanPhone = phone.replace(/\D/g, '');
     
     let code: string;
-    let method: 'call' | 'sms' = 'sms';
+    let method: 'call' | 'sms' = 'call';
 
     if (this.enabled && this.token) {
       try {
-        // Основной метод — SMS через GreenSMS (from: SVMONTAJ.ru)
-        code = this.generateCode();
-        await this.sendSMSVerification(cleanPhone, code);
-        method = 'sms';
-        console.log(`📱 SMS верификация отправлена на ${cleanPhone}`);
-      } catch (smsError: any) {
-        console.warn(`⚠️ SMS не удалось: ${smsError.message}, пробуем звонок...`);
+        // Основной метод — звонок (SMS пока в тестовом режиме GreenSMS)
+        const callResult = await this.sendCallVerification(cleanPhone);
+        code = callResult.code;
+        method = 'call';
+        console.log(`📞 Верификация звонком отправлена на ${cleanPhone}`);
+      } catch (callError: any) {
+        console.warn(`⚠️ Звонок не удался: ${callError.message}, пробуем SMS...`);
 
         try {
-          // Фоллбэк на звонок
-          const callResult = await this.sendCallVerification(cleanPhone);
-          code = callResult.code;
-          method = 'call';
-          console.log(`📞 Верификация звонком отправлена на ${cleanPhone}`);
-        } catch (callError: any) {
-          console.error(`❌ Звонок тоже не удался: ${callError.message}`);
+          // Фоллбэк на SMS
+          code = this.generateCode();
+          await this.sendSMSVerification(cleanPhone, code);
+          method = 'sms';
+          console.log(`📱 SMS верификация отправлена на ${cleanPhone}`);
+        } catch (smsError: any) {
+          console.error(`❌ SMS тоже не удалось: ${smsError.message}`);
           // Фоллбэк на заглушку в dev
           code = this.generateCode();
           method = 'sms';
