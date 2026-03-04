@@ -413,7 +413,7 @@ export default function ExecutorDashboard() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-bold text-sm sm:text-base truncate">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</h3>
-                  {subscription?.expiresAt && (
+                  {subscription?.expiresAt && subscription.tariffType !== 'STANDARD' && (
                     <p className="text-xs text-muted-foreground">
                       до {new Date(subscription.expiresAt).toLocaleDateString('ru-RU')}
                     </p>

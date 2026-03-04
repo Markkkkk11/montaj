@@ -71,7 +71,7 @@ export default function CurrentSubscription() {
             </div>
           </div>
 
-          {tariff.expiresAt && (
+          {tariff.expiresAt && tariff.tariffType !== 'STANDARD' && (
             <div className="flex items-start gap-3 p-3 border rounded-lg">
               <Calendar className="w-5 h-5 text-gray-600 mt-0.5" />
               <div>

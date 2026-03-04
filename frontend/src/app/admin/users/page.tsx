@@ -429,7 +429,9 @@ export default function AdminUsersPage() {
                                           <div className="flex items-center gap-2 mt-1">
                                             <span className="text-muted-foreground">Тариф:</span>
                                             <span className="font-medium">{user.subscription.tariffType}</span>
-                                            <span className="text-xs text-muted-foreground">до {new Date(user.subscription.expiresAt).toLocaleDateString('ru-RU')}</span>
+                                            {user.subscription.tariffType !== 'STANDARD' && (
+                                              <span className="text-xs text-muted-foreground">до {new Date(user.subscription.expiresAt).toLocaleDateString('ru-RU')}</span>
+                                            )}
                                           </div>
                                         )}
                                       </div>
