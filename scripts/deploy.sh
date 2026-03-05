@@ -35,8 +35,6 @@ npm run build
 echo "📦 Обновление фронтенда..."
 cd "$APP_DIR/frontend"
 npm install
-# Next.js иногда падает на rename внутри .next при инкрементальном артефакте,
-# поэтому перед сборкой очищаем build-кэш полностью.
 rm -rf .next
 npm run build
 
