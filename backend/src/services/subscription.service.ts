@@ -69,8 +69,10 @@ export class SubscriptionService {
 
     const tariffSettings = await settingsService.getBySection('tariffs');
     const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
-    const specializationCount = tariffType === 'PREMIUM' ? premiumSpecs : standardSpecs;
+    const specCounts: Record<string, number> = { STANDARD: standardSpecs, COMFORT: comfortSpecs, PREMIUM: premiumSpecs };
+    const specializationCount = specCounts[tariffType] || standardSpecs;
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
@@ -121,7 +123,32 @@ export class SubscriptionService {
       },
     });
 
+    // Обрезаем сохранённые специализации до нового лимита
+    await this.trimSpecializations(userId, standardSpecs);
+
     return subscription;
+  }
+
+  /**
+   * Обрезать специализации профиля исполнителя до лимита тарифа
+   */
+  private async trimSpecializations(userId: string, maxSpecs: number) {
+    try {
+      const profile = await prisma.executorProfile.findUnique({
+        where: { userId },
+      });
+
+      if (profile && (profile.specializations as string[])?.length > maxSpecs) {
+        const trimmed = (profile.specializations as string[]).slice(0, maxSpecs);
+        await prisma.executorProfile.update({
+          where: { userId },
+          data: { specializations: trimmed },
+        });
+        console.log(`✂️ Специализации пользователя ${userId} обрезаны до ${maxSpecs}: ${trimmed.join(', ')}`);
+      }
+    } catch (err) {
+      console.error('Ошибка обрезки специализаций:', err);
+    }
   }
 
   /**

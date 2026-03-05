@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import { UpdateProfileData, UpdateExecutorProfileData } from '../types';
 import settingsService from './settings.service';
+import subscriptionService from './subscription.service';
 
 export class UserService {
   /**
@@ -85,6 +86,13 @@ export class UserService {
     if (data.specializations !== undefined) {
       const currentSpecializations = user.executorProfile.specializations || [];
       const nextSpecializations = data.specializations || [];
+
+      // Проверяем лимит специализаций по текущему тарифу
+      const currentTariff = await subscriptionService.getCurrentTariff(userId);
+      const maxSpecs = currentTariff.specializationCount || 1;
+      if (nextSpecializations.length > maxSpecs) {
+        throw new Error(`На вашем тарифе доступно не более ${maxSpecs} специализаций`);
+      }
 
       const isChanged =
         currentSpecializations.length !== nextSpecializations.length ||

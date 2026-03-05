@@ -435,7 +435,7 @@ export default function ExecutorDashboard() {
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Специализации</p>
                 <p className="text-lg sm:text-xl font-extrabold text-violet-600">
-                  {subscription?.tariffType === 'PREMIUM' ? `до ${subscription.specializationCount}` : '1'}
+                  {subscription ? `до ${subscription.specializationCount || 1}` : '1'}
                 </p>
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">

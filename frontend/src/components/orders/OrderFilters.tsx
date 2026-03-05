@@ -31,14 +31,14 @@ export function OrderFilters({ onApply, onSpecializationsSaved, initialFilters =
 
   const [selectedSpecs, setSelectedSpecs] = useState<Specialization[]>([]);
   const [isSavingSpecs, setIsSavingSpecs] = useState(false);
-  const [maxSpecializations, setMaxSpecializations] = useState(3);
+  const [maxSpecializations, setMaxSpecializations] = useState(1);
 
   useEffect(() => {
     if (user?.executorProfile) {
       setSelectedSpecs(user.executorProfile.specializations || []);
     }
     if (user?.subscription) {
-      setMaxSpecializations(user.subscription.specializationCount || 3);
+      setMaxSpecializations(user.subscription.specializationCount || 1);
     }
   }, [user]);
 

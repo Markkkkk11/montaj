@@ -4,6 +4,7 @@ import { generateToken } from '../utils/jwt';
 import { RegisterData, LoginData } from '../types';
 import smsService from './sms.service';
 import settingsService from './settings.service';
+import subscriptionService from './subscription.service';
 
 export class AuthService {
   /**
@@ -174,6 +175,16 @@ export class AuthService {
       throw new Error('Ваш профиль не прошёл модерацию');
     }
 
+    // Проверяем срок подписки: если истекла, переводим на Standard
+    if (user.subscription && user.subscription.tariffType !== 'STANDARD') {
+      const isExpired = new Date() >= new Date(user.subscription.expiresAt);
+      if (isExpired) {
+        console.log(`⏰ Подписка ${user.subscription.tariffType} истекла у пользователя ${user.id}, переводим на Стандарт`);
+        const updatedSub = await subscriptionService.changeTariff(user.id, 'STANDARD');
+        user.subscription = updatedSub as any;
+      }
+    }
+
     // Генерируем JWT токен
     const token = generateToken({
       userId: user.id,
@@ -185,9 +196,10 @@ export class AuthService {
 
   /**
    * Получить текущего пользователя по ID
+   * Проверяет срок подписки и автоматически переводит на Стандарт при истечении.
    */
   async getCurrentUser(userId: string): Promise<any | null> {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
         executorProfile: true,
@@ -195,6 +207,20 @@ export class AuthService {
         subscription: true,
       },
     });
+
+    if (!user) return null;
+
+    // Проверяем срок подписки: если истекла, переводим на Standard
+    if (user.subscription && user.subscription.tariffType !== 'STANDARD') {
+      const isExpired = new Date() >= new Date(user.subscription.expiresAt);
+      if (isExpired) {
+        console.log(`⏰ Подписка ${user.subscription.tariffType} истекла у пользователя ${userId}, переводим на Стандарт`);
+        const updatedSub = await subscriptionService.changeTariff(userId, 'STANDARD');
+        user.subscription = updatedSub as any;
+      }
+    }
+
+    return user;
   }
 
   /**

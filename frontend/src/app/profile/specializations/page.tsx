@@ -20,14 +20,14 @@ export default function SpecializationsPage() {
 
   const [selected, setSelected] = useState<Specialization[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [maxSpecializations, setMaxSpecializations] = useState(3);
+  const [maxSpecializations, setMaxSpecializations] = useState(1);
 
   useEffect(() => {
     if (!isHydrated) return;
     if (!user) { router.push('/login'); return; }
     if (user.role !== 'EXECUTOR') { router.push('/'); return; }
     if (user.executorProfile) setSelected(user.executorProfile.specializations);
-    if (user.subscription) setMaxSpecializations(user.subscription.specializationCount || 3);
+    if (user.subscription) setMaxSpecializations(user.subscription.specializationCount || 1);
   }, [user, router, isHydrated]);
 
   const handleToggle = (spec: Specialization) => {
