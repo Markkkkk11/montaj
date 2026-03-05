@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
-import { Search, Edit, Trash2, ChevronDown, ChevronUp, Phone, Mail, MapPin, Calendar, Briefcase, FileText, MessageSquare, User as UserIcon, Users, Hammer, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Search, Edit, Trash2, ChevronDown, ChevronUp, Phone, Mail, MapPin, Calendar, Briefcase, FileText, MessageSquare, User as UserIcon, Users, Hammer, DollarSign, ArrowUpRight, ArrowDownRight, ArrowUpDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -96,6 +96,7 @@ export default function AdminUsersPage() {
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [activityData, setActivityData] = useState<{ [key: string]: UserActivity }>({});
   const [loadingActivity, setLoadingActivity] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>('default');
 
   useEffect(() => {
     loadUsers();
@@ -150,14 +151,33 @@ export default function AdminUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter((user) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      user.fullName.toLowerCase().includes(query) ||
-      user.phone.includes(query) ||
-      user.email?.toLowerCase().includes(query)
-    );
-  });
+  const filteredUsers = users
+    .filter((user) => {
+      const query = searchQuery.toLowerCase();
+      return (
+        user.fullName.toLowerCase().includes(query) ||
+        user.phone.includes(query) ||
+        user.email?.toLowerCase().includes(query)
+      );
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'orders_desc':
+          return (b.ordersCount ?? 0) - (a.ordersCount ?? 0);
+        case 'orders_asc':
+          return (a.ordersCount ?? 0) - (b.ordersCount ?? 0);
+        case 'rating_desc':
+          return b.rating - a.rating;
+        case 'rating_asc':
+          return a.rating - b.rating;
+        case 'date_desc':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'date_asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        default:
+          return 0;
+      }
+    });
 
   const getRoleBadge = (role: string) => {
     const colors: any = {
@@ -247,7 +267,7 @@ export default function AdminUsersPage() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -269,6 +289,22 @@ export default function AdminUsersPage() {
                 <SelectItem value="ACTIVE">Активные</SelectItem>
                 <SelectItem value="PENDING">На модерации</SelectItem>
                 <SelectItem value="BLOCKED">Заблокированные</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger>
+                <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Сортировка" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">По умолчанию</SelectItem>
+                <SelectItem value="orders_desc">Заказы ↓ (больше)</SelectItem>
+                <SelectItem value="orders_asc">Заказы ↑ (меньше)</SelectItem>
+                <SelectItem value="rating_desc">Рейтинг ↓ (выше)</SelectItem>
+                <SelectItem value="rating_asc">Рейтинг ↑ (ниже)</SelectItem>
+                <SelectItem value="date_desc">Дата рег. ↓ (новые)</SelectItem>
+                <SelectItem value="date_asc">Дата рег. ↑ (старые)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -349,12 +385,10 @@ export default function AdminUsersPage() {
                         </span>
                       </TableCell>
                     <TableCell>
-                      {user.role === 'EXECUTOR' && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-yellow-500">★</span>
-                          <span>{user.rating.toFixed(1)}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1">
+                        <span className="text-yellow-500">★</span>
+                        <span>{user.rating.toFixed(1)}</span>
+                      </div>
                     </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(user.createdAt).toLocaleDateString('ru-RU')}
