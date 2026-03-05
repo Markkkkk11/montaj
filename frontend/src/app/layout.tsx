@@ -71,7 +71,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" className="overflow-x-hidden">
-      <head>
+      <body className={`${inter.className} overflow-x-hidden`}>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
         <Script id="yandex-metrika" strategy="afterInteractive">
           {`
             (function(m,e,t,r,i,k,a){
@@ -89,12 +93,6 @@ export default function RootLayout({
             <img src="https://mc.yandex.ru/watch/107153178" style={{position: 'absolute', left: '-9999px'}} alt="" />
           </div>
         </noscript>
-      </head>
-      <body className={`${inter.className} overflow-x-hidden`}>
-        <Providers>
-          {children}
-          <Toaster />
-        </Providers>
       </body>
     </html>
   );
