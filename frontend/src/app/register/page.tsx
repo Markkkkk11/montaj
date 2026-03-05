@@ -410,7 +410,7 @@ function RegisterContent() {
                           </div>
                           <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                             <p className="text-sm font-semibold text-blue-800">Комфорт — 500 ₽/мес</p>
-                            <p className="text-xs text-blue-600/70 mt-0.5">Бесплатные отклики. 500 ₽ списывается при выборе заказчиком. 1 специализация.</p>
+                            <p className="text-xs text-blue-600/70 mt-0.5">Бесплатные отклики. 500 ₽ списывается при выборе заказчиком. 1 специализация (свободный выбор).</p>
                           </div>
                           <div className="p-3 bg-violet-50/50 rounded-xl border border-violet-100">
                             <p className="text-sm font-semibold text-violet-800">Премиум</p>
@@ -483,6 +483,7 @@ function RegisterContent() {
                           <p>В заявке указать точные данные заявителя (ФИО — должны соответствовать данным, как в личном кабинете пользователя), контактный номер телефона, реквизиты карты банка, серия и номер паспорта, дата выдачи, кем выдан.</p>
                           <p>В ответ на заявку придёт уведомление о приёме заявки и присвоят номер.</p>
                           <p>Средства переводятся после идентификации заявителя в течение пяти рабочих дней за вычетом банковской комиссии.</p>
+                          <p>Cумма средств на возврат не может превышать сумму текущего баланса.</p>
                           <p>
                             Почта для заявок:{' '}
                             <a href="https://e.mail.ru/compose/?to=SVMontaj24@mail.ru" className="text-primary hover:underline font-semibold">SVMontaj24@mail.ru</a>
