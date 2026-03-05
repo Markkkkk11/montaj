@@ -14,7 +14,7 @@ export const config = {
   greenSms: {
     token: process.env.GREENSMS_TOKEN || '',
     enabled: process.env.GREENSMS_ENABLED === 'true',
-    baseUrl: 'https://api.greensms.ru',
+    baseUrl: process.env.GREENSMS_BASE_URL || 'https://api3.greensms.ru',
   },
 
   // SMSC.ru (legacy)

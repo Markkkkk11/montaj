@@ -15,34 +15,33 @@ export class SMSService {
   private enabled = config.greenSms.enabled;
 
   /**
-   * Отправка кода верификации через GreenSMS (звонок — дешевле)
-   * Метод call/send — звонит на номер, код = последние 4 цифры вызывающего номера
+   * Отправка кода верификации через GreenSMS (основной канал — SMS)
    */
   async sendVerificationCode(phone: string): Promise<void> {
     // Нормализуем телефон: оставляем только цифры, убираем +
     const cleanPhone = phone.replace(/\D/g, '');
     
     let code: string;
-    let method: 'call' | 'sms' = 'call';
+    let method: 'call' | 'sms' = 'sms';
 
     if (this.enabled && this.token) {
       try {
-        // Основной метод — звонок (SMS пока в тестовом режиме GreenSMS)
-        const callResult = await this.sendCallVerification(cleanPhone);
-        code = callResult.code;
-        method = 'call';
-        console.log(`📞 Верификация звонком отправлена на ${cleanPhone}`);
-      } catch (callError: any) {
-        console.warn(`⚠️ Звонок не удался: ${callError.message}, пробуем SMS...`);
+        // Основной метод — SMS с from=SVMONTAJ.ru и фиксированным шаблоном текста.
+        code = this.generateCode();
+        await this.sendSMSVerification(cleanPhone, code);
+        method = 'sms';
+        console.log(`📱 SMS верификация отправлена на ${cleanPhone}`);
+      } catch (smsError: any) {
+        console.warn(`⚠️ SMS не удалось: ${smsError.message}, пробуем звонок...`);
 
         try {
-          // Фоллбэк на SMS
-          code = this.generateCode();
-          await this.sendSMSVerification(cleanPhone, code);
-          method = 'sms';
-          console.log(`📱 SMS верификация отправлена на ${cleanPhone}`);
-        } catch (smsError: any) {
-          console.error(`❌ SMS тоже не удалось: ${smsError.message}`);
+          // Фоллбэк на звонок
+          const callResult = await this.sendCallVerification(cleanPhone);
+          code = callResult.code;
+          method = 'call';
+          console.log(`📞 Верификация звонком отправлена на ${cleanPhone}`);
+        } catch (callError: any) {
+          console.error(`❌ Звонок тоже не удался: ${callError.message}`);
           // Фоллбэк на заглушку в dev
           code = this.generateCode();
           method = 'sms';
@@ -126,7 +125,7 @@ export class SMSService {
       },
       body: JSON.stringify({
         to: phone,
-        // from: 'SVMONTAJ.ru', // TODO: раскомментировать после одобрения имени отправителя в GreenSMS
+        from: 'SVMONTAJ.ru',
         txt: `Ваш код подтверждения: ${code}`,
       }),
     });
