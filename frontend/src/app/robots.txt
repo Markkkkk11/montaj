@@ -1,20 +1,23 @@
-# Robots.txt для Montaj Platform
+# Robots.txt для SVMontaj
 
 User-agent: *
 Allow: /
 Allow: /orders
-Allow: /login
 Allow: /register
+Allow: /terms
 
-# Закрыть приватные страницы
+# Закрыть приватные и служебные страницы
 Disallow: /admin
 Disallow: /profile
 Disallow: /notifications
 Disallow: /api
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /executor
+Disallow: /customer
 
 # Sitemap
-Sitemap: https://your-domain.com/sitemap.xml
+Sitemap: https://svmontaj.ru/sitemap.xml
 
 # Crawler settings
 Crawl-delay: 1
-
