@@ -15,7 +15,7 @@ export class SMSService {
   private enabled = config.greenSms.enabled;
 
   /**
-   * Отправка кода верификации через GreenSMS (основной канал — SMS)
+   * Отправка кода верификации через GreenSMS (SMS через api3.greensms.ru)
    */
   async sendVerificationCode(phone: string): Promise<void> {
     // Нормализуем телефон: оставляем только цифры, убираем +
@@ -26,7 +26,7 @@ export class SMSService {
 
     if (this.enabled && this.token) {
       try {
-        // Основной метод — SMS с from=SVMONTAJ.ru и фиксированным шаблоном текста.
+        // Основной метод — SMS через api3.greensms.ru (from: SVMONTAJ.ru)
         code = this.generateCode();
         await this.sendSMSVerification(cleanPhone, code);
         method = 'sms';
@@ -157,7 +157,7 @@ export class SMSService {
         },
         body: JSON.stringify({
           to: cleanPhone,
-          // from: 'SVMONTAJ.ru', // TODO: раскомментировать после одобрения имени отправителя в GreenSMS
+          from: 'SVMONTAJ.ru',
           txt: message,
         }),
       });
