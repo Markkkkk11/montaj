@@ -1,4 +1,5 @@
 import prisma from '../config/database';
+import { Specialization } from '@prisma/client';
 import settingsService from './settings.service';
 
 export class SubscriptionService {
@@ -138,8 +139,8 @@ export class SubscriptionService {
         where: { userId },
       });
 
-      if (profile && (profile.specializations as string[])?.length > maxSpecs) {
-        const trimmed = (profile.specializations as string[]).slice(0, maxSpecs);
+      if (profile && (profile.specializations as Specialization[])?.length > maxSpecs) {
+        const trimmed = (profile.specializations as Specialization[]).slice(0, maxSpecs);
         await prisma.executorProfile.update({
           where: { userId },
           data: { specializations: trimmed },
