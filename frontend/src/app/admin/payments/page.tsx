@@ -49,7 +49,7 @@ export default function AdminPaymentsPage() {
   const loadPayments = async () => {
     try {
       setLoading(true);
-      const params: any = { page, limit: 30 };
+      const params: any = { page, limit: 10000 };
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
 

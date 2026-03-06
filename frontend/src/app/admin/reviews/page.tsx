@@ -78,7 +78,7 @@ export default function AdminReviewsPage() {
   const loadReviews = async () => {
     try {
       setLoading(true);
-      const params: any = { page, limit: 20 };
+      const params: any = { page, limit: 10000 };
       if (statusFilter !== 'all') params.status = statusFilter;
 
       const data = await adminApi.getReviews(params);
