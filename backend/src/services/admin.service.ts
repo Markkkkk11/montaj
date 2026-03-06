@@ -201,13 +201,32 @@ export class AdminService {
   /**
    * Получить заказы для модерации
    */
-  async getOrdersForModeration(page: number = 1, limit: number = 20, status?: string) {
+  async getOrdersForModeration(
+    page: number = 1,
+    limit: number = 20,
+    status?: string,
+    region?: string,
+    category?: string,
+    sortBy: string = 'createdAt',
+    sortOrder: string = 'desc',
+  ) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
     if (status) {
       where.status = status;
     }
+    if (region) {
+      where.region = region;
+    }
+    if (category) {
+      where.category = category;
+    }
+
+    // Определяем поле сортировки
+    const allowedSortFields = ['createdAt', 'updatedAt', 'budget'];
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const order = sortOrder === 'asc' ? 'asc' : 'desc';
 
     const [orders, total] = await Promise.all([
       prisma.order.findMany({
@@ -239,7 +258,7 @@ export class AdminService {
           },
         },
         orderBy: {
-          createdAt: 'desc',
+          [sortField]: order,
         },
         skip,
         take: limit,

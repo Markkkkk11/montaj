@@ -74,11 +74,19 @@ export class AdminController {
    */
   async getOrdersForModeration(req: AuthRequest, res: Response) {
     try {
-      const { status } = req.query;
+      const { status, region, category, sortBy, sortOrder } = req.query;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const result = await adminService.getOrdersForModeration(page, limit, status as string);
+      const result = await adminService.getOrdersForModeration(
+        page,
+        limit,
+        status as string,
+        region as string,
+        category as string,
+        (sortBy as string) || 'createdAt',
+        (sortOrder as string) || 'desc',
+      );
 
       res.json({
         success: true,

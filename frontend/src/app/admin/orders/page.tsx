@@ -21,8 +21,14 @@ import {
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
-import { Search, Eye, Trash2 } from 'lucide-react';
+import { Search, Eye, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+
+const AVAILABLE_REGIONS = [
+  'Москва и обл.',
+  'Санкт-Петербург и обл.',
+  'Краснодар',
+];
 
 interface Order {
   id: string;
@@ -49,16 +55,25 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [regionFilter, setRegionFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<string>('desc');
 
   useEffect(() => {
     loadOrders();
-  }, [statusFilter]);
+  }, [statusFilter, regionFilter, categoryFilter, sortBy, sortOrder]);
 
   const loadOrders = async () => {
     try {
       setLoading(true);
-      const params: any = {};
+      const params: any = {
+        sortBy,
+        sortOrder,
+      };
       if (statusFilter !== 'all') params.status = statusFilter;
+      if (regionFilter !== 'all') params.region = regionFilter;
+      if (categoryFilter !== 'all') params.category = categoryFilter;
 
       const data = await adminApi.getOrders(params);
       setOrders(data.orders || data);
@@ -81,8 +96,13 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+  };
+
   const filteredOrders = orders.filter((order) => {
     const query = searchQuery.toLowerCase();
+    if (!query) return true;
     const categoryLabel = (SPECIALIZATION_LABELS[order.category] || order.category).toLowerCase();
     return (
       order.title.toLowerCase().includes(query) ||
@@ -95,6 +115,7 @@ export default function AdminOrdersPage() {
 
   const getStatusBadge = (status: string) => {
     const colors: any = {
+      PENDING: 'bg-orange-100 text-orange-800',
       PUBLISHED: 'bg-blue-100 text-blue-800',
       IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
       COMPLETED: 'bg-green-100 text-green-800',
@@ -106,6 +127,7 @@ export default function AdminOrdersPage() {
 
   const getStatusLabel = (status: string) => {
     const labels: any = {
+      PENDING: 'На модерации',
       PUBLISHED: 'Опубликован',
       IN_PROGRESS: 'В работе',
       COMPLETED: 'Завершен',
@@ -113,6 +135,11 @@ export default function AdminOrdersPage() {
       ARCHIVED: 'Архивирован',
     };
     return labels[status] || status;
+  };
+
+  const SortIcon = () => {
+    if (sortOrder === 'desc') return <ArrowDown className="h-3 w-3" />;
+    return <ArrowUp className="h-3 w-3" />;
   };
 
   return (
@@ -127,12 +154,13 @@ export default function AdminOrdersPage() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Поиск */}
+            <div className="md:col-span-2 lg:col-span-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Поиск по названию, заказчику, региону..."
+                  placeholder="Поиск по названию, заказчику, региону, номеру..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -140,19 +168,73 @@ export default function AdminOrdersPage() {
               </div>
             </div>
 
+            {/* Статус */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Статус" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="PUBLISHED">Опубликованные</SelectItem>
-                <SelectItem value="IN_PROGRESS">В работе</SelectItem>
-                <SelectItem value="COMPLETED">Завершенные</SelectItem>
-                <SelectItem value="CANCELLED">Отмененные</SelectItem>
-                <SelectItem value="ARCHIVED">Архивированные</SelectItem>
+                <SelectItem value="PENDING">🟠 На модерации</SelectItem>
+                <SelectItem value="PUBLISHED">🔵 Опубликованные</SelectItem>
+                <SelectItem value="IN_PROGRESS">🟡 В работе</SelectItem>
+                <SelectItem value="COMPLETED">🟢 Завершенные</SelectItem>
+                <SelectItem value="CANCELLED">🔴 Отмененные</SelectItem>
+                <SelectItem value="ARCHIVED">⚪ Архивированные</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Регион */}
+            <Select value={regionFilter} onValueChange={setRegionFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Регион" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все регионы</SelectItem>
+                {AVAILABLE_REGIONS.map((region) => (
+                  <SelectItem key={region} value={region}>
+                    {region}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Категория */}
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Категория" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все категории</SelectItem>
+                {Object.entries(SPECIALIZATION_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Сортировка */}
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Сортировка" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="createdAt">По дате создания</SelectItem>
+                  <SelectItem value="updatedAt">По дате обновления</SelectItem>
+                  <SelectItem value="budget">По бюджету</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleSortOrder}
+                title={sortOrder === 'desc' ? 'Сначала новые' : 'Сначала старые'}
+              >
+                <SortIcon />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -160,11 +242,26 @@ export default function AdminOrdersPage() {
       {/* Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Заказы ({filteredOrders.length})</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Заказы ({filteredOrders.length})
+            {sortOrder === 'desc' ? (
+              <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+                <ArrowDown className="h-3 w-3" /> новые сначала
+              </span>
+            ) : (
+              <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+                <ArrowUp className="h-3 w-3" /> старые сначала
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8">Загрузка...</div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Заказы не найдены
+            </div>
           ) : (
             <div className="overflow-x-auto -mx-6">
             <Table>
@@ -178,13 +275,28 @@ export default function AdminOrdersPage() {
                   <TableHead>Заказчик</TableHead>
                   <TableHead>Исполнитель</TableHead>
                   <TableHead>Статус</TableHead>
-                  <TableHead>Дата создания</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none hover:text-primary transition-colors"
+                    onClick={() => {
+                      if (sortBy === 'createdAt') {
+                        toggleSortOrder();
+                      } else {
+                        setSortBy('createdAt');
+                        setSortOrder('desc');
+                      }
+                    }}
+                  >
+                    <span className="flex items-center gap-1">
+                      Дата создания
+                      {sortBy === 'createdAt' ? <SortIcon /> : <ArrowUpDown className="h-3 w-3 opacity-30" />}
+                    </span>
+                  </TableHead>
                   <TableHead>Действия</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
+                  <TableRow key={order.id} className={order.status === 'PENDING' ? 'bg-orange-50/50' : ''}>
                     <TableCell className="font-mono text-sm font-bold text-primary">
                       {order.orderNumber ? `#${order.orderNumber}` : '—'}
                     </TableCell>
@@ -217,7 +329,7 @@ export default function AdminOrdersPage() {
                         {getStatusLabel(order.status)}
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       {new Date(order.createdAt).toLocaleDateString('ru-RU')}
                     </TableCell>
                     <TableCell>
@@ -249,4 +361,3 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
-

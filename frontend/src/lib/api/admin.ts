@@ -72,7 +72,7 @@ export const adminApi = {
   },
 
   // Заказы
-  async getOrders(params?: { page?: number; limit?: number; status?: string }) {
+  async getOrders(params?: { page?: number; limit?: number; status?: string; region?: string; category?: string; sortBy?: string; sortOrder?: string }) {
     const { data } = await api.get('/admin/orders', { params });
     return data;
   },
