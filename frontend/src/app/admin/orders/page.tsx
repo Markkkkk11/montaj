@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
-import { Search, Eye, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Eye, Trash2, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const AVAILABLE_REGIONS = [
@@ -82,6 +82,28 @@ export default function AdminOrdersPage() {
       console.error('Failed to load orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApproveOrder = async (orderId: string) => {
+    if (!confirm('Одобрить и опубликовать этот заказ?')) {
+      return;
+    }
+    try {
+      await adminApi.moderateOrder(orderId, 'APPROVE');
+      loadOrders();
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Ошибка одобрения заказа');
+    }
+  };
+
+  const handleRejectOrder = async (orderId: string) => {
+    const reason = prompt('Укажите причину отклонения (необязательно):');
+    try {
+      await adminApi.moderateOrder(orderId, 'REJECT', reason || undefined);
+      loadOrders();
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Ошибка отклонения заказа');
     }
   };
 
@@ -334,11 +356,32 @@ export default function AdminOrdersPage() {
                       {new Date(order.createdAt).toLocaleDateString('ru-RU')}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
+                        {order.status === 'PENDING' && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleApproveOrder(order.id)}
+                              title="Одобрить"
+                            >
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRejectOrder(order.id)}
+                              title="Отклонить"
+                            >
+                              <XCircle className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => router.push(`/orders/${order.id}`)}
+                          title="Просмотр"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -346,6 +389,7 @@ export default function AdminOrdersPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteOrder(order.id)}
+                          title="Удалить"
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>

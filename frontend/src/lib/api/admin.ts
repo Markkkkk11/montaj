@@ -92,6 +92,11 @@ export const adminApi = {
     return data;
   },
 
+  async moderateOrder(orderId: string, action: 'APPROVE' | 'REJECT' | 'BLOCK', reason?: string) {
+    const { data } = await api.post(`/admin/orders/${orderId}/moderate`, { action, reason });
+    return data;
+  },
+
   // Отзывы (модерация)
   async getReviews(params?: { page?: number; limit?: number; status?: string }) {
     const { data } = await api.get('/admin/reviews', { params });
