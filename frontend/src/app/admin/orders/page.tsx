@@ -70,6 +70,7 @@ export default function AdminOrdersPage() {
       const params: any = {
         sortBy,
         sortOrder,
+        limit: 10000,
       };
       if (statusFilter !== 'all') params.status = statusFilter;
       if (regionFilter !== 'all') params.region = regionFilter;
