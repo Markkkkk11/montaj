@@ -611,13 +611,14 @@ export class OrderService {
       throw new Error('Можно отказаться только от активных заказов');
     }
 
-    // Возвращаем заказ в статус PUBLISHED
+    // Возвращаем заказ в статус PUBLISHED (обновляем publishedAt для корректного таймера 72ч)
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
         status: 'PUBLISHED',
         executorId: null,
         workStartedAt: null,
+        publishedAt: new Date(),
       },
       include: {
         customer: true,
@@ -974,13 +975,14 @@ export class OrderService {
     }
 
     for (const order of staleOrders) {
-      // Возвращаем заказ в PUBLISHED
+      // Возвращаем заказ в PUBLISHED (обновляем publishedAt для корректного таймера 72ч)
       await prisma.order.update({
         where: { id: order.id },
         data: {
           status: 'PUBLISHED',
           executorId: null,
           workStartedAt: null,
+          publishedAt: new Date(),
         },
       });
 
