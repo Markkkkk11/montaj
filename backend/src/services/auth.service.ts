@@ -66,12 +66,12 @@ export class AuthService {
       await this.initializeExecutorData(user.id);
     }
 
-    // Отправляем код верификации (звонок или SMS через GreenSMS)
+    // Отправляем код верификации ЗВОНКОМ (при регистрации — звонок, при повторной отправке — SMS)
     try {
-      await smsService.sendVerificationCode(normalizedPhone);
+      await smsService.sendVerificationByCall(normalizedPhone);
     } catch (err: any) {
       console.error('❌ Ошибка отправки кода верификации:', err.message);
-      // Не блокируем регистрацию если SMS не отправилось
+      // Не блокируем регистрацию если звонок не прошёл
     }
 
     return { user, requiresVerification: true };
@@ -241,7 +241,8 @@ export class AuthService {
       throw new Error('Телефон не подтверждён');
     }
 
-    await smsService.sendVerificationCode(normalizedPhone);
+    // Для сброса пароля отправляем SMS (не звонок)
+    await smsService.sendVerificationBySMS(normalizedPhone);
   }
 
   /**
@@ -274,7 +275,7 @@ export class AuthService {
   }
 
   /**
-   * Повторная отправка кода верификации
+   * Повторная отправка кода верификации (через SMS)
    */
   async resendVerificationCode(phone: string): Promise<void> {
     const normalizedPhone = this.normalizePhone(phone);
@@ -291,7 +292,8 @@ export class AuthService {
       throw new Error('Телефон уже подтверждён');
     }
 
-    await smsService.sendVerificationCode(normalizedPhone);
+    // При повторной отправке используем SMS (при регистрации был звонок)
+    await smsService.sendVerificationBySMS(normalizedPhone);
   }
 }
 

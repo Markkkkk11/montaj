@@ -90,6 +90,21 @@ export function NotificationBell() {
     }
   };
 
+  const getNotificationLink = (notification: Notification): string | null => {
+    const data = notification.data;
+    if (data?.orderId) return `/orders/${data.orderId}`;
+
+    switch (notification.type) {
+      case 'BALANCE_LOW':
+      case 'PAYMENT_SUCCESS':
+        return '/profile/balance';
+      case 'USER_APPROVED':
+        return '/profile';
+      default:
+        return null;
+    }
+  };
+
   const handleNotificationClick = (notification: Notification) => {
     // Отмечаем как прочитанное
     if (!notification.read) {
@@ -97,9 +112,14 @@ export function NotificationBell() {
     }
 
     // Переходим на соответствующую страницу
-    if (notification.data?.orderId) {
-      router.push(`/orders/${notification.data.orderId}`);
+    const link = getNotificationLink(notification);
+    if (link) {
       setIsOpen(false);
+      router.push(link);
+    } else {
+      // Если нет конкретной ссылки — открываем страницу уведомлений
+      setIsOpen(false);
+      router.push('/notifications');
     }
   };
 
@@ -182,7 +202,10 @@ export function NotificationBell() {
                 className={`flex flex-col items-start gap-1 p-3 cursor-pointer ${
                   !notification.read ? 'bg-blue-50' : ''
                 }`}
-                onClick={() => handleNotificationClick(notification)}
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleNotificationClick(notification);
+                }}
               >
                 <div className="flex items-start gap-2 w-full">
                   <span className="text-lg">{getNotificationIcon(notification.type)}</span>
@@ -209,9 +232,10 @@ export function NotificationBell() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-center text-sm text-primary cursor-pointer justify-center"
-              onClick={() => {
-                router.push('/notifications');
+              onSelect={(e) => {
+                e.preventDefault();
                 setIsOpen(false);
+                router.push('/notifications');
               }}
             >
               Показать все уведомления

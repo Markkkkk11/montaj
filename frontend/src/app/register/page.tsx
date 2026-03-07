@@ -37,6 +37,7 @@ function RegisterContent() {
   const [registeredPhone, setRegisteredPhone] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
   const [showRules, setShowRules] = useState(false);
+  const [verificationMethod, setVerificationMethod] = useState<'call' | 'sms'>('call');
 
   useEffect(() => {
     if (resendTimer > 0) {
@@ -119,6 +120,7 @@ function RegisterContent() {
     
     try {
       await sendSMS(registeredPhone);
+      setVerificationMethod('sms');
       setResendTimer(60);
     } catch (err) {
       // Ошибка уже в store
@@ -558,16 +560,29 @@ function RegisterContent() {
         <Card className="border-0 shadow-soft-xl">
           <CardHeader className="text-center pt-6 sm:pt-8 px-4 sm:px-8">
             <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
-              <span className="text-2xl sm:text-3xl">📞</span>
+              <span className="text-2xl sm:text-3xl">{verificationMethod === 'call' ? '📞' : '📱'}</span>
             </div>
             <CardTitle className="text-xl sm:text-2xl font-extrabold">Подтверждение телефона</CardTitle>
             <CardDescription className="space-y-2">
-              <p>
-                Мы позвоним на номер <strong>{registeredPhone}</strong>
-              </p>
-              <p className="text-xs">
-                Введите <strong>последние 4 цифры</strong> входящего номера.
-              </p>
+              {verificationMethod === 'call' ? (
+                <>
+                  <p>
+                    Мы позвоним на номер <strong>{registeredPhone}</strong>
+                  </p>
+                  <p className="text-xs">
+                    Введите <strong>последние 4 цифры</strong> входящего номера.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    Мы отправили SMS на номер <strong>{registeredPhone}</strong>
+                  </p>
+                  <p className="text-xs">
+                    Введите <strong>4-значный код</strong> из сообщения.
+                  </p>
+                </>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 sm:px-8 pb-6 sm:pb-8">
@@ -662,7 +677,7 @@ function RegisterContent() {
                     disabled={isLoading}
                     className="text-primary font-semibold"
                   >
-                    Отправить код повторно
+                    📱 Отправить код по SMS
                   </Button>
                 )}
               </div>

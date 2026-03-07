@@ -16,9 +16,64 @@ export class SMSService {
 
   /**
    * Отправка кода верификации через GreenSMS (SMS через api3.greensms.ru)
+   * Используется как общий метод (по умолчанию — звонок с фоллбэком на SMS)
    */
   async sendVerificationCode(phone: string): Promise<void> {
-    // Нормализуем телефон: оставляем только цифры, убираем +
+    return this.sendVerificationByCall(phone);
+  }
+
+  /**
+   * Верификация ЗВОНКОМ (основной метод при регистрации)
+   * Пользователь получает звонок, код — последние 4 цифры номера
+   */
+  async sendVerificationByCall(phone: string): Promise<void> {
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    let code: string;
+    let method: 'call' | 'sms' = 'call';
+
+    if (this.enabled && this.token) {
+      try {
+        // Основной метод — звонок
+        const callResult = await this.sendCallVerification(cleanPhone);
+        code = callResult.code;
+        method = 'call';
+        console.log(`📞 Верификация звонком отправлена на ${cleanPhone}, код: ${code}`);
+      } catch (callError: any) {
+        console.warn(`⚠️ Звонок не удался: ${callError.message}, пробуем SMS...`);
+
+        try {
+          // Фоллбэк на SMS
+          code = this.generateCode();
+          await this.sendSMSVerification(cleanPhone, code);
+          method = 'sms';
+          console.log(`📱 SMS верификация отправлена на ${cleanPhone} (фоллбэк)`);
+        } catch (smsError: any) {
+          console.error(`❌ SMS тоже не удалось: ${smsError.message}`);
+          // Фоллбэк на заглушку в dev
+          code = this.generateCode();
+          method = 'call';
+          console.log(`🔧 DEV: Используем сгенерированный код: ${code}`);
+        }
+      }
+    } else {
+      // Режим разработки без GreenSMS
+      code = '1234';
+      console.log(`\n🔧 =======================================`);
+      console.log(`📞 КОД ЗВОНКА ДЛЯ ТЕСТИРОВАНИЯ (GreenSMS отключен)`);
+      console.log(`📞 Телефон: ${cleanPhone}`);
+      console.log(`🔑 КОД: ${code}`);
+      console.log(`🔧 =======================================\n`);
+    }
+
+    await this.saveVerificationCode(cleanPhone, code, method);
+  }
+
+  /**
+   * Верификация через SMS (используется при повторной отправке кода)
+   * Пользователь получает SMS с кодом
+   */
+  async sendVerificationBySMS(phone: string): Promise<void> {
     const cleanPhone = phone.replace(/\D/g, '');
     
     let code: string;
@@ -26,7 +81,6 @@ export class SMSService {
 
     if (this.enabled && this.token) {
       try {
-        // Основной метод — SMS через api3.greensms.ru (from: SVMONTAJ.ru)
         code = this.generateCode();
         await this.sendSMSVerification(cleanPhone, code);
         method = 'sms';
@@ -39,10 +93,9 @@ export class SMSService {
           const callResult = await this.sendCallVerification(cleanPhone);
           code = callResult.code;
           method = 'call';
-          console.log(`📞 Верификация звонком отправлена на ${cleanPhone}`);
+          console.log(`📞 Верификация звонком отправлена на ${cleanPhone} (фоллбэк)`);
         } catch (callError: any) {
           console.error(`❌ Звонок тоже не удался: ${callError.message}`);
-          // Фоллбэк на заглушку в dev
           code = this.generateCode();
           method = 'sms';
           console.log(`🔧 DEV: Используем сгенерированный код: ${code}`);
@@ -50,7 +103,7 @@ export class SMSService {
       }
     } else {
       // Режим разработки без GreenSMS
-      code = '123456';
+      code = '1234';
       console.log(`\n🔧 =======================================`);
       console.log(`📱 SMS КОД ДЛЯ ТЕСТИРОВАНИЯ (GreenSMS отключен)`);
       console.log(`📞 Телефон: ${cleanPhone}`);
@@ -58,6 +111,13 @@ export class SMSService {
       console.log(`🔧 =======================================\n`);
     }
 
+    await this.saveVerificationCode(cleanPhone, code, method);
+  }
+
+  /**
+   * Сохранить код верификации в БД
+   */
+  private async saveVerificationCode(cleanPhone: string, code: string, method: 'call' | 'sms'): Promise<void> {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 минут
 
     // Удаляем старые неиспользованные коды для этого номера

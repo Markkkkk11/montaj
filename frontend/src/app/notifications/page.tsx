@@ -66,9 +66,25 @@ export default function NotificationsPage() {
     }
   };
 
+  const getNotificationLink = (notification: Notification): string | null => {
+    const data = notification.data;
+    if (data?.orderId) return `/orders/${data.orderId}`;
+
+    switch (notification.type) {
+      case 'BALANCE_LOW':
+      case 'PAYMENT_SUCCESS':
+        return '/profile/balance';
+      case 'USER_APPROVED':
+        return '/profile';
+      default:
+        return null;
+    }
+  };
+
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) handleMarkAsRead(notification.id);
-    if (notification.data?.orderId) router.push(`/orders/${notification.data.orderId}`);
+    const link = getNotificationLink(notification);
+    if (link) router.push(link);
   };
 
   const getNotificationIcon = (type: string) => {
