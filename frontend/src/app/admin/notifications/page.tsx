@@ -41,15 +41,18 @@ export default function AdminNotificationsPage() {
   // Загрузка пользователей при поиске
   useEffect(() => {
     if (targetType !== 'USER') return;
+    // Не искать, если пользователь уже выбран
+    if (selectedUserId) return;
     const timer = setTimeout(() => {
       if (userSearch.length >= 2) {
         searchUsers(userSearch);
       } else {
         setUsers([]);
+        setShowUserDropdown(false);
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [userSearch, targetType]);
+  }, [userSearch, targetType, selectedUserId]);
 
   const searchUsers = async (query: string) => {
     try {
