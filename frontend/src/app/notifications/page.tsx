@@ -9,7 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/layout/Header';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Trash2, Bell, CheckCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Trash2, Bell, CheckCheck, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 
 export default function NotificationsPage() {
   const { user, isHydrated } = useAuthStore();
@@ -18,6 +19,7 @@ export default function NotificationsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -83,8 +85,16 @@ export default function NotificationsPage() {
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) handleMarkAsRead(notification.id);
-    const link = getNotificationLink(notification);
-    if (link) router.push(link);
+    setSelectedNotification(notification);
+  };
+
+  const handleGoToLink = () => {
+    if (!selectedNotification) return;
+    const link = getNotificationLink(selectedNotification);
+    if (link) {
+      setSelectedNotification(null);
+      router.push(link);
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -226,6 +236,131 @@ export default function NotificationsPage() {
             </Button>
           </div>
         )}
+
+        {/* Модальное окно просмотра уведомления */}
+        <Dialog open={!!selectedNotification} onOpenChange={(open) => { if (!open) setSelectedNotification(null); }}>
+          <DialogContent className="max-w-md sm:max-w-lg rounded-2xl p-0 gap-0 overflow-hidden [&>button:last-child]:hidden">
+            {selectedNotification && (
+              <>
+                {/* Шапка */}
+                <div className="bg-gradient-to-r from-blue-600 to-violet-600 px-5 py-4 text-white relative">
+                  <button
+                    onClick={() => setSelectedNotification(null)}
+                    className="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  >
+                    <span className="sr-only">Закрыть</span>
+                    <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+                      {getNotificationIcon(selectedNotification.type)}
+                    </div>
+                    <div className="min-w-0">
+                      <DialogHeader>
+                        <DialogTitle className="text-white text-base font-bold leading-tight">
+                          {selectedNotification.title}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <p className="text-blue-100 text-xs mt-0.5">
+                        {getNotificationTypeLabel(selectedNotification.type)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Содержимое */}
+                <div className="px-5 py-5 space-y-4">
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {selectedNotification.message}
+                  </p>
+
+                  {/* Дополнительные данные */}
+                  {selectedNotification.data && Object.keys(selectedNotification.data).length > 0 && (
+                    <div className="bg-gray-50 rounded-xl p-3 space-y-1.5">
+                      {selectedNotification.data.orderTitle && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Заказ:</span>
+                          <span className="font-medium text-gray-900">{selectedNotification.data.orderTitle}</span>
+                        </div>
+                      )}
+                      {selectedNotification.data.executorName && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Исполнитель:</span>
+                          <span className="font-medium text-gray-900">{selectedNotification.data.executorName}</span>
+                        </div>
+                      )}
+                      {selectedNotification.data.customerName && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Заказчик:</span>
+                          <span className="font-medium text-gray-900">{selectedNotification.data.customerName}</span>
+                        </div>
+                      )}
+                      {selectedNotification.data.customerPhone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Телефон:</span>
+                          <a href={`tel:${selectedNotification.data.customerPhone}`} className="font-medium text-blue-600 hover:underline">
+                            {selectedNotification.data.customerPhone}
+                          </a>
+                        </div>
+                      )}
+                      {selectedNotification.data.rating && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Оценка:</span>
+                          <span className="font-medium text-gray-900">{'⭐'.repeat(selectedNotification.data.rating)}</span>
+                        </div>
+                      )}
+                      {selectedNotification.data.reviewerName && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">От:</span>
+                          <span className="font-medium text-gray-900">{selectedNotification.data.reviewerName}</span>
+                        </div>
+                      )}
+                      {selectedNotification.data.amount && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Сумма:</span>
+                          <span className="font-medium text-gray-900">{selectedNotification.data.amount} ₽</span>
+                        </div>
+                      )}
+                      {selectedNotification.data.balance !== undefined && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Баланс:</span>
+                          <span className="font-medium text-gray-900">{selectedNotification.data.balance} ₽</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(selectedNotification.createdAt).toLocaleString('ru-RU', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+
+                {/* Кнопки */}
+                <div className="border-t px-5 py-3 bg-gray-50/80 flex gap-2">
+                  {getNotificationLink(selectedNotification) && (
+                    <Button onClick={handleGoToLink} className="flex-1 gap-2" size="sm">
+                      <ExternalLink className="h-4 w-4" /> Перейти
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setSelectedNotification(null)}
+                  >
+                    Закрыть
+                  </Button>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
