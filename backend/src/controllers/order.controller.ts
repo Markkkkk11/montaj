@@ -319,7 +319,7 @@ export class OrderController {
 
   /**
    * POST /api/orders/:id/complete
-   * Завершить заказ (исполнителем)
+   * Завершить заказ (исполнителем или заказчиком)
    */
   async completeOrder(req: AuthRequest, res: Response): Promise<void> {
     try {
@@ -328,14 +328,17 @@ export class OrderController {
         return;
       }
 
-      if (req.user.role !== 'EXECUTOR') {
-        res.status(403).json({ error: 'Только исполнители могут завершать заказы' });
+      const { id } = req.params;
+      let order;
+
+      if (req.user.role === 'EXECUTOR') {
+        order = await orderService.completeOrder(id, req.user.id);
+      } else if (req.user.role === 'CUSTOMER') {
+        order = await orderService.completeOrderByCustomer(id, req.user.id);
+      } else {
+        res.status(403).json({ error: 'Нет прав для завершения заказа' });
         return;
       }
-
-      const { id } = req.params;
-
-      const order = await orderService.completeOrder(id, req.user.id);
 
       res.json({
         message: 'Заказ помечен как выполненный',

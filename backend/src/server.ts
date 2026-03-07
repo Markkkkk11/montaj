@@ -3,6 +3,7 @@ import app from './app';
 import { config } from './config/env';
 import { initializeSocket } from './socket';
 import settingsService from './services/settings.service';
+import orderService from './services/order.service';
 
 const PORT = config.port;
 
@@ -28,6 +29,25 @@ httpServer.listen(PORT, async () => {
   } catch (e) {
     console.error('⚠️  Не удалось инициализировать настройки:', e);
   }
+
+  // Планировщик автоматических задач (каждый час)
+  setInterval(async () => {
+    try {
+      const closedCount = await orderService.autoCloseExpiredOrders();
+      if (closedCount > 0) {
+        console.log(`🕐 Автозакрытие: ${closedCount} заказов без откликов (72ч)`);
+      }
+
+      const returnedCount = await orderService.autoReturnStaleOrders();
+      if (returnedCount > 0) {
+        console.log(`🕐 Автовозврат: ${returnedCount} заказов (исполнитель не приступил 48ч)`);
+      }
+    } catch (err) {
+      console.error('❌ Ошибка планировщика:', err);
+    }
+  }, 60 * 60 * 1000); // Каждый час
+
+  console.log('⏰ Планировщик задач запущен (интервал: 1 час)');
 });
 
 // Graceful shutdown

@@ -120,7 +120,10 @@ export default function OrderDetailPage() {
   };
 
   const handleCompleteOrder = async () => {
-    if (!confirm('Подтвердите, что работа выполнена и оплата получена')) return;
+    const msg = user?.role === 'CUSTOMER'
+      ? 'Подтвердите, что работа выполнена и вы довольны результатом'
+      : 'Подтвердите, что работа выполнена и оплата получена';
+    if (!confirm(msg)) return;
     try {
       setActionLoading(true);
       await ordersApi.completeOrder(orderId);
@@ -470,6 +473,12 @@ export default function OrderDetailPage() {
                     Отказаться
                   </Button>
                 </>
+              )}
+
+              {isCustomer && order.status === 'IN_PROGRESS' && order.workStartedAt && (
+                <Button onClick={handleCompleteOrder} disabled={actionLoading} className="flex-1 w-full sm:w-auto gap-2" size="lg" variant="success">
+                  <CheckCircle className="h-5 w-5" /> Подтвердить выполнение
+                </Button>
               )}
 
               {isCustomer && order.status === 'PUBLISHED' && (

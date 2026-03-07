@@ -70,7 +70,7 @@ router.post(
 
 router.post(
   '/:id/complete',
-  requireRole('EXECUTOR'),
+  requireRole('EXECUTOR', 'CUSTOMER'),
   requireStatus('ACTIVE'),
   orderController.completeOrder
 );

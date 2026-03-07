@@ -733,6 +733,77 @@ export class OrderService {
   }
 
   /**
+   * Завершить заказ (заказчиком)
+   */
+  async completeOrderByCustomer(orderId: string, customerId: string): Promise<any> {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { executor: true },
+    });
+
+    if (!order) {
+      throw new Error('Заказ не найден');
+    }
+
+    if (order.customerId !== customerId) {
+      throw new Error('Вы не являетесь заказчиком этого заказа');
+    }
+
+    if (order.status !== 'IN_PROGRESS') {
+      throw new Error('Можно завершить только активные заказы');
+    }
+
+    if (!order.executorId) {
+      throw new Error('Нет назначенного исполнителя');
+    }
+
+    // Обновляем заказ и счётчики выполненных заказов
+    const [updatedOrder] = await prisma.$transaction([
+      prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'COMPLETED',
+          closedAt: new Date(),
+        },
+      }),
+      // Инкрементируем счётчик исполнителя
+      prisma.user.update({
+        where: { id: order.executorId },
+        data: {
+          completedOrders: { increment: 1 },
+        },
+      }),
+      // Инкрементируем счётчик заказчика
+      prisma.user.update({
+        where: { id: customerId },
+        data: {
+          completedOrders: { increment: 1 },
+        },
+      }),
+    ]);
+
+    // Уведомление исполнителю о завершении заказа
+    notificationService.notifyOrderCompleted(
+      order.executorId,
+      orderId,
+      order.title
+    ).catch(err => console.error('Notification error:', err));
+
+    // Уведомление заказчику
+    notificationService.notifyOrderCompleted(
+      customerId,
+      orderId,
+      order.title
+    ).catch(err => console.error('Notification error:', err));
+
+    // Удаляем файлы заказа и чата с диска
+    this.cleanupOrderFiles(orderId, order.files || [])
+      .catch(err => console.error('File cleanup error:', err));
+
+    return updatedOrder;
+  }
+
+  /**
    * Удалить все файлы заказа и чата с диска после завершения
    */
   private async cleanupOrderFiles(orderId: string, orderFiles: string[]): Promise<void> {
@@ -825,19 +896,22 @@ export class OrderService {
   }
 
   /**
-   * Автоматическое закрытие заказов без откликов
+   * Автоматическое закрытие заказов без откликов через 72 часа
    */
   async autoCloseExpiredOrders(): Promise<number> {
+    const threshold72h = new Date(Date.now() - 72 * 60 * 60 * 1000);
+
     const expiredOrders = await prisma.order.findMany({
       where: {
         status: 'PUBLISHED',
-        startDate: {
-          lt: new Date(),
+        publishedAt: {
+          lt: threshold72h,
         },
         responses: {
           none: {},
         },
       },
+      include: { customer: true },
     });
 
     if (expiredOrders.length === 0) {
@@ -856,13 +930,106 @@ export class OrderService {
       },
     });
 
-    // Удаляем файлы закрытых заказов
+    // Уведомляем заказчиков и удаляем файлы
     for (const order of expiredOrders) {
+      notificationService.createNotification({
+        userId: order.customerId,
+        type: 'SYSTEM',
+        title: 'Заказ снят с публикации',
+        message: `Заказ "${order.title}" был снят: за 72 часа не поступило откликов. Вы можете разместить его заново.`,
+        data: { orderId: order.id },
+      }).catch(err => console.error('Notification error (auto-close):', err));
+
       this.cleanupOrderFiles(order.id, order.files || [])
         .catch(err => console.error('File cleanup error (auto-close):', err));
     }
 
     return expiredOrders.length;
+  }
+
+  /**
+   * Автоматический возврат заказа в PUBLISHED, если исполнитель не приступил к работе в течение 48 часов
+   */
+  async autoReturnStaleOrders(): Promise<number> {
+    const threshold48h = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+    // Заказы в IN_PROGRESS, где исполнитель не нажал "Приступить" и прошло 48ч с момента назначения
+    const staleOrders = await prisma.order.findMany({
+      where: {
+        status: 'IN_PROGRESS',
+        workStartedAt: null,
+        updatedAt: {
+          lt: threshold48h,
+        },
+      },
+      include: {
+        customer: true,
+        executor: true,
+        responses: true,
+      },
+    });
+
+    if (staleOrders.length === 0) {
+      return 0;
+    }
+
+    for (const order of staleOrders) {
+      // Возвращаем заказ в PUBLISHED
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          status: 'PUBLISHED',
+          executorId: null,
+          workStartedAt: null,
+        },
+      });
+
+      // Отмечаем отклик исполнителя как отменённый
+      if (order.executorId) {
+        const executorResponse = order.responses.find(r => r.executorId === order.executorId);
+        if (executorResponse) {
+          await prisma.response.update({
+            where: { id: executorResponse.id },
+            data: {
+              status: 'CANCELLED',
+              rejectedAt: new Date(),
+            },
+          });
+        }
+
+        // Возвращаем все остальные отклики в статус PENDING
+        await prisma.response.updateMany({
+          where: {
+            orderId: order.id,
+            status: 'REJECTED',
+          },
+          data: {
+            status: 'PENDING',
+            rejectedAt: null,
+          },
+        });
+
+        // Уведомляем заказчика
+        notificationService.createNotification({
+          userId: order.customerId,
+          type: 'SYSTEM',
+          title: 'Исполнитель не приступил к работе',
+          message: `Исполнитель ${order.executor?.fullName || ''} не приступил к заказу "${order.title}" в течение 48 часов. Заказ снова доступен для других исполнителей.`,
+          data: { orderId: order.id },
+        }).catch(err => console.error('Notification error (auto-return):', err));
+
+        // Уведомляем исполнителя
+        notificationService.createNotification({
+          userId: order.executorId,
+          type: 'SYSTEM',
+          title: 'Вы потеряли заказ',
+          message: `Вы не приступили к заказу "${order.title}" в течение 48 часов. Заказ возвращён в доступные.`,
+          data: { orderId: order.id },
+        }).catch(err => console.error('Notification error (auto-return):', err));
+      }
+    }
+
+    return staleOrders.length;
   }
 
   /**
