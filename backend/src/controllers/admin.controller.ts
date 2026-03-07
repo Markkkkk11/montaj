@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../types';
 import adminService from '../services/admin.service';
+import notificationService from '../services/notification.service';
 
 export class AdminController {
   /**
@@ -358,6 +359,40 @@ export class AdminController {
       res.json({ message: 'Заказ удален' });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  }
+  /**
+   * Отправить уведомление от администрации
+   */
+  async sendNotification(req: AuthRequest, res: Response) {
+    try {
+      const adminId = req.user!.id;
+      const { title, message, target } = req.body;
+
+      if (!title || !message || !target) {
+        return res.status(400).json({
+          success: false,
+          error: 'Заполните все обязательные поля: title, message, target',
+        });
+      }
+
+      const result = await notificationService.sendAdminNotification({
+        adminId,
+        title,
+        message,
+        target,
+      });
+
+      res.json({
+        success: true,
+        ...result,
+        message: `Уведомление отправлено ${result.sent} пользователям`,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: error.message,
+      });
     }
   }
 }

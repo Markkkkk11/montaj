@@ -331,6 +331,7 @@ enum ModerationAction {
   REJECT
   BLOCK
   UNBLOCK
+  SEND_NOTIFICATION
 }
 
 enum NotificationType {

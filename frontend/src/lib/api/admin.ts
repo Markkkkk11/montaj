@@ -113,4 +113,10 @@ export const adminApi = {
     const { data } = await api.get('/admin/payments', { params });
     return data;
   },
+
+  // Рассылка уведомлений
+  async sendNotification(params: { title: string; message: string; target: string }) {
+    const { data } = await api.post('/admin/notifications/send', params);
+    return data;
+  },
 };

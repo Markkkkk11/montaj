@@ -13,7 +13,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  DollarSign
+  DollarSign,
+  Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -52,6 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/orders', icon: FileText, label: 'Заказы' },
     { href: '/admin/reviews', icon: MessageSquare, label: 'Отзывы' },
     { href: '/admin/payments', icon: DollarSign, label: 'Пополнения' },
+    { href: '/admin/notifications', icon: Bell, label: 'Уведомления' },
     { href: '/admin/settings', icon: Settings, label: 'Настройки' },
   ];
 

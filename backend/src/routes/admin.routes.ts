@@ -55,5 +55,8 @@ router.get('/analytics/financial', adminController.getFinancialAnalytics);
 // История пополнений
 router.get('/payments', adminController.getPaymentHistory);
 
+// Рассылка уведомлений
+router.post('/notifications/send', adminController.sendNotification);
+
 export default router;
 

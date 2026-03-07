@@ -685,6 +685,84 @@ export class NotificationService {
       );
     }
   }
+
+  /**
+   * Отправить уведомление от администрации
+   * target: 'ALL' | 'CUSTOMERS' | 'EXECUTORS' | конкретный userId
+   */
+  async sendAdminNotification(params: {
+    adminId: string;
+    title: string;
+    message: string;
+    target: 'ALL' | 'CUSTOMERS' | 'EXECUTORS' | string;
+  }) {
+    let userIds: string[] = [];
+
+    if (params.target === 'ALL') {
+      const users = await prisma.user.findMany({
+        where: { status: 'ACTIVE' },
+        select: { id: true },
+      });
+      userIds = users.map((u) => u.id);
+    } else if (params.target === 'CUSTOMERS') {
+      const users = await prisma.user.findMany({
+        where: { role: 'CUSTOMER', status: 'ACTIVE' },
+        select: { id: true },
+      });
+      userIds = users.map((u) => u.id);
+    } else if (params.target === 'EXECUTORS') {
+      const users = await prisma.user.findMany({
+        where: { role: 'EXECUTOR', status: 'ACTIVE' },
+        select: { id: true },
+      });
+      userIds = users.map((u) => u.id);
+    } else {
+      // Конкретный userId
+      const user = await prisma.user.findUnique({
+        where: { id: params.target },
+      });
+      if (!user) {
+        throw new Error('Пользователь не найден');
+      }
+      userIds = [params.target];
+    }
+
+    if (userIds.length === 0) {
+      throw new Error('Не найдено пользователей для отправки');
+    }
+
+    // Массовая вставка уведомлений
+    await prisma.notification.createMany({
+      data: userIds.map((userId) => ({
+        userId,
+        type: 'SYSTEM' as any,
+        channel: 'IN_APP' as any,
+        title: params.title,
+        message: params.message,
+        data: { fromAdmin: true, adminId: params.adminId },
+        sent: true,
+        sentAt: new Date(),
+      })),
+    });
+
+    // Записать в лог действий администратора
+    await prisma.adminLog.create({
+      data: {
+        adminId: params.adminId,
+        action: 'SEND_NOTIFICATION' as any,
+        targetType: 'NOTIFICATION',
+        targetId: params.target,
+        metadata: {
+          title: params.title,
+          message: params.message,
+          target: params.target,
+          recipientsCount: userIds.length,
+        },
+      },
+    });
+
+    return { sent: userIds.length };
+  }
 }
 
 export default new NotificationService();
