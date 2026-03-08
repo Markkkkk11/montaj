@@ -35,7 +35,7 @@ httpServer.listen(PORT, async () => {
     try {
       const closedCount = await orderService.autoCloseExpiredOrders();
       if (closedCount > 0) {
-        console.log(`🕐 Автозакрытие: ${closedCount} заказов без откликов (72ч)`);
+        console.log(`🕐 Автозакрытие: ${closedCount} заказов без откликов (120ч от даты начала)`);
       }
 
       const returnedCount = await orderService.autoReturnStaleOrders();

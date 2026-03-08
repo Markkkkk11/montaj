@@ -611,7 +611,7 @@ export class OrderService {
       throw new Error('Можно отказаться только от активных заказов');
     }
 
-    // Возвращаем заказ в статус PUBLISHED (обновляем publishedAt для корректного таймера 72ч)
+    // Возвращаем заказ в статус PUBLISHED (автоотмена по startDate + 120ч если нет откликов)
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -897,16 +897,18 @@ export class OrderService {
   }
 
   /**
-   * Автоматическое закрытие заказов без откликов через 72 часа
+   * Автоматическое закрытие заказов без откликов через 120 часов С ДАТЫ НАЧАЛА работ
    */
   async autoCloseExpiredOrders(): Promise<number> {
-    const threshold72h = new Date(Date.now() - 72 * 60 * 60 * 1000);
+    const now = new Date();
+    const threshold120h = new Date(now.getTime() - 120 * 60 * 60 * 1000);
 
+    // Только PUBLISHED + нет откликов + startDate + 120ч уже прошло
     const expiredOrders = await prisma.order.findMany({
       where: {
         status: 'PUBLISHED',
-        publishedAt: {
-          lt: threshold72h,
+        startDate: {
+          lt: threshold120h,
         },
         responses: {
           none: {},
@@ -937,7 +939,7 @@ export class OrderService {
         userId: order.customerId,
         type: 'SYSTEM',
         title: 'Заказ снят с публикации',
-        message: `Заказ "${order.title}" был снят: за 72 часа не поступило откликов. Вы можете разместить его заново.`,
+        message: `Заказ "${order.title}" был снят: не поступило откликов в течение 120 часов с даты начала работ. Вы можете разместить его заново.`,
         data: { orderId: order.id },
       }).catch(err => console.error('Notification error (auto-close):', err));
 
@@ -975,7 +977,7 @@ export class OrderService {
     }
 
     for (const order of staleOrders) {
-      // Возвращаем заказ в PUBLISHED (обновляем publishedAt для корректного таймера 72ч)
+      // Возвращаем заказ в PUBLISHED (автоотмена по startDate + 120ч если нет откликов)
       await prisma.order.update({
         where: { id: order.id },
         data: {
