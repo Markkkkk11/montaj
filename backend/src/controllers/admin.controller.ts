@@ -362,6 +362,51 @@ export class AdminController {
     }
   }
   /**
+   * Удалить отзыв
+   */
+  async deleteReview(req: AuthRequest, res: Response) {
+    try {
+      const { reviewId } = req.params;
+      const adminId = req.user!.id;
+
+      const result = await adminService.deleteReview(reviewId, adminId);
+
+      res.json({
+        success: true,
+        ...result,
+        message: 'Отзыв удалён',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Получить историю рассылок уведомлений
+   */
+  async getNotificationHistory(req: AuthRequest, res: Response) {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      const result = await adminService.getNotificationHistory(page, limit);
+
+      res.json({
+        success: true,
+        ...result,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  /**
    * Отправить уведомление от администрации
    */
   async sendNotification(req: AuthRequest, res: Response) {

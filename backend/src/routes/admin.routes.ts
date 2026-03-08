@@ -45,6 +45,7 @@ router.post('/orders/:orderId/moderate', validateBody(moderateOrderSchema), admi
 // Управление отзывами
 router.get('/reviews', adminController.getReviewsForModeration);
 router.post('/reviews/:reviewId/moderate', validateBody(moderateReviewSchema), adminController.moderateReview);
+router.delete('/reviews/:reviewId', adminController.deleteReview);
 
 // Логи действий администраторов
 router.get('/logs', adminController.getAdminLogs);
@@ -56,6 +57,7 @@ router.get('/analytics/financial', adminController.getFinancialAnalytics);
 router.get('/payments', adminController.getPaymentHistory);
 
 // Рассылка уведомлений
+router.get('/notifications/history', adminController.getNotificationHistory);
 router.post('/notifications/send', adminController.sendNotification);
 
 export default router;

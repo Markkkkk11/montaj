@@ -447,6 +447,114 @@ export class AdminService {
   }
 
   /**
+   * Удалить отзыв (администратор)
+   */
+  async deleteReview(reviewId: string, adminId: string) {
+    const review = await prisma.review.findUnique({
+      where: { id: reviewId },
+      include: {
+        reviewer: { select: { fullName: true } },
+        reviewee: { select: { fullName: true } },
+      },
+    });
+
+    if (!review) {
+      throw new Error('Отзыв не найден');
+    }
+
+    await prisma.review.delete({
+      where: { id: reviewId },
+    });
+
+    // Пересчитать рейтинг пользователя, если отзыв был одобрен
+    if (review.status === 'APPROVED') {
+      const approvedReviews = await prisma.review.findMany({
+        where: {
+          revieweeId: review.revieweeId,
+          status: 'APPROVED',
+        },
+      });
+
+      const avgRating = approvedReviews.length > 0
+        ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / approvedReviews.length
+        : 0;
+
+      await prisma.user.update({
+        where: { id: review.revieweeId },
+        data: { rating: Math.round(avgRating * 10) / 10 },
+      });
+    }
+
+    await prisma.adminLog.create({
+      data: {
+        adminId,
+        action: 'DELETE_REVIEW',
+        targetType: 'REVIEW',
+        targetId: reviewId,
+        metadata: {
+          rating: review.rating,
+          reviewerName: review.reviewer.fullName,
+          revieweeName: review.reviewee.fullName,
+          oldStatus: review.status,
+        },
+      },
+    });
+
+    return { deleted: true };
+  }
+
+  /**
+   * Получить историю рассылок уведомлений
+   */
+  async getNotificationHistory(page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
+
+    const [logs, total] = await Promise.all([
+      prisma.adminLog.findMany({
+        where: {
+          action: 'SEND_NOTIFICATION',
+          targetType: 'NOTIFICATION',
+        },
+        include: {
+          admin: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.adminLog.count({
+        where: {
+          action: 'SEND_NOTIFICATION',
+          targetType: 'NOTIFICATION',
+        },
+      }),
+    ]);
+
+    return {
+      notifications: logs.map((log) => ({
+        id: log.id,
+        adminId: log.adminId,
+        adminName: log.admin.fullName,
+        title: (log.metadata as any)?.title || '',
+        message: (log.metadata as any)?.message || '',
+        target: (log.metadata as any)?.target || '',
+        recipientsCount: (log.metadata as any)?.recipientsCount || 0,
+        createdAt: log.createdAt,
+      })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  /**
    * Получить логи действий администраторов
    */
   async getAdminLogs(page: number = 1, limit: number = 50) {

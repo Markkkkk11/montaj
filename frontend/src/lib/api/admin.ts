@@ -108,6 +108,11 @@ export const adminApi = {
     return data;
   },
 
+  async deleteReview(reviewId: string) {
+    const { data } = await api.delete(`/admin/reviews/${reviewId}`);
+    return data;
+  },
+
   // История пополнений
   async getPaymentHistory(params?: { startDate?: string; endDate?: string; page?: number; limit?: number }) {
     const { data } = await api.get('/admin/payments', { params });
@@ -117,6 +122,11 @@ export const adminApi = {
   // Рассылка уведомлений
   async sendNotification(params: { title: string; message: string; target: string }) {
     const { data } = await api.post('/admin/notifications/send', params);
+    return data;
+  },
+
+  async getNotificationHistory(params?: { page?: number; limit?: number }) {
+    const { data } = await api.get('/admin/notifications/history', { params });
     return data;
   },
 };

@@ -332,6 +332,7 @@ enum ModerationAction {
   BLOCK
   UNBLOCK
   SEND_NOTIFICATION
+  DELETE_REVIEW
 }
 
 enum NotificationType {

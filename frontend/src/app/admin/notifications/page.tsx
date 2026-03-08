@@ -12,8 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { adminApi } from '@/lib/api/admin';
-import { Send, Users, User, Briefcase, Search } from 'lucide-react';
+import { Send, Users, User, Briefcase, Search, History, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserItem {
@@ -21,6 +27,17 @@ interface UserItem {
   fullName: string;
   phone: string;
   role: string;
+}
+
+interface NotificationHistoryItem {
+  id: string;
+  adminId: string;
+  adminName: string;
+  title: string;
+  message: string;
+  target: string;
+  recipientsCount: number;
+  createdAt: string;
 }
 
 export default function AdminNotificationsPage() {
@@ -32,11 +49,39 @@ export default function AdminNotificationsPage() {
   const [selectedUserId, setSelectedUserId] = useState('');
   const [sending, setSending] = useState(false);
 
+  // История рассылок
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<NotificationHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotalPages, setHistoryTotalPages] = useState(1);
+  const [viewNotification, setViewNotification] = useState<NotificationHistoryItem | null>(null);
+
   // Поиск пользователей для личной отправки
   const [userSearch, setUserSearch] = useState('');
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  const loadHistory = async (p: number = 1) => {
+    try {
+      setHistoryLoading(true);
+      const data = await adminApi.getNotificationHistory({ page: p, limit: 10 });
+      setHistory(data.notifications || []);
+      setHistoryTotalPages(data.totalPages || 1);
+      setHistoryPage(p);
+    } catch (error) {
+      console.error('Failed to load notification history:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showHistory && history.length === 0) {
+      loadHistory();
+    }
+  }, [showHistory]);
 
   // Загрузка пользователей при поиске
   useEffect(() => {
@@ -128,6 +173,29 @@ export default function AdminNotificationsPage() {
     }
   };
 
+  const getTargetLabel = (target: string) => {
+    switch (target) {
+      case 'ALL':
+        return 'Все пользователи';
+      case 'CUSTOMERS':
+        return 'Все заказчики';
+      case 'EXECUTORS':
+        return 'Все исполнители';
+      default:
+        return 'Конкретный пользователь';
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const getTargetIcon = () => {
     switch (targetType) {
       case 'ALL':
@@ -152,7 +220,7 @@ export default function AdminNotificationsPage() {
         </p>
       </div>
 
-      <div className="max-w-2xl">
+      <div className="max-w-2xl space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -314,7 +382,135 @@ export default function AdminNotificationsPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* История рассылок */}
+        <Card>
+          <CardHeader>
+            <button
+              className="w-full flex items-center justify-between cursor-pointer"
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5 text-primary" />
+                История рассылок
+              </CardTitle>
+              {showHistory ? (
+                <ChevronUp className="h-5 w-5 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              )}
+            </button>
+          </CardHeader>
+          {showHistory && (
+            <CardContent>
+              {historyLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Загрузка...</div>
+              ) : history.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Рассылок пока не было
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {history.map((item) => (
+                    <button
+                      key={item.id}
+                      className="w-full text-left p-4 rounded-lg border hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => setViewNotification(item)}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{item.title}</p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.message}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {formatDate(item.createdAt)}
+                          </span>
+                          <p className="text-xs mt-1">
+                            <span className="text-muted-foreground">Получатели: </span>
+                            <span className="font-medium">{item.recipientsCount}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        <span>Кому: {getTargetLabel(item.target)}</span>
+                        <span>·</span>
+                        <span>Отправил: {item.adminName}</span>
+                      </div>
+                    </button>
+                  ))}
+
+                  {historyTotalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4 pt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => loadHistory(historyPage - 1)}
+                        disabled={historyPage <= 1 || historyLoading}
+                      >
+                        ← Назад
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        {historyPage} / {historyTotalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => loadHistory(historyPage + 1)}
+                        disabled={historyPage >= historyTotalPages || historyLoading}
+                      >
+                        Вперёд →
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
       </div>
+
+      {/* Диалог просмотра уведомления */}
+      <Dialog open={!!viewNotification} onOpenChange={() => setViewNotification(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Просмотр рассылки</DialogTitle>
+          </DialogHeader>
+          {viewNotification && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Заголовок</label>
+                <p className="text-base font-semibold mt-0.5">{viewNotification.title}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Текст сообщения</label>
+                <div className="bg-gray-50 rounded-lg p-4 mt-1">
+                  <p className="text-sm whitespace-pre-wrap">{viewNotification.message}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Получатели</label>
+                  <p className="mt-0.5">{getTargetLabel(viewNotification.target)}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Кол-во</label>
+                  <p className="mt-0.5 font-medium">{viewNotification.recipientsCount}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Отправил</label>
+                  <p className="mt-0.5">{viewNotification.adminName}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Дата</label>
+                  <p className="mt-0.5">{formatDate(viewNotification.createdAt)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

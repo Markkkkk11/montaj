@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { adminApi } from '@/lib/api/admin';
-import { CheckCircle, XCircle, Clock, Star, MessageSquare } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Star, MessageSquare, Trash2 } from 'lucide-react';
 
 interface Review {
   id: string;
@@ -66,6 +66,10 @@ export default function AdminReviewsPage() {
   const [rejectNote, setRejectNote] = useState('');
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Модалка для удаления
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [deleteReviewId, setDeleteReviewId] = useState<string | null>(null);
 
   // Модалка для просмотра полного текста
   const [viewDialog, setViewDialog] = useState(false);
@@ -121,6 +125,27 @@ export default function AdminReviewsPage() {
       loadReviews();
     } catch (error: any) {
       alert(error.response?.data?.error || 'Ошибка при отклонении отзыва');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const openDeleteDialog = (reviewId: string) => {
+    setDeleteReviewId(reviewId);
+    setDeleteDialog(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteReviewId) return;
+    try {
+      setActionLoading(deleteReviewId);
+      await adminApi.deleteReview(deleteReviewId);
+      setDeleteDialog(false);
+      setDeleteReviewId(null);
+      setViewDialog(false);
+      loadReviews();
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Ошибка при удалении отзыва');
     } finally {
       setActionLoading(null);
     }
@@ -298,33 +323,40 @@ export default function AdminReviewsPage() {
                       </TableCell>
                       <TableCell>{getStatusBadge(review.status)}</TableCell>
                       <TableCell className="text-right">
-                        {review.status === 'PENDING' ? (
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="default"
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => handleApprove(review.id)}
-                              disabled={actionLoading === review.id}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Одобрить
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => openRejectDialog(review.id)}
-                              disabled={actionLoading === review.id}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Отклонить
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            {review.moderationNote && `Причина: ${review.moderationNote}`}
-                          </span>
-                        )}
+                        <div className="flex justify-end gap-2">
+                          {review.status === 'PENDING' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleApprove(review.id)}
+                                disabled={actionLoading === review.id}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Одобрить
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => openRejectDialog(review.id)}
+                                disabled={actionLoading === review.id}
+                              >
+                                <XCircle className="h-4 w-4 mr-1" />
+                                Отклонить
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => openDeleteDialog(review.id)}
+                            disabled={actionLoading === review.id}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -387,6 +419,32 @@ export default function AdminReviewsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Диалог подтверждения удаления */}
+      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Удалить отзыв</DialogTitle>
+            <DialogDescription>
+              Вы уверены, что хотите удалить этот отзыв? Это действие нельзя отменить.
+              {reviews.find(r => r.id === deleteReviewId)?.status === 'APPROVED' && (
+                <span className="block mt-2 text-orange-600 font-medium">
+                  Отзыв уже одобрен — рейтинг пользователя будет пересчитан.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialog(false)}>
+              Отмена
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={!!actionLoading}>
+              <Trash2 className="h-4 w-4 mr-1" />
+              Удалить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Диалог просмотра отзыва */}
       <Dialog open={viewDialog} onOpenChange={setViewDialog}>
         <DialogContent className="max-w-lg">
@@ -429,31 +487,42 @@ export default function AdminReviewsPage() {
                 Создан: {formatDate(viewReview.createdAt)}
               </div>
 
-              {viewReview.status === 'PENDING' && (
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => {
-                      handleApprove(viewReview.id);
-                      setViewDialog(false);
-                    }}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Одобрить
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={() => {
-                      setViewDialog(false);
-                      openRejectDialog(viewReview.id);
-                    }}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Отклонить
-                  </Button>
-                </div>
-              )}
+              <div className="flex gap-2 pt-2">
+                {viewReview.status === 'PENDING' && (
+                  <>
+                    <Button
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        handleApprove(viewReview.id);
+                        setViewDialog(false);
+                      }}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Одобрить
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={() => {
+                        setViewDialog(false);
+                        openRejectDialog(viewReview.id);
+                      }}
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Отклонить
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="outline"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => openDeleteDialog(viewReview.id)}
+                  disabled={!!actionLoading}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Удалить
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
