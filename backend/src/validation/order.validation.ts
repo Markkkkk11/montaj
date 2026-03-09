@@ -73,6 +73,6 @@ export const getOrdersQuerySchema = Joi.object({
   sortBy: Joi.string().valid('createdAt', 'startDate').optional(),
   sortOrder: Joi.string().valid('asc', 'desc').optional(),
   page: Joi.number().integer().min(1).optional().default(1),
-  limit: Joi.number().integer().min(1).max(100).optional().default(20),
+  limit: Joi.number().integer().min(1).max(500).optional().default(20),
 });
 
