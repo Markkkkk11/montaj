@@ -38,14 +38,20 @@ export default function OrdersPage() {
       return;
     }
     loadOrders();
-  }, [user, filters, page, isHydrated, userRefreshed]);
+  }, [user, filters, page, viewMode, isHydrated, userRefreshed]);
 
   const loadOrders = async () => {
     try {
       setIsLoading(true);
-      const result = await ordersApi.getOrders({ ...filters, page });
-      setOrders(result.orders);
-      setTotal(result.total);
+      if (viewMode === 'map') {
+        const result = await ordersApi.getOrders({ ...filters, page: 1, limit: 500 });
+        setOrders(result.orders);
+        setTotal(result.total);
+      } else {
+        const result = await ordersApi.getOrders({ ...filters, page });
+        setOrders(result.orders);
+        setTotal(result.total);
+      }
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
