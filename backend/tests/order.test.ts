@@ -29,6 +29,7 @@ describe('Order Management', () => {
       fullName: 'Test Customer',
       role: 'CUSTOMER',
       agreeToTerms: true,
+      agreeToPrivacy: true,
       city: 'Москва',
     });
 
@@ -66,6 +67,7 @@ describe('Order Management', () => {
       fullName: 'Test Executor',
       role: 'EXECUTOR',
       agreeToTerms: true,
+      agreeToPrivacy: true,
       city: 'Москва',
     });
 

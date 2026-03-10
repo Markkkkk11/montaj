@@ -20,6 +20,7 @@ export interface RegisterData {
   inn?: string;
   ogrn?: string;
   agreeToTerms: boolean;
+  agreeToPrivacy: boolean;
 }
 
 export interface LoginData {

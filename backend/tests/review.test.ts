@@ -30,6 +30,7 @@ describe('Review Management', () => {
       fullName: 'Review Customer',
       role: 'CUSTOMER',
       agreeToTerms: true,
+      agreeToPrivacy: true,
       city: 'Москва',
     });
 
@@ -64,6 +65,7 @@ describe('Review Management', () => {
       fullName: 'Review Executor',
       role: 'EXECUTOR',
       agreeToTerms: true,
+      agreeToPrivacy: true,
       city: 'Москва',
     });
 

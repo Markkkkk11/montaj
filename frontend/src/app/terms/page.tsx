@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Shield, Users, Hammer, CreditCard, Eye, Scale, ScrollText, Mail, Banknote } from 'lucide-react';
+import { ArrowLeft, Shield, Users, Hammer, CreditCard, Eye, Scale, ScrollText, Mail, Banknote, Trash2 } from 'lucide-react';
 
 export default function TermsPage() {
   return (
@@ -84,6 +84,8 @@ export default function TermsPage() {
                 <li className="text-muted-foreground flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Новые исполнители получают тариф «Премиум» на 30 дней бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течении 30 дней после регистрации. Бонусы можно использовать для оплаты откликов на заказы.</li>
                 <li className="text-muted-foreground flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Рейтинг исполнителя формируется на основе отзывов заказчиков.</li>
                 <li className="text-muted-foreground flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Контактные данные исполнителя открываются заказчику только после выбора исполнителя.</li>
+                <li className="text-muted-foreground flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель обязан выполнять правила сайта и реагировать на замечания от администрации.</li>
+                <li className="text-muted-foreground flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель после регистрации, должен пройти, не менее трёх Тестовых заданий, чтобы быть допущенным к реальным Заказам. При работе с тестовыми заданиями, определяется функциональность сайта для исполнителя и даёт возможность администрации, определить возможные ошибки, в заполнении профиля/работе на сайте, которые необходимо исправить, для эффективной работы исполнителя с заказчиками.</li>
               </ul>
             </section>
 
@@ -182,13 +184,29 @@ export default function TermsPage() {
               </div>
             </section>
 
-            {/* 9. Обратная связь */}
+            {/* 9. Удаление своего аккаунта */}
+            <section>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 bg-rose-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Trash2 className="h-4 w-4 text-rose-500" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">9. Удаление своего аккаунта</h3>
+              </div>
+              <div className="text-muted-foreground leading-relaxed space-y-3 pl-12">
+                <p>Удаление пользователя с сайта, происходит, путём направления Заявления (свободная форма), о желании удалить свой аккаунт с площадки. Необходимо указать в заявлении свои личные данные и контактный номер телефона заявителя. Заявление направляется на электронную почту, по обратной связи.</p>
+                <p>В теме указать: <span className="font-semibold">«Заявление на удаление аккаунта»</span>. В тексте можете написать причину.</p>
+                <p>После проверки подлинности заявления, аккаунт заявителя с его данными, будет удалён.</p>
+                <p>В случае, желания восстановить аккаунт обратно, вы должны будете пройти заново регистрацию.</p>
+              </div>
+            </section>
+
+            {/* 10. Обратная связь */}
             <section>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Mail className="h-4 w-4 text-teal-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">9. Обратная связь</h3>
+                <h3 className="text-lg font-bold text-gray-900">10. Обратная связь</h3>
               </div>
               <div className="pl-12 space-y-2">
               <p className="text-muted-foreground">

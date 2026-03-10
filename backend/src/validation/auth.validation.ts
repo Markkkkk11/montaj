@@ -48,6 +48,10 @@ export const registerSchema = Joi.object({
     'any.only': 'Необходимо согласиться с условиями сервиса',
     'any.required': 'Необходимо согласиться с условиями сервиса',
   }),
+  agreeToPrivacy: Joi.boolean().valid(true).required().messages({
+    'any.only': 'Необходимо дать согласие на предоставление персональных данных',
+    'any.required': 'Необходимо дать согласие на предоставление персональных данных',
+  }),
 });
 
 export const loginSchema = Joi.object({

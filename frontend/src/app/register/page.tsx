@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
 import { RegisterData } from '@/lib/types';
-import { ArrowLeft, UserPlus, Briefcase, Wrench, ChevronRight, ScrollText, Shield, Users, Hammer, CreditCard, Eye, Scale, Mail, Banknote, X } from 'lucide-react';
+import { ArrowLeft, UserPlus, Briefcase, Wrench, ChevronRight, ScrollText, Shield, Users, Hammer, CreditCard, Eye, Scale, Mail, Banknote, X, FileText, Trash2 } from 'lucide-react';
 
 export default function RegisterPage() {
   return (
@@ -32,11 +32,13 @@ function RegisterContent() {
   const [formData, setFormData] = useState<Partial<RegisterData>>({
     role: role,
     agreeToTerms: false,
+    agreeToPrivacy: false,
   });
   const [verificationCode, setVerificationCode] = useState('');
   const [registeredPhone, setRegisteredPhone] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
   const [showRules, setShowRules] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const [verificationMethod, setVerificationMethod] = useState<'call' | 'sms'>('call');
 
   useEffect(() => {
@@ -323,6 +325,75 @@ function RegisterContent() {
                   </Label>
                 </div>
 
+                <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="agreeToPrivacy"
+                    required
+                    checked={formData.agreeToPrivacy || false}
+                    onChange={(e) => setFormData({ ...formData, agreeToPrivacy: e.target.checked })}
+                    className="rounded mt-0.5 h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                  />
+                  <Label htmlFor="agreeToPrivacy" className="font-normal leading-relaxed text-sm mb-0">
+                    Я ознакомлен и согласен с{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}
+                      className="text-primary hover:underline font-semibold"
+                    >
+                      Предоставлением персональных данных
+                    </button>
+                  </Label>
+                </div>
+
+                {/* Модальное окно с согласием на персональные данные */}
+                <Dialog open={showPrivacy} onOpenChange={setShowPrivacy}>
+                  <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 [&>button:last-child]:hidden">
+                    <div className="bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-5 text-white relative flex-shrink-0">
+                      <button
+                        onClick={() => setShowPrivacy(false)}
+                        className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                      >
+                        <X className="h-4 w-4 text-white" />
+                      </button>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                          <FileText className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <DialogHeader>
+                            <DialogTitle className="text-white text-lg font-bold">Согласие на предоставление персональных данных</DialogTitle>
+                          </DialogHeader>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        Пользователь сайта SVMontaj.ru (далее — Компания), даёт своё согласие, на предоставление и обработку общедоступных, персональных данных, с соблюдением конфиденциальности, для регистрации и возможности предоставления оказания услуг на данном сайте. Согласно статьи 9 Федерального закона от 27.07.2006 №152-ФЗ.
+                      </p>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        Компания в праве обрабатывать персональные данные, посредством включения их в списки и внесения в электронные базы данных Компании.
+                      </p>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        Переданные данные не используются для рассылок, рекламы, не передаются третьим лицам, вне исполнения запроса. Пользователь сам решает, предоставлять доступ к своим данным, или не предоставлять третьим лицам, путем отклика на заказы.
+                      </p>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        Срок действия настоящего согласия — период времени до истечения установленных нормативными актами сроков хранения соответствующей информации или документов размещенных в компонентах системы, по адресу: svmontaj.ru, размещённом в сети Интернет.
+                      </p>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        Настоящее согласие может быть отозвано, в порядке, установленном Федеральным законом РФ, или направлением заявления администрации сайта на эл. почту, на удаление аккаунта пользователя, с его личными данными.
+                      </p>
+                    </div>
+
+                    <div className="border-t px-6 py-4 bg-gray-50/80 flex-shrink-0">
+                      <Button onClick={() => setShowPrivacy(false)} className="w-full" size="lg">
+                        Понятно
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
                 {/* Модальное окно с правилами */}
                 <Dialog open={showRules} onOpenChange={setShowRules}>
                   <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 [&>button:last-child]:hidden">
@@ -394,6 +465,8 @@ function RegisterContent() {
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Новые исполнители получают тариф «Премиум» на 30 дней бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течении 30 дней после регистрации. Бонусы можно использовать для оплаты откликов на заказы.</li>
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Рейтинг исполнителя формируется на основе отзывов заказчиков.</li>
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Контактные данные исполнителя открываются заказчику только после выбора исполнителя.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель обязан выполнять правила сайта и реагировать на замечания от администрации.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель после регистрации, должен пройти, не менее трёх Тестовых заданий, чтобы быть допущенным к реальным Заказам. При работе с тестовыми заданиями, определяется функциональность сайта для исполнителя и даёт возможность администрации, определить возможные ошибки, в заполнении профиля/работе на сайте, которые необходимо исправить, для эффективной работы исполнителя с заказчиками.</li>
                         </ul>
                       </section>
 
@@ -493,13 +566,29 @@ function RegisterContent() {
                         </div>
                       </section>
 
-                      {/* 9. Обратная связь */}
+                      {/* 9. Удаление своего аккаунта */}
+                      <section>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className="w-7 h-7 bg-rose-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                          </div>
+                          <h3 className="text-sm font-bold text-gray-900">9. Удаление своего аккаунта</h3>
+                        </div>
+                        <div className="text-sm text-gray-600 leading-relaxed space-y-2 pl-9">
+                          <p>Удаление пользователя с сайта, происходит, путём направления Заявления (свободная форма), о желании удалить свой аккаунт с площадки. Необходимо указать в заявлении свои личные данные и контактный номер телефона заявителя. Заявление направляется на электронную почту, по обратной связи.</p>
+                          <p>В теме указать: <span className="font-semibold">«Заявление на удаление аккаунта»</span>. В тексте можете написать причину.</p>
+                          <p>После проверки подлинности заявления, аккаунт заявителя с его данными, будет удалён.</p>
+                          <p>В случае, желания восстановить аккаунт обратно, вы должны будете пройти заново регистрацию.</p>
+                        </div>
+                      </section>
+
+                      {/* 10. Обратная связь */}
                       <section>
                         <div className="flex items-center gap-2.5 mb-2">
                           <div className="w-7 h-7 bg-teal-50 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Mail className="h-3.5 w-3.5 text-teal-600" />
                           </div>
-                          <h3 className="text-sm font-bold text-gray-900">9. Обратная связь</h3>
+                          <h3 className="text-sm font-bold text-gray-900">10. Обратная связь</h3>
                         </div>
                         <div className="pl-9 space-y-1.5">
                           <p className="text-sm text-gray-600">

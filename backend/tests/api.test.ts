@@ -30,6 +30,7 @@ describe('API Integration Tests', () => {
       fullName: 'Тестовый Заказчик',
       city: 'Москва',
       agreeToTerms: true,
+      agreeToPrivacy: true,
     });
 
     expect(response.status).toBe(201);
@@ -48,6 +49,7 @@ describe('API Integration Tests', () => {
         fullName: 'Другой пользователь',
         city: 'Москва',
         agreeToTerms: true,
+        agreeToPrivacy: true,
       });
       fail('Should have thrown error');
     } catch (error: any) {
@@ -109,6 +111,7 @@ describe('API Integration Tests', () => {
         fullName: 'Test',
         city: 'Москва',
         agreeToTerms: true,
+        agreeToPrivacy: true,
       });
       fail('Should have thrown error');
     } catch (error: any) {
