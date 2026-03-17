@@ -52,12 +52,43 @@ function filterOrdersWithCoords(orders: Order[]): Order[] {
   );
 }
 
+let ymapsLoadPromise: Promise<void> | null = null;
+
+function ensureYmapsLoaded(): Promise<void> {
+  if (ymapsLoadPromise) return ymapsLoadPromise;
+
+  ymapsLoadPromise = new Promise((resolve) => {
+    if (window.ymaps) {
+      window.ymaps.ready(resolve);
+      return;
+    }
+
+    const existingScript = document.querySelector('script[src*="api-maps.yandex.ru"]');
+    if (existingScript) {
+      const poll = setInterval(() => {
+        if (window.ymaps) {
+          clearInterval(poll);
+          window.ymaps.ready(resolve);
+        }
+      }, 50);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://api-maps.yandex.ru/2.1/?apikey=${process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY}&lang=ru_RU`;
+    script.async = true;
+    script.onload = () => window.ymaps.ready(resolve);
+    document.head.appendChild(script);
+  });
+
+  return ymapsLoadPromise;
+}
+
 export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
   const mapRef = useRef<any>(null);
   const clustererRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const isInitialized = useRef(false);
-  const scriptLoaded = useRef(false);
   const onOrderSelectRef = useRef(onOrderSelect);
   onOrderSelectRef.current = onOrderSelect;
 
@@ -146,46 +177,36 @@ export function OrdersMap({ orders, region, onOrderSelect }: OrdersMapProps) {
   }, [orders, region]);
 
   useEffect(() => {
-    const existingScript = document.querySelector('script[src*="api-maps.yandex.ru"]');
+    let cancelled = false;
 
-    if (!window.ymaps && !existingScript && !scriptLoaded.current) {
-      scriptLoaded.current = true;
-      const script = document.createElement('script');
-      script.src = `https://api-maps.yandex.ru/2.1/?apikey=${process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY}&lang=ru_RU`;
-      script.async = true;
-      script.onload = () => {
-        window.ymaps.ready(initMap);
-      };
-      document.head.appendChild(script);
-    } else if (window.ymaps && !isInitialized.current) {
-      window.ymaps.ready(initMap);
-    }
+    ensureYmapsLoaded().then(() => {
+      if (cancelled || !mapContainerRef.current) return;
 
-    function initMap() {
-      if (!mapContainerRef.current) return;
+      if (!isInitialized.current) {
+        if (mapRef.current) {
+          mapRef.current.destroy();
+          mapRef.current = null;
+        }
 
-      if (mapRef.current && isInitialized.current) {
-        mapRef.current.destroy();
-        mapRef.current = null;
+        const config = region && REGION_CONFIG[region]
+          ? REGION_CONFIG[region]
+          : { center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM };
+
+        mapRef.current = new window.ymaps.Map(mapContainerRef.current, {
+          center: config.center,
+          zoom: config.zoom,
+          controls: ['zoomControl', 'fullscreenControl'],
+        });
+
+        isInitialized.current = true;
       }
 
-      const config = region && REGION_CONFIG[region]
-        ? REGION_CONFIG[region]
-        : { center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM };
-
-      mapRef.current = new window.ymaps.Map(mapContainerRef.current, {
-        center: config.center,
-        zoom: config.zoom,
-        controls: ['zoomControl', 'fullscreenControl'],
-      });
-
-      isInitialized.current = true;
       updateMarkers();
-    }
+    });
 
-    if (isInitialized.current && window.ymaps) {
-      updateMarkers();
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [orders, region, updateMarkers]);
 
   const ordersWithCoords = filterOrdersWithCoords(orders);
