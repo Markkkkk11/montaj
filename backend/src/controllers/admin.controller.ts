@@ -23,7 +23,7 @@ export class AdminController {
    */
   async getUsersForModeration(req: AuthRequest, res: Response) {
     try {
-      const { status, role } = req.query;
+      const { status, role, specialization } = req.query;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
@@ -31,7 +31,8 @@ export class AdminController {
         status as string,
         page,
         limit,
-        role as string
+        role as string,
+        specialization as string
       );
 
       res.json({

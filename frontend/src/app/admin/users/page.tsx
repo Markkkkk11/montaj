@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
-import { Search, Edit, Trash2, ChevronDown, ChevronUp, Phone, Mail, MapPin, Calendar, Briefcase, FileText, MessageSquare, User as UserIcon, Users, Hammer, DollarSign, ArrowUpRight, ArrowDownRight, ArrowUpDown } from 'lucide-react';
+import { SPECIALIZATION_LABELS } from '@/lib/utils';
+import { Search, Edit, Trash2, ChevronDown, ChevronUp, Phone, Mail, MapPin, Calendar, Briefcase, FileText, MessageSquare, User as UserIcon, Users, Hammer, DollarSign, ArrowUpRight, ArrowDownRight, ArrowUpDown, Wrench } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -43,6 +44,10 @@ interface User {
   subscription?: {
     tariffType: string;
     expiresAt: string;
+  };
+  executorProfile?: {
+    specializations?: string[];
+    region?: string;
   };
 }
 
@@ -93,6 +98,7 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [specializationFilter, setSpecializationFilter] = useState<string>('all');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [activityData, setActivityData] = useState<{ [key: string]: UserActivity }>({});
   const [loadingActivity, setLoadingActivity] = useState<string | null>(null);
@@ -100,7 +106,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     loadUsers();
-  }, [roleFilter, statusFilter]);
+  }, [roleFilter, statusFilter, specializationFilter]);
 
   const loadUsers = async () => {
     try {
@@ -108,6 +114,7 @@ export default function AdminUsersPage() {
       const params: any = { limit: 10000 };
       if (roleFilter !== 'all') params.role = roleFilter;
       if (statusFilter !== 'all') params.status = statusFilter;
+      if (roleFilter === 'EXECUTOR' && specializationFilter !== 'all') params.specialization = specializationFilter;
       
       const data = await adminApi.getUsers(params);
       setUsers(data.users || data);
@@ -292,6 +299,21 @@ export default function AdminUsersPage() {
               </SelectContent>
             </Select>
 
+            {roleFilter === 'EXECUTOR' && (
+              <Select value={specializationFilter} onValueChange={setSpecializationFilter}>
+                <SelectTrigger>
+                  <Wrench className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Специализация" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все специализации</SelectItem>
+                  {Object.entries(SPECIALIZATION_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger>
                 <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -343,6 +365,7 @@ export default function AdminUsersPage() {
                   <TableHead>Роль</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Город</TableHead>
+                  {roleFilter === 'EXECUTOR' && <TableHead>Специализации</TableHead>}
                   <TableHead>Заказы</TableHead>
                   <TableHead>Рейтинг</TableHead>
                   <TableHead>Регистрация</TableHead>
@@ -376,6 +399,24 @@ export default function AdminUsersPage() {
                       </span>
                     </TableCell>
                     <TableCell>{user.city}</TableCell>
+                    {roleFilter === 'EXECUTOR' && (
+                      <TableCell>
+                        {user.executorProfile?.specializations && user.executorProfile.specializations.length > 0 ? (
+                          <span className="flex flex-wrap gap-1">
+                            {user.executorProfile.specializations.slice(0, 3).map((spec: string) => (
+                              <span key={spec} className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 text-xs">
+                                {SPECIALIZATION_LABELS[spec] || spec}
+                              </span>
+                            ))}
+                            {(user.executorProfile.specializations?.length ?? 0) > 3 && (
+                              <span className="text-xs text-muted-foreground">+{(user.executorProfile.specializations?.length ?? 0) - 3}</span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
+                    )}
                       <TableCell>
                         <span className="font-semibold text-sm">
                           {user.ordersCount ?? '—'}
@@ -416,7 +457,7 @@ export default function AdminUsersPage() {
                     {/* Expanded Detail Row */}
                     {expandedUserId === user.id && (
                       <TableRow key={`${user.id}-detail`} className="bg-gray-50/80 hover:bg-gray-50/80">
-                        <TableCell colSpan={9} className="p-0">
+                        <TableCell colSpan={roleFilter === 'EXECUTOR' ? 10 : 9} className="p-0">
                           <div className="px-6 py-4">
                             {loadingActivity === user.id ? (
                               <div className="flex items-center justify-center py-6">
@@ -450,6 +491,18 @@ export default function AdminUsersPage() {
                                       <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                                       <span>Регистрация: {new Date(user.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                                     </div>
+                                    {user.role === 'EXECUTOR' && user.executorProfile?.specializations && user.executorProfile.specializations.length > 0 && (
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Wrench className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                        <span className="flex gap-1 flex-wrap">
+                                          {user.executorProfile.specializations.map((spec: string) => (
+                                            <span key={spec} className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 text-xs">
+                                              {SPECIALIZATION_LABELS[spec] || spec}
+                                            </span>
+                                          ))}
+                                        </span>
+                                      </div>
+                                    )}
                                     {user.balance && (
                                       <div className="pt-2 border-t mt-2">
                                         <div className="flex items-center gap-2">

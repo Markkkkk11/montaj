@@ -82,7 +82,13 @@ export class AdminService {
   /**
    * Получить пользователей для модерации
    */
-  async getUsersForModeration(status?: string, page: number = 1, limit: number = 20, role?: string) {
+  async getUsersForModeration(
+    status?: string,
+    page: number = 1,
+    limit: number = 20,
+    role?: string,
+    specialization?: string
+  ) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -91,6 +97,12 @@ export class AdminService {
     }
     if (role) {
       where.role = role;
+    }
+    // Фильтр по специализации (только для исполнителей)
+    if (specialization) {
+      where.executorProfile = {
+        specializations: { has: specialization },
+      };
     }
 
     const [users, total] = await Promise.all([

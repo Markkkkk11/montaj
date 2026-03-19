@@ -33,7 +33,7 @@ export const adminApi = {
   },
 
   // Пользователи
-  async getUsers(params?: { page?: number; limit?: number; role?: string; status?: string }) {
+  async getUsers(params?: { page?: number; limit?: number; role?: string; status?: string; specialization?: string }) {
     const { data } = await api.get('/admin/users', { params });
     return data;
   },
