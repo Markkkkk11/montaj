@@ -144,6 +144,7 @@ export interface Order {
   responses?: Response[];
   _count?: {
     responses: number;
+    views: number;
   };
 }
 
@@ -252,4 +253,3 @@ export interface ReviewStats {
     1: number;
   };
 }
-

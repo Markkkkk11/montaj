@@ -3,7 +3,7 @@ import { Order } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SPECIALIZATION_LABELS, SPECIALIZATION_COLORS } from '@/lib/utils';
-import { Calendar, MapPin, Wallet, Users, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Wallet, Users, Eye, ChevronRight } from 'lucide-react';
 
 interface OrderCardProps {
   order: Order;
@@ -25,6 +25,7 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
     : "hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-0.5";
 
   const responsesCount = order._count?.responses || 0;
+  const viewsCount = order._count?.views || 0;
 
   return (
     <Card className={`${cardClassName} overflow-hidden w-full max-w-full box-border`}>
@@ -86,11 +87,17 @@ export function OrderCard({ order, showActions = false, onSelect, isCustomer = f
           {isCustomer && order.status === 'PUBLISHED' && (
             <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl border ${responsesCount > 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <Users className={`h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 ${responsesCount > 0 ? 'text-emerald-600' : 'text-gray-400'}`} />
-                  <span className={`text-xs sm:text-sm font-semibold truncate ${responsesCount > 0 ? 'text-emerald-800' : 'text-gray-600'}`}>
-                    {responsesCount === 0 ? 'Нет откликов' : `${responsesCount} ${responsesCount === 1 ? 'отклик' : responsesCount < 5 ? 'отклика' : 'откликов'}`}
-                  </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <Users className={`h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 ${responsesCount > 0 ? 'text-emerald-600' : 'text-gray-400'}`} />
+                    <span className={`text-xs sm:text-sm font-semibold truncate ${responsesCount > 0 ? 'text-emerald-800' : 'text-gray-600'}`}>
+                      {responsesCount === 0 ? 'Нет откликов' : `${responsesCount} ${responsesCount === 1 ? 'отклик' : responsesCount < 5 ? 'отклика' : 'откликов'}`}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-muted-foreground">
+                    <Eye className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{viewsCount} {viewsCount === 1 ? 'просмотр' : viewsCount < 5 ? 'просмотра' : 'просмотров'}</span>
+                  </div>
                 </div>
                 {responsesCount > 0 && (
                   <Link href={`/orders/${order.id}`}>

@@ -492,6 +492,42 @@ export class NotificationService {
   }
 
   /**
+   * Уведомление заказчику об удалении заявки по истечении срока без откликов
+   */
+  async notifyOrderExpiredWithoutResponses(
+    customerId: string,
+    orderId: string,
+    orderTitle: string
+  ) {
+    const user = await prisma.user.findUnique({
+      where: { id: customerId },
+    });
+
+    if (!user) return;
+
+    const message = `По заявке "${orderTitle}" не поступило ни одного отклика в течение 120 часов после даты начала работ. Заявка снята с публикации.`;
+
+    await this.createNotification({
+      userId: customerId,
+      type: 'ORDER_CANCELLED',
+      title: 'Заявка удалена по сроку',
+      message,
+      data: {
+        orderId,
+        orderTitle,
+        reason: 'EXPIRED_WITHOUT_RESPONSES',
+      },
+    });
+
+    if (user.email) {
+      const ordersLink = `${config.frontendUrl}/customer/dashboard`;
+      await emailService.sendOrderCancelledEmail(user.email, orderTitle, ordersLink).catch(err =>
+        console.error('❌ Email notifyOrderExpiredWithoutResponses failed:', err.message)
+      );
+    }
+  }
+
+  /**
    * Уведомление о низком балансе
    */
   async notifyLowBalance(userId: string, balance: number) {
@@ -766,4 +802,3 @@ export class NotificationService {
 }
 
 export default new NotificationService();
-

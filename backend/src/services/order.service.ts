@@ -192,6 +192,7 @@ export class OrderService {
           _count: {
             select: {
               responses: { where: { status: { not: 'CANCELLED' } } },
+              views: true,
             },
           },
           // Включаем информацию о просмотрах для текущего пользователя
@@ -285,6 +286,12 @@ export class OrderService {
             createdAt: 'desc',
           },
         },
+        _count: {
+          select: {
+            responses: { where: { status: { not: 'CANCELLED' } } },
+            views: true,
+          },
+        },
       },
     });
 
@@ -320,6 +327,7 @@ export class OrderService {
         _count: {
           select: {
             responses: { where: { status: { not: 'CANCELLED' } } },
+            views: true,
           },
         },
       },
@@ -935,13 +943,11 @@ export class OrderService {
 
     // Уведомляем заказчиков и удаляем файлы
     for (const order of expiredOrders) {
-      notificationService.createNotification({
-        userId: order.customerId,
-        type: 'SYSTEM',
-        title: 'Заказ снят с публикации',
-        message: `Заказ "${order.title}" был снят: не поступило откликов в течение 120 часов с даты начала работ. Вы можете разместить его заново.`,
-        data: { orderId: order.id },
-      }).catch(err => console.error('Notification error (auto-close):', err));
+      notificationService.notifyOrderExpiredWithoutResponses(
+        order.customerId,
+        order.id,
+        order.title
+      ).catch(err => console.error('Notification error (auto-close):', err));
 
       this.cleanupOrderFiles(order.id, order.files || [])
         .catch(err => console.error('File cleanup error (auto-close):', err));
@@ -1059,4 +1065,3 @@ export class OrderService {
 }
 
 export default new OrderService();
-
