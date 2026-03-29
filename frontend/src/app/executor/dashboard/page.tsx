@@ -124,7 +124,11 @@ export default function ExecutorDashboard() {
 
   const activeOrders = myOrders.filter(o => o.status === 'IN_PROGRESS');
   const completedOrders = myOrders.filter(o => o.status === 'COMPLETED');
-  const pendingResponses = myResponses.filter(r => r.status === 'PENDING');
+  const pendingResponses = myResponses.filter(
+    (response) =>
+      response.status === 'PENDING' &&
+      ['PUBLISHED', 'PENDING'].includes(response.order?.status || '')
+  );
 
   return (
     <div className="min-h-screen bg-gray-50/50">

@@ -200,7 +200,15 @@ export class ResponseService {
    */
   async getExecutorResponses(executorId: string) {
     const responses = await prisma.response.findMany({
-      where: { executorId },
+      where: {
+        executorId,
+        status: 'PENDING',
+        order: {
+          status: {
+            in: ['PUBLISHED', 'PENDING'],
+          },
+        },
+      },
       include: {
         order: {
           include: {
@@ -381,4 +389,3 @@ export class ResponseService {
 }
 
 export default new ResponseService();
-
