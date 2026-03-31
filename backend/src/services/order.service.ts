@@ -412,6 +412,17 @@ export class OrderService {
       executorIds.push(response.executorId);
     }
 
+    // Обновить статус откликов на CANCELLED
+    await prisma.response.updateMany({
+      where: {
+        orderId,
+        status: 'PENDING',
+      },
+      data: {
+        status: 'CANCELLED',
+      },
+    });
+
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
