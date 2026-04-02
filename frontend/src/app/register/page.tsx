@@ -32,7 +32,7 @@ function RegisterContent() {
   const [formData, setFormData] = useState<Partial<RegisterData>>({
     role: role,
     agreeToTerms: false,
-    agreeToPrivacy: false,
+    agreeToPrivacy: true,
   });
   const [verificationCode, setVerificationCode] = useState('');
   const [registeredPhone, setRegisteredPhone] = useState('');
