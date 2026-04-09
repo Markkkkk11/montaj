@@ -224,15 +224,15 @@ export class SubscriptionService {
   /**
    * Обрезать специализации профиля исполнителя до лимита тарифа
    */
-  private async trimSpecializations(userId: string, maxSpecs: number) {
+  private async trimSpecializations(userId: string, maxSpecs: number, db: any = prisma) {
     try {
-      const profile = await prisma.executorProfile.findUnique({
+      const profile = await db.executorProfile.findUnique({
         where: { userId },
       });
 
       if (profile && (profile.specializations as Specialization[])?.length > maxSpecs) {
         const trimmed = (profile.specializations as Specialization[]).slice(0, maxSpecs);
-        await prisma.executorProfile.update({
+        await db.executorProfile.update({
           where: { userId },
           data: { specializations: trimmed },
         });
@@ -464,44 +464,67 @@ export class SubscriptionService {
 
     const price = parseInt(tariffSettings.premiumPrice || '5000', 10);
 
-    // Получить баланс пользователя
-    const balance = await prisma.balance.findUnique({ where: { userId } });
-    const totalBalance = parseFloat(balance?.amount.toString() || '0') +
-                        parseFloat(balance?.bonusAmount.toString() || '0');
+    return prisma.$transaction(async (tx) => {
+      const balance = await tx.balance.findUnique({ where: { userId } });
+      const totalBalance =
+        parseFloat(balance?.amount.toString() || '0') +
+        parseFloat(balance?.bonusAmount.toString() || '0');
 
-    if (totalBalance < price) {
-      throw new Error(`Недостаточно средств на балансе. Нужно ${price}₽, на балансе ${Math.floor(totalBalance)}₽`);
-    }
+      if (totalBalance < price) {
+        throw new Error(`Недостаточно средств на балансе. Нужно ${price}₽, на балансе ${Math.floor(totalBalance)}₽`);
+      }
 
-    // Списать средства: сначала бонусы, потом основной баланс
-    let remaining = price;
-    const bonusAmount = parseFloat(balance?.bonusAmount.toString() || '0');
+      // Списать средства: сначала бонусы, потом основной баланс
+      let remaining = price;
+      const bonusAmount = parseFloat(balance?.bonusAmount.toString() || '0');
 
-    let bonusDeduct = Math.min(bonusAmount, remaining);
-    remaining -= bonusDeduct;
-    let mainDeduct = remaining;
+      const bonusDeduct = Math.min(bonusAmount, remaining);
+      remaining -= bonusDeduct;
+      const mainDeduct = remaining;
 
-    await prisma.balance.update({
-      where: { userId },
-      data: {
-        amount: { decrement: mainDeduct },
-        bonusAmount: { decrement: bonusDeduct },
-      },
-    });
+      await tx.balance.update({
+        where: { userId },
+        data: {
+          amount: { decrement: mainDeduct },
+          bonusAmount: { decrement: bonusDeduct },
+        },
+      });
 
-    const subscription = await this.activatePaidSubscription(userId, tariffType, 30);
-
-    // Создать транзакцию
-    await prisma.transaction.create({
-      data: {
+      const { expiresAt, specializationCount } = await this.preparePaidSubscription(
         userId,
-        type: 'SUBSCRIPTION',
-        amount: -price,
-        description: 'Оплата подписки «Премиум» с баланса на 30 дней',
-      },
-    });
+        tariffType,
+        30,
+        tx
+      );
 
-    return subscription;
+      const subscription = await tx.subscription.upsert({
+        where: { userId },
+        create: {
+          userId,
+          tariffType,
+          expiresAt,
+          specializationCount,
+        },
+        update: {
+          tariffType,
+          expiresAt,
+          specializationCount,
+        },
+      });
+
+      await this.trimSpecializations(userId, specializationCount, tx);
+
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: 'SUBSCRIPTION',
+          amount: -price,
+          description: 'Оплата подписки «Премиум» с баланса на 30 дней',
+        },
+      });
+
+      return subscription;
+    });
   }
 
   /**

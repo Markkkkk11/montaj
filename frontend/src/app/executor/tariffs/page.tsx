@@ -81,8 +81,8 @@ function TariffsContent() {
 
       if (payment?.paid) {
         toast({
-          title: 'Подписка активирована!',
-          description: 'Тариф успешно подключён на 30 дней.',
+          title: 'Premium обновлён',
+          description: 'Подписка активирована или продлена ещё на 30 дней.',
         });
       } else {
         toast({
@@ -177,7 +177,7 @@ function TariffsContent() {
 
   // Оплата через ЮKassa
   const handlePayViaYookassa = async (tariffId: string) => {
-    if (tariffId === currentTariffType) return;
+    if (tariffId !== 'PREMIUM') return;
     try {
       setChangingTariff(tariffId);
       const { confirmationUrl } = await createSubscriptionPaymentWithReturnPath('PREMIUM', '/executor/tariffs');
@@ -195,15 +195,17 @@ function TariffsContent() {
 
   // Оплата с баланса только для Premium
   const handlePayPremiumFromBalance = async () => {
-    if (currentTariffType === 'PREMIUM') return;
+    const isRenewal = currentTariffType === 'PREMIUM';
     try {
       setChangingTariff('PREMIUM');
       await paySubscriptionFromBalance('PREMIUM');
       await loadTariffData();
       await getCurrentUser();
       toast({
-        title: 'Подписка активирована!',
-        description: 'Тариф успешно подключён на 30 дней.',
+        title: isRenewal ? 'Подписка продлена!' : 'Подписка активирована!',
+        description: isRenewal
+          ? 'Срок действия Premium увеличен ещё на 30 дней.'
+          : 'Тариф успешно подключён на 30 дней.',
       });
     } catch (error: any) {
       toast({ title: 'Ошибка оплаты', description: error.response?.data?.error || error.message || 'Попробуйте позже', variant: 'destructive' });
@@ -271,6 +273,7 @@ function TariffsContent() {
           {tariffs.map((tariff) => {
             const Icon = tariff.icon;
             const isCurrent = currentTariffType === tariff.id;
+            const canRenewCurrentPremium = isCurrent && tariff.id === 'PREMIUM';
             const isChanging = changingTariff === tariff.id;
             return (
             <Card
@@ -304,10 +307,15 @@ function TariffsContent() {
                     </li>
                   ))}
                 </ul>
-                {isCurrent ? (
+                {isCurrent && !canRenewCurrentPremium ? (
                     <Button className="w-full" disabled variant="outline">✓ Текущий тариф</Button>
                 ) : tariff.isPaid ? (
                   <div className="space-y-2">
+                    {canRenewCurrentPremium && (
+                      <p className="text-xs text-amber-700 bg-amber-100/70 rounded-lg px-3 py-2">
+                        Продление Premium добавит ещё 30 дней к текущему сроку.
+                      </p>
+                    )}
                     {/* Оплата с баланса */}
                     {userBalance >= premiumPrice ? (
                       <Button
@@ -321,12 +329,12 @@ function TariffsContent() {
                             <Loader2 className="h-4 w-4 animate-spin" /> Оплата...
                           </span>
                         ) : (
-                          'Оплатить с баланса'
+                          canRenewCurrentPremium ? 'Продлить с баланса' : 'Оплатить с баланса'
                         )}
                       </Button>
                     ) : (
                       <Button className="w-full" variant="outline" disabled>
-                        На балансе {Math.floor(userBalance)} ₽ — недостаточно
+                        На балансе {Math.floor(userBalance)} ₽ — недостаточно {canRenewCurrentPremium ? 'для продления' : 'для оплаты'}
                       </Button>
                     )}
                     {/* Оплата через ЮKassa */}
@@ -341,7 +349,7 @@ function TariffsContent() {
                           <Loader2 className="h-4 w-4 animate-spin" /> Переход к оплате...
                         </span>
                       ) : (
-                        'Оплатить через ЮKassa'
+                        canRenewCurrentPremium ? 'Продлить через ЮKassa' : 'Оплатить через ЮKassa'
                       )}
                     </Button>
                   </div>
@@ -376,7 +384,7 @@ function TariffsContent() {
               { q: 'Как работает тариф «Стандарт»?', a: `Тариф «Стандарт» — бесплатный. С вашего баланса списывается ${stdResponsePrice} ₽ за каждый отклик на заказ. Вы можете работать с ${stdSpecs === 1 ? 'одной специализацией' : `${stdSpecs} специализациями`} и при необходимости менять их.` },
               { q: 'Как работает тариф «Комфорт»?', a: `Тариф «Комфорт» подключается бесплатно. Отклики бесплатны, но на балансе должно быть не менее ${comfortOrderPrice} ₽. Оплата ${comfortOrderPrice} ₽ списывается с баланса когда заказчик выбирает вас исполнителем. Баланс может уйти в минус, если вас выбрали по нескольким заказам. Доступно ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`}.` },
               { q: 'Что даёт тариф «Премиум»?', a: `Тариф «Премиум» за ${premiumPrice.toLocaleString('ru-RU')} ₽ на 30 дней даёт безлимитные отклики на заказы и возможность работать с ${premiumSpecs} специализациями одновременно.` },
-              { q: 'Бонус при регистрации', a: `Новые исполнители получают тариф «Премиум» на ${trialDays} ${trialDays === 1 ? 'день' : trialDays < 5 ? 'дня' : 'дней'} бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течение 30 дней после регистрации.` },
+              { q: 'Бонус при регистрации', a: `Новые исполнители получают тариф «Премиум» на ${trialDays} ${trialDays === 1 ? 'день' : trialDays < 5 ? 'дня' : 'дней'} бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течение 30 дней после регистрации. Бонусы можно использовать для оплаты откликов и Premium с баланса.` },
             ].map((item, idx) => (
               <div key={idx} className="p-4 bg-gray-50 rounded-xl">
                 <h3 className="font-bold text-sm mb-1.5">{item.q}</h3>
