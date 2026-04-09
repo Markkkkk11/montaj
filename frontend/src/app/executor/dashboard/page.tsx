@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { OrderCard } from '@/components/orders/OrderCard';
@@ -15,6 +16,7 @@ import { Wallet, FileText, User, Star, Search, Mail, MessageCircle, ArrowRight, 
 
 export default function ExecutorDashboard() {
   const { user, logout, isHydrated } = useAuthStore();
+  const { settings, fetchSettings } = useSettingsStore();
   const router = useRouter();
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [myResponses, setMyResponses] = useState<Response[]>([]);
@@ -23,6 +25,10 @@ export default function ExecutorDashboard() {
   const [balanceInfoClosed, setBalanceInfoClosed] = useState(false);
   const [showAllActive, setShowAllActive] = useState(false);
   const [showAllCompleted, setShowAllCompleted] = useState(false);
+
+  useEffect(() => {
+    fetchSettings().catch((error) => console.error('Failed to load public settings:', error));
+  }, [fetchSettings]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -117,6 +123,7 @@ export default function ExecutorDashboard() {
   const balance = user.balance;
   const subscription = getEffectiveSubscription(user.subscription);
   const profile = user.executorProfile;
+  const standardResponsePrice = parseInt(settings.standardResponsePrice || '150', 10);
 
   const totalBalance = balance && balance.amount !== undefined && balance.bonusAmount !== undefined
     ? (parseFloat(balance.amount.toString()) + parseFloat(balance.bonusAmount.toString())).toFixed(2)
@@ -433,7 +440,7 @@ export default function ExecutorDashboard() {
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Стоимость отклика</p>
                 <p className="text-lg sm:text-xl font-extrabold text-blue-600">
-                  {subscription.tariffType === 'PREMIUM' || subscription.tariffType === 'COMFORT' ? '0' : '150'} ₽
+                  {subscription.tariffType === 'PREMIUM' || subscription.tariffType === 'COMFORT' ? '0' : standardResponsePrice} ₽
                 </p>
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">

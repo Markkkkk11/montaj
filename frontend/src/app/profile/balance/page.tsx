@@ -147,7 +147,7 @@ function BalanceContent() {
         {/* Контент вкладок */}
         {activeTab === 'balance' && (
           <div className="grid md:grid-cols-2 gap-6">
-            <TopUpForm />
+            <TopUpForm returnPath="/profile/balance" />
             <Card>
               <CardHeader>
                 <CardTitle>Информация</CardTitle>
@@ -198,4 +198,3 @@ function BalanceContent() {
     </div>
   );
 }
-

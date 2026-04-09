@@ -10,7 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Wallet, Gift, TrendingUp, ArrowLeft, CreditCard, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getBalance } from '@/lib/api/users';
-import { createTopUpPayment, processPaymentSuccess, getPaymentHistory, Payment } from '@/lib/api/payments';
+import {
+  createTopUpPaymentWithReturnPath,
+  processPaymentSuccess,
+  getPaymentHistory,
+  Payment,
+} from '@/lib/api/payments';
 import { useToast } from '@/hooks/use-toast';
 
 const PRESET_AMOUNTS = [150, 300, 500, 1000, 2000, 5000];
@@ -152,7 +157,7 @@ function ExecutorBalanceContent() {
         return;
       }
 
-      const result = await createTopUpPayment(finalAmount);
+      const result = await createTopUpPaymentWithReturnPath(finalAmount, '/executor/balance');
 
       // Перенаправить на страницу оплаты ЮKassa
       if (result.confirmationUrl) {
@@ -475,4 +480,3 @@ function ExecutorBalanceContent() {
     </div>
   );
 }
-

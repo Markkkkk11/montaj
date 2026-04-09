@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
+import { getTariffInfo, TariffInfo } from '@/lib/api/subscriptions';
 import { ArrowLeft } from 'lucide-react';
 
 export default function AdminUserEditPage() {
@@ -24,6 +25,7 @@ export default function AdminUserEditPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tariffLimits, setTariffLimits] = useState<Record<string, TariffInfo>>({});
 
   // Form state
   const [fullName, setFullName] = useState('');
@@ -39,6 +41,17 @@ export default function AdminUserEditPage() {
   useEffect(() => {
     loadUser();
   }, [userId]);
+
+  useEffect(() => {
+    loadTariffLimits();
+  }, []);
+
+  useEffect(() => {
+    const limit = tariffLimits[tariffType]?.specializationCount;
+    if (typeof limit === 'number') {
+      setSpecializationCount(limit.toString());
+    }
+  }, [tariffType, tariffLimits]);
 
   const loadUser = async () => {
     try {
@@ -61,6 +74,15 @@ export default function AdminUserEditPage() {
       alert('Ошибка загрузки пользователя');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTariffLimits = async () => {
+    try {
+      const data = await getTariffInfo();
+      setTariffLimits(data);
+    } catch (error) {
+      console.error('Failed to load tariff limits:', error);
     }
   };
 
@@ -88,7 +110,6 @@ export default function AdminUserEditPage() {
         // Update subscription
         await adminApi.updateUserSubscription(userId, {
           tariffType,
-          specializationCount: parseInt(specializationCount),
         });
       }
 
@@ -252,8 +273,11 @@ export default function AdminUserEditPage() {
                     min="1"
                     max="6"
                     value={specializationCount}
-                    onChange={(e) => setSpecializationCount(e.target.value)}
+                    disabled
                   />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Лимит определяется автоматически по выбранному тарифу.
+                  </p>
                 </div>
 
                 {user.subscription?.expiresAt && tariffType !== 'STANDARD' && (
@@ -283,4 +307,3 @@ export default function AdminUserEditPage() {
     </div>
   );
 }
-

@@ -34,6 +34,17 @@ export async function createTopUpPayment(amount: number): Promise<{
   return data;
 }
 
+export async function createTopUpPaymentWithReturnPath(
+  amount: number,
+  returnPath?: string
+): Promise<{
+  payment: Payment;
+  confirmationUrl: string;
+}> {
+  const { data } = await api.post('/payments/top-up', { amount, returnPath });
+  return data;
+}
+
 /**
  * Создать платёж для подписки (Comfort / Premium)
  */
@@ -45,6 +56,17 @@ export async function createSubscriptionPayment(tariffType: 'COMFORT' | 'PREMIUM
   return data;
 }
 
+export async function createSubscriptionPaymentWithReturnPath(
+  tariffType: 'COMFORT' | 'PREMIUM',
+  returnPath?: string
+): Promise<{
+  payment: Payment;
+  confirmationUrl: string;
+}> {
+  const { data } = await api.post('/payments/subscription', { tariffType, returnPath });
+  return data;
+}
+
 /**
  * Обратная совместимость
  */
@@ -52,7 +74,7 @@ export async function createPremiumSubscriptionPayment(): Promise<{
   payment: Payment;
   confirmationUrl: string;
 }> {
-  return createSubscriptionPayment('PREMIUM');
+  return createSubscriptionPaymentWithReturnPath('PREMIUM');
 }
 
 /**
@@ -85,4 +107,3 @@ export async function processPaymentSuccess(paymentId: string): Promise<Payment>
   });
   return data.payment;
 }
-

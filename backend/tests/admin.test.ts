@@ -80,7 +80,7 @@ describe('Admin Panel', () => {
     const order = await prisma.order.create({
       data: {
         customerId: customer.id,
-        specialization: 'WINDOWS',
+        category: 'WINDOWS',
         region: 'Moscow',
         address: 'Test Address',
         title: 'Test Order',
@@ -237,6 +237,40 @@ describe('Admin Panel', () => {
         where: { id: userId },
       });
       expect(user?.status).toBe('BLOCKED');
+    });
+
+    it('should normalize specialization count to the tariff limit when admin updates subscription', async () => {
+      await prisma.executorProfile.upsert({
+        where: { userId },
+        update: {
+          region: 'Moscow',
+          specializations: ['WINDOWS', 'DOORS', 'CEILINGS'],
+          workPhotos: [],
+        },
+        create: {
+          userId,
+          region: 'Moscow',
+          specializations: ['WINDOWS', 'DOORS', 'CEILINGS'],
+          workPhotos: [],
+        },
+      });
+
+      const response = await request(app)
+        .patch(`/api/admin/users/${userId}/subscription`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          tariffType: 'COMFORT',
+          specializationCount: 3,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.tariffType).toBe('COMFORT');
+      expect(response.body.specializationCount).toBe(1);
+
+      const executorProfile = await prisma.executorProfile.findUnique({
+        where: { userId },
+      });
+      expect(executorProfile?.specializations).toEqual(['WINDOWS']);
     });
   });
 

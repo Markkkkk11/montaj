@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Header } from '@/components/layout/Header';
 import { Check, Crown, Zap, Shield, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSettingsStore } from '@/stores/settingsStore';
 import {
   getTariffInfo,
   getCurrentTariff,
@@ -15,7 +16,10 @@ import {
   paySubscriptionFromBalance,
   TariffInfo,
 } from '@/lib/api/subscriptions';
-import { createSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
+import {
+  createSubscriptionPaymentWithReturnPath,
+  processPaymentSuccess,
+} from '@/lib/api/payments';
 
 export default function TariffsPage() {
   return (
@@ -27,6 +31,7 @@ export default function TariffsPage() {
 
 function TariffsContent() {
   const { user, isHydrated, getCurrentUser } = useAuthStore();
+  const { settings, fetchSettings } = useSettingsStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -40,6 +45,7 @@ function TariffsContent() {
     if (!user) { router.push('/login'); return; }
     if (user.role !== 'EXECUTOR') { router.push('/customer/dashboard'); return; }
 
+    fetchSettings().catch((error) => console.error('Failed to load public settings:', error));
     loadTariffData();
 
     // Обработать callback после оплаты Premium
@@ -103,6 +109,7 @@ function TariffsContent() {
   const stdSpecs = tariffInfo.STANDARD?.specializationCount ?? 1;
   const comfortSpecs = tariffInfo.COMFORT?.specializationCount ?? 1;
   const premiumSpecs = tariffInfo.PREMIUM?.specializationCount ?? 3;
+  const trialDays = parseInt(settings.trialDays || '7', 10);
 
   const tariffs = [
     {
@@ -172,7 +179,10 @@ function TariffsContent() {
     if (tariffId === currentTariffType) return;
     try {
       setChangingTariff(tariffId);
-      const { confirmationUrl } = await createSubscriptionPayment(tariffId as 'COMFORT' | 'PREMIUM');
+      const { confirmationUrl } = await createSubscriptionPaymentWithReturnPath(
+        tariffId as 'COMFORT' | 'PREMIUM',
+        '/executor/tariffs'
+      );
       if (confirmationUrl) {
         window.location.href = confirmationUrl;
       } else {
@@ -362,10 +372,10 @@ function TariffsContent() {
           </CardHeader>
           <CardContent className="space-y-5">
             {[
-              { q: 'Как работает тариф «Стандарт»?', a: `Тариф «Стандарт» — бесплатный. С вашего баланса списывается ${stdResponsePrice} ₽ за каждый отклик на заказ. Вы можете работать с одной специализацией, но можете переключаться между ними.` },
-              { q: 'Как работает тариф «Комфорт»?', a: `Тариф «Комфорт» стоит ${comfortPrice.toLocaleString('ru-RU')} ₽/мес. Отклики бесплатны, но на балансе должно быть не менее ${comfortOrderPrice} ₽. Оплата ${comfortOrderPrice} ₽ списывается с баланса когда заказчик выбирает вас исполнителем. Баланс может уйти в минус, если вас выбрали по нескольким заказам. Вы можете работать с одной специализацией, но можете переключаться между ними.` },
+              { q: 'Как работает тариф «Стандарт»?', a: `Тариф «Стандарт» — бесплатный. С вашего баланса списывается ${stdResponsePrice} ₽ за каждый отклик на заказ. Вы можете работать с ${stdSpecs === 1 ? 'одной специализацией' : `${stdSpecs} специализациями`} и при необходимости менять их.` },
+              { q: 'Как работает тариф «Комфорт»?', a: `Тариф «Комфорт» стоит ${comfortPrice.toLocaleString('ru-RU')} ₽/мес. Отклики бесплатны, но на балансе должно быть не менее ${comfortOrderPrice} ₽. Оплата ${comfortOrderPrice} ₽ списывается с баланса когда заказчик выбирает вас исполнителем. Баланс может уйти в минус, если вас выбрали по нескольким заказам. Доступно ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`}.` },
               { q: 'Что даёт тариф «Премиум»?', a: `Тариф «Премиум» за ${premiumPrice.toLocaleString('ru-RU')} ₽/мес даёт безлимитные отклики на заказы, возможность работать с ${premiumSpecs} специализациями одновременно, приоритетное размещение в списке исполнителей и персонального менеджера.` },
-              { q: 'Бонус при регистрации', a: 'Новые исполнители получают тариф «Премиум» на 1 месяц бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течение 30 дней после регистрации.' },
+              { q: 'Бонус при регистрации', a: `Новые исполнители получают тариф «Премиум» на ${trialDays} ${trialDays === 1 ? 'день' : trialDays < 5 ? 'дня' : 'дней'} бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течение 30 дней после регистрации.` },
             ].map((item, idx) => (
               <div key={idx} className="p-4 bg-gray-50 rounded-xl">
                 <h3 className="font-bold text-sm mb-1.5">{item.q}</h3>

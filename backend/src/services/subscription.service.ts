@@ -29,6 +29,13 @@ export class SubscriptionService {
     return this.getTariffSpecializationCount('STANDARD', tariffSettings);
   }
 
+  async getSpecializationCountForTariff(
+    tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM'
+  ): Promise<number> {
+    const tariffSettings = await this.getTariffSettings();
+    return this.getTariffSpecializationCount(tariffType, tariffSettings);
+  }
+
   private async getStandardResponsePrice(): Promise<number> {
     const tariffSettings = await this.getTariffSettings();
     return parseInt(tariffSettings.standardResponsePrice || '150', 10);
@@ -115,11 +122,18 @@ export class SubscriptionService {
       };
     }
 
+    const fallbackSpecializationCount = await this.getSpecializationCountForTariff(
+      subscription.tariffType as 'STANDARD' | 'COMFORT' | 'PREMIUM'
+    );
+
     return {
       tariffType: subscription.tariffType,
       isActive: true,
       expiresAt: subscription.expiresAt,
-      specializationCount: subscription.specializationCount,
+      specializationCount:
+        typeof subscription.specializationCount === 'number' && subscription.specializationCount > 0
+          ? subscription.specializationCount
+          : fallbackSpecializationCount,
     };
   }
 

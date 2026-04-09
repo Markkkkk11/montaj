@@ -1,6 +1,19 @@
 import { Request, Response } from 'express';
 import paymentService from '../services/payment.service';
-import subscriptionService from '../services/subscription.service';
+
+function buildReturnUrl(defaultPath: string, returnPath?: string) {
+  const frontendUrl = process.env.FRONTEND_URL;
+
+  if (!frontendUrl) {
+    throw new Error('FRONTEND_URL не настроен');
+  }
+
+  if (returnPath && !/^\/[A-Za-z0-9\-/_?=&]*$/.test(returnPath)) {
+    throw new Error('Некорректный путь возврата');
+  }
+
+  return `${frontendUrl}${returnPath || defaultPath}`;
+}
 
 export class PaymentController {
   /**
@@ -8,11 +21,10 @@ export class PaymentController {
    */
   async createTopUp(req: Request, res: Response) {
     try {
-      const { amount } = req.body;
+      const { amount, returnPath } = req.body;
       const userId = req.user!.id;
 
-      // Определяем return URL: исполнители возвращаются на /executor/balance
-      const returnUrl = `${process.env.FRONTEND_URL}/executor/balance`;
+      const returnUrl = buildReturnUrl('/executor/balance', returnPath);
 
       const payment = await paymentService.createTopUpPayment(
         userId,
@@ -39,13 +51,13 @@ export class PaymentController {
   async createSubscriptionPayment(req: Request, res: Response) {
     try {
       const userId = req.user!.id;
-      const { tariffType } = req.body;
+      const { tariffType, returnPath } = req.body;
 
       if (!tariffType || !['COMFORT', 'PREMIUM'].includes(tariffType)) {
         throw new Error('Укажите тариф: COMFORT или PREMIUM');
       }
 
-      const returnUrl = `${process.env.FRONTEND_URL}/executor/tariffs`;
+      const returnUrl = buildReturnUrl('/executor/tariffs', returnPath);
 
       const payment = await paymentService.createSubscriptionPayment(
         userId,
@@ -159,4 +171,3 @@ export class PaymentController {
 }
 
 export default new PaymentController();
-

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { X, Mail, MessageCircle, ChevronRight, ChevronDown, Shield, Clock, Star, Zap, ArrowRight, HelpCircle } from 'lucide-react';
@@ -142,9 +143,14 @@ const FAQ_ITEMS = [
 
 export default function HomeClient() {
   const { user } = useAuthStore();
+  const { settings, fetchSettings } = useSettingsStore();
   const router = useRouter();
   const [selectedSpec, setSelectedSpec] = useState<typeof SPECIALIZATIONS[0] | null>(null);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchSettings().catch((err) => console.error('Failed to load public settings:', err));
+  }, [fetchSettings]);
 
   useEffect(() => {
     if (user) {
@@ -157,6 +163,19 @@ export default function HomeClient() {
       }
     }
   }, [user, router]);
+
+  const trialDays = parseInt(settings.trialDays || '7', 10);
+  const standardResponsePrice = parseInt(settings.standardResponsePrice || '150', 10);
+  const comfortOrderTakenPrice = parseInt(settings.comfortOrderTakenPrice || '500', 10);
+  const trialDaysLabel = `${trialDays} ${trialDays === 1 ? 'день' : trialDays < 5 ? 'дня' : 'дней'}`;
+  const faqItems = FAQ_ITEMS.map((item) => ({
+    ...item,
+    answer: item.answer
+      .replaceAll('тариф «Премиум» на 30 дней', `тариф «Премиум» на ${trialDaysLabel}`)
+      .replaceAll('Премиум тарифу на 30 дней', `Премиум тарифу на ${trialDaysLabel}`)
+      .replaceAll('Стандарт — 150₽', `Стандарт — ${standardResponsePrice}₽`)
+      .replaceAll('Комфорт — 500₽ при выборе', `Комфорт — ${comfortOrderTakenPrice}₽ при выборе`),
+  }));
 
   return (
     <div className="min-h-screen bg-white">
@@ -419,7 +438,7 @@ export default function HomeClient() {
           </div>
 
           <div className="max-w-3xl mx-auto space-y-3">
-            {FAQ_ITEMS.map((item, index) => (
+            {faqItems.map((item, index) => (
               <div
                 key={index}
                 className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-soft"

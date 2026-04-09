@@ -2,6 +2,7 @@ import request from 'supertest';
 import app from '../src/app';
 import prisma from '../src/config/database';
 import { hashPassword } from '../src/utils/hash';
+import paymentService from '../src/services/payment.service';
 
 describe('Payment and Subscription System', () => {
   let authToken: string;
@@ -179,6 +180,41 @@ describe('Payment and Subscription System', () => {
       expect(parseFloat(response.body.payment.amount)).toBe(5000);
     });
 
+    it('should use the requested return path for subscription payments', async () => {
+      const paymentSpy = jest
+        .spyOn(paymentService, 'createSubscriptionPayment')
+        .mockResolvedValue({
+          id: 'subscription-payment',
+          userId: executorId,
+          amount: 500,
+          currency: 'RUB',
+          status: 'PROCESSING',
+          purpose: 'subscription',
+          description: 'Подписка COMFORT на 30 дней',
+          confirmationUrl: 'https://example.com/pay',
+          paid: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any);
+
+      const response = await request(app)
+        .post('/api/payments/subscription')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          tariffType: 'COMFORT',
+          returnPath: '/profile/subscription',
+        });
+
+      expect(response.status).toBe(200);
+      expect(paymentSpy).toHaveBeenCalledWith(
+        executorId,
+        'COMFORT',
+        expect.stringContaining('/profile/subscription')
+      );
+
+      paymentSpy.mockRestore();
+    });
+
     it('should activate COMFORT from balance payment', async () => {
       const response = await request(app)
         .post('/api/subscriptions/pay-from-balance')
@@ -195,6 +231,41 @@ describe('Payment and Subscription System', () => {
 
   describe('Payment Processing', () => {
     let testPaymentId: string;
+
+    it('should use the requested return path for top-up payments', async () => {
+      const paymentSpy = jest
+        .spyOn(paymentService, 'createTopUpPayment')
+        .mockResolvedValue({
+          id: 'topup-payment',
+          userId: executorId,
+          amount: 1000,
+          currency: 'RUB',
+          status: 'PROCESSING',
+          purpose: 'top_up',
+          description: 'Пополнение баланса на 1000₽',
+          confirmationUrl: 'https://example.com/pay',
+          paid: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any);
+
+      const response = await request(app)
+        .post('/api/payments/top-up')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          amount: 1000,
+          returnPath: '/profile/balance?tab=history',
+        });
+
+      expect(response.status).toBe(200);
+      expect(paymentSpy).toHaveBeenCalledWith(
+        executorId,
+        1000,
+        expect.stringContaining('/profile/balance?tab=history')
+      );
+
+      paymentSpy.mockRestore();
+    });
 
     it('should create a test payment', async () => {
       const payment = await prisma.payment.create({

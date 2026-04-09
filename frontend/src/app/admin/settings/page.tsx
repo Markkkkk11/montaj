@@ -46,6 +46,7 @@ export default function AdminSettingsPage() {
     comfortSpecializations: '1',
     premiumPrice: '5000',
     premiumSpecializations: '3',
+    trialDays: '7',
   });
 
   const [emailSettings, setEmailSettings] = useState({
@@ -390,7 +391,7 @@ export default function AdminSettingsPage() {
                 <CreditCard className="h-4 w-4 text-amber-500" />
                 Премиум
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="premiumPrice">Подписка (₽/мес)</Label>
                   <Input
@@ -410,6 +411,17 @@ export default function AdminSettingsPage() {
                   value={tariffSettings.premiumSpecializations}
                   onChange={(e) =>
                     setTariffSettings({ ...tariffSettings, premiumSpecializations: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                  <Label htmlFor="trialDays">Пробный период (дней)</Label>
+                <Input
+                  id="trialDays"
+                  type="number"
+                  value={tariffSettings.trialDays}
+                  onChange={(e) =>
+                    setTariffSettings({ ...tariffSettings, trialDays: e.target.value })
                   }
                 />
               </div>

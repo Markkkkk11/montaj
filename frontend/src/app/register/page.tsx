@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { RegisterData } from '@/lib/types';
 import { ArrowLeft, UserPlus, Briefcase, Wrench, ChevronRight, ScrollText, Shield, Users, Hammer, CreditCard, Eye, Scale, Mail, Banknote, X, FileText, Trash2 } from 'lucide-react';
 
@@ -24,6 +25,7 @@ function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { register, verifyPhone, sendSMS, isLoading, error, setError } = useAuthStore();
+  const { settings, fetchSettings } = useSettingsStore();
 
   const [step, setStep] = useState<'role' | 'info' | 'verify'>('role');
   const [role, setRole] = useState<'CUSTOMER' | 'EXECUTOR'>(
@@ -42,11 +44,24 @@ function RegisterContent() {
   const [verificationMethod, setVerificationMethod] = useState<'call' | 'sms'>('call');
 
   useEffect(() => {
+    fetchSettings().catch((err) => console.error('Failed to load public settings:', err));
+  }, [fetchSettings]);
+
+  useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
       return () => clearTimeout(timer);
     }
   }, [resendTimer]);
+
+  const standardResponsePrice = parseInt(settings.standardResponsePrice || '150', 10);
+  const comfortPrice = parseInt(settings.comfortPrice || '500', 10);
+  const comfortOrderTakenPrice = parseInt(settings.comfortOrderTakenPrice || '500', 10);
+  const premiumPrice = parseInt(settings.premiumPrice || '5000', 10);
+  const standardSpecs = parseInt(settings.standardSpecializations || '1', 10);
+  const comfortSpecs = parseInt(settings.comfortSpecializations || '1', 10);
+  const premiumSpecs = parseInt(settings.premiumSpecializations || '3', 10);
+  const trialDays = parseInt(settings.trialDays || '7', 10);
 
   const handleRoleSelect = (selectedRole: 'CUSTOMER' | 'EXECUTOR') => {
     setRole(selectedRole);
@@ -462,7 +477,7 @@ function RegisterContent() {
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель обязан предоставить достоверную информацию о себе, опыте и квалификации.</li>
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель обязан качественно выполнять принятые заказы в оговорённые сроки.</li>
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Стоимость отклика зависит от выбранного тарифа (Стандарт, Комфорт, Премиум).</li>
-                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Новые исполнители получают тариф «Премиум» на 30 дней бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течении 30 дней после регистрации. Бонусы можно использовать для оплаты откликов на заказы.</li>
+                          <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>{`Новые исполнители получают тариф «Премиум» на ${trialDays} ${trialDays === 1 ? 'день' : trialDays < 5 ? 'дня' : 'дней'} бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течении 30 дней после регистрации. Бонусы можно использовать для оплаты откликов на заказы.`}</li>
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Рейтинг исполнителя формируется на основе отзывов заказчиков.</li>
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Контактные данные исполнителя открываются заказчику только после выбора исполнителя.</li>
                           <li className="text-sm text-gray-600 flex items-start gap-2"><span className="text-violet-500 mt-1.5 flex-shrink-0">•</span>Исполнитель обязан выполнять правила сайта и реагировать на замечания от администрации.</li>
@@ -481,15 +496,15 @@ function RegisterContent() {
                         <div className="space-y-2 pl-9">
                           <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
                             <p className="text-sm font-semibold text-gray-800">Стандарт</p>
-                            <p className="text-xs text-gray-500 mt-0.5">150 ₽ за каждый отклик. 1 специализация (свободный выбор).</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{`${standardResponsePrice} ₽ за каждый отклик. ${standardSpecs === 1 ? '1 специализация' : `${standardSpecs} специализации`} (свободный выбор).`}</p>
                           </div>
                           <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-                            <p className="text-sm font-semibold text-blue-800">Комфорт — 500 ₽/мес</p>
-                            <p className="text-xs text-blue-600/70 mt-0.5">Бесплатные отклики. 500 ₽ списывается при выборе заказчиком. 1 специализация (свободный выбор).</p>
+                            <p className="text-sm font-semibold text-blue-800">{`Комфорт — ${comfortPrice} ₽/мес`}</p>
+                            <p className="text-xs text-blue-600/70 mt-0.5">{`Бесплатные отклики. ${comfortOrderTakenPrice} ₽ списывается при выборе заказчиком. ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`} (свободный выбор).`}</p>
                           </div>
                           <div className="p-3 bg-violet-50/50 rounded-xl border border-violet-100">
                             <p className="text-sm font-semibold text-violet-800">Премиум</p>
-                            <p className="text-xs text-violet-600/70 mt-0.5">5000 ₽ за 30 дней. Безлимитные отклики, до 3 специализаций (свободный выбор).</p>
+                            <p className="text-xs text-violet-600/70 mt-0.5">{`${premiumPrice} ₽ за 30 дней. Безлимитные отклики, до ${premiumSpecs} ${premiumSpecs === 1 ? 'специализации' : premiumSpecs < 5 ? 'специализаций' : 'специализаций'} (свободный выбор).`}</p>
                           </div>
                         </div>
                       </section>

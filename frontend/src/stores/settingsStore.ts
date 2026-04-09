@@ -7,6 +7,10 @@ interface PlatformSettings {
   supportPhone: string;
   defaultRegion: string;
   standardPrice: string;
+  standardResponsePrice: string;
+  comfortPrice: string;
+  comfortOrderTakenPrice: string;
+  comfortSpecializations: string;
   premiumPrice: string;
   premiumSpecializations: string;
   standardSpecializations: string;
@@ -27,7 +31,11 @@ const defaultSettings: PlatformSettings = {
   supportPhone: '+7 (800) 123-45-67',
   defaultRegion: 'Москва и обл.',
   standardPrice: '0',
-  premiumPrice: '990',
+  standardResponsePrice: '150',
+  comfortPrice: '500',
+  comfortOrderTakenPrice: '500',
+  comfortSpecializations: '1',
+  premiumPrice: '5000',
   premiumSpecializations: '3',
   standardSpecializations: '1',
   trialDays: '7',
@@ -55,4 +63,3 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     }
   },
 }));
-

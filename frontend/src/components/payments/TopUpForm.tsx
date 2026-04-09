@@ -5,11 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { createTopUpPayment } from '@/lib/api/payments';
+import { createTopUpPaymentWithReturnPath } from '@/lib/api/payments';
 
 const PRESET_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
-export default function TopUpForm() {
+interface TopUpFormProps {
+  returnPath?: string;
+}
+
+export default function TopUpForm({ returnPath }: TopUpFormProps) {
   const [amount, setAmount] = useState<number>(1000);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -27,7 +31,7 @@ export default function TopUpForm() {
         return;
       }
 
-      const { confirmationUrl } = await createTopUpPayment(finalAmount);
+      const { confirmationUrl } = await createTopUpPaymentWithReturnPath(finalAmount, returnPath);
 
       // Перенаправить на страницу оплаты
       window.location.href = confirmationUrl;
@@ -111,4 +115,3 @@ export default function TopUpForm() {
     </Card>
   );
 }
-

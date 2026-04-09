@@ -913,19 +913,31 @@ export class AdminService {
    * Обновить подписку пользователя
    */
   async updateUserSubscription(userId: string, data: any) {
-    const expiresAt = data.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const tariffType = data.tariffType as 'STANDARD' | 'COMFORT' | 'PREMIUM';
+
+    if (!tariffType || !['STANDARD', 'COMFORT', 'PREMIUM'].includes(tariffType)) {
+      throw new Error('Некорректный тариф');
+    }
+
+    const specializationCount = await subscriptionService.getSpecializationCountForTariff(tariffType);
+    const expiresAt =
+      data.expiresAt
+        ? new Date(data.expiresAt)
+        : tariffType === 'STANDARD'
+          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
       update: {
-        tariffType: data.tariffType,
-        specializationCount: data.specializationCount,
+        tariffType,
+        specializationCount,
         expiresAt,
       },
       create: {
         userId,
-        tariffType: data.tariffType,
-        specializationCount: data.specializationCount,
+        tariffType,
+        specializationCount,
         expiresAt,
       },
     });

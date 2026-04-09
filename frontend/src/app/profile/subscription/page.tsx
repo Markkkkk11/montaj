@@ -10,7 +10,10 @@ import {
   changeTariff,
   TariffInfo,
 } from '@/lib/api/subscriptions';
-import { createSubscriptionPayment, processPaymentSuccess } from '@/lib/api/payments';
+import {
+  createSubscriptionPaymentWithReturnPath,
+  processPaymentSuccess,
+} from '@/lib/api/payments';
 
 export default function SubscriptionPage() {
   return (
@@ -75,7 +78,10 @@ function SubscriptionContent() {
 
       if (tariffKey === 'COMFORT' || tariffKey === 'PREMIUM') {
         // Comfort и Premium — оплата через ЮKassa
-        const { confirmationUrl } = await createSubscriptionPayment(tariffKey as 'COMFORT' | 'PREMIUM');
+        const { confirmationUrl } = await createSubscriptionPaymentWithReturnPath(
+          tariffKey as 'COMFORT' | 'PREMIUM',
+          '/profile/subscription'
+        );
         window.location.href = confirmationUrl;
       } else {
         // Standard — бесплатная смена
@@ -89,6 +95,10 @@ function SubscriptionContent() {
       setLoading(false);
     }
   };
+
+  const standardTariff = tariffs.STANDARD;
+  const comfortTariff = tariffs.COMFORT;
+  const premiumTariff = tariffs.PREMIUM;
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -124,22 +134,36 @@ function SubscriptionContent() {
             <div>
               <h4 className="font-semibold mb-2">Стандарт</h4>
               <p className="text-gray-600">
-                Бесплатный тариф. Оплата 150₽ за каждый отклик на заказ. Одна
-                специализация.
+                {standardTariff
+                  ? `Бесплатный тариф. Оплата ${standardTariff.responsePrice}₽ за каждый отклик на заказ. ${
+                      standardTariff.specializationCount === 1
+                        ? 'Одна специализация.'
+                        : `До ${standardTariff.specializationCount} специализаций.`
+                    }`
+                  : 'Бесплатный тариф с оплатой за каждый отклик.'}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-2">Комфорт — 500 ₽/мес</h4>
+              <h4 className="font-semibold mb-2">
+                Комфорт
+                {comfortTariff ? ` — ${comfortTariff.price} ₽/мес` : ''}
+              </h4>
               <p className="text-gray-600">
-                Подписка 500₽/мес. Бесплатные отклики. 500₽ списывается при выборе
-                заказчиком. Одна специализация.
+                {comfortTariff
+                  ? `Подписка ${comfortTariff.price}₽/мес. Бесплатные отклики. ${comfortTariff.orderTakenPrice}₽ списывается при выборе заказчиком. ${
+                      comfortTariff.specializationCount === 1
+                        ? 'Одна специализация.'
+                        : `До ${comfortTariff.specializationCount} специализаций.`
+                    }`
+                  : 'Подписка с бесплатными откликами и оплатой только при выборе заказчиком.'}
               </p>
             </div>
             <div>
               <h4 className="font-semibold mb-2">Премиум</h4>
               <p className="text-gray-600">
-                Подписка 5000₽ на 30 дней. Безлимитные отклики. До 3-х специализаций
-                одновременно.
+                {premiumTariff
+                  ? `Подписка ${premiumTariff.price}₽ на ${premiumTariff.duration || 30} дней. Безлимитные отклики. До ${premiumTariff.specializationCount} специализаций одновременно.`
+                  : 'Подписка с безлимитными откликами и расширенным лимитом специализаций.'}
               </p>
             </div>
           </div>
@@ -148,4 +172,3 @@ function SubscriptionContent() {
     </div>
   );
 }
-

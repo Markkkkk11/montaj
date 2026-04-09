@@ -10,6 +10,12 @@ export const createTopUpSchema = Joi.object({
       'number.max': 'Максимальная сумма пополнения - 100000₽',
       'any.required': 'Укажите сумму пополнения',
     }),
+  returnPath: Joi.string()
+    .pattern(/^\/[A-Za-z0-9\-/_?=&]*$/)
+    .optional()
+    .messages({
+      'string.pattern.base': 'Некорректный путь возврата',
+    }),
 });
 
 export const changeTariffSchema = Joi.object({
@@ -21,4 +27,3 @@ export const changeTariffSchema = Joi.object({
       'any.required': 'Укажите тип тарифа',
     }),
 });
-
