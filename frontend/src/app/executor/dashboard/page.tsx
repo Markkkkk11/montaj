@@ -10,7 +10,7 @@ import { Header } from '@/components/layout/Header';
 import { ordersApi } from '@/lib/api/orders';
 import { responsesApi } from '@/lib/api/responses';
 import { Order, Response } from '@/lib/types';
-import { TARIFF_LABELS, getUserFirstName, isExecutorProfileComplete } from '@/lib/utils';
+import { TARIFF_LABELS, getEffectiveSubscription, getUserFirstName, isExecutorProfileComplete } from '@/lib/utils';
 import { Wallet, FileText, User, Star, Search, Mail, MessageCircle, ArrowRight, TrendingUp, Zap, Package, ChevronRight, ChevronDown, Gift, X, HelpCircle, Info } from 'lucide-react';
 
 export default function ExecutorDashboard() {
@@ -115,7 +115,7 @@ export default function ExecutorDashboard() {
   }
 
   const balance = user.balance;
-  const subscription = user.subscription;
+  const subscription = getEffectiveSubscription(user.subscription);
   const profile = user.executorProfile;
 
   const totalBalance = balance && balance.amount !== undefined && balance.bonusAmount !== undefined
@@ -287,7 +287,7 @@ export default function ExecutorDashboard() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">Тариф</p>
-                    <p className="text-base sm:text-lg font-extrabold text-gray-900 truncate">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</p>
+                    <p className="text-base sm:text-lg font-extrabold text-gray-900 truncate">{TARIFF_LABELS[subscription.tariffType] || 'Стандарт'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -416,8 +416,8 @@ export default function ExecutorDashboard() {
                   <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-sm sm:text-base truncate">{subscription ? TARIFF_LABELS[subscription.tariffType] : 'Стандарт'}</h3>
-                  {subscription?.expiresAt && subscription.tariffType !== 'STANDARD' && (
+                  <h3 className="font-bold text-sm sm:text-base truncate">{TARIFF_LABELS[subscription.tariffType] || 'Стандарт'}</h3>
+                  {subscription.expiresAt && subscription.tariffType !== 'STANDARD' && (
                     <p className="text-xs text-muted-foreground">
                       до {new Date(subscription.expiresAt).toLocaleDateString('ru-RU')}
                     </p>
@@ -433,19 +433,19 @@ export default function ExecutorDashboard() {
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Стоимость отклика</p>
                 <p className="text-lg sm:text-xl font-extrabold text-blue-600">
-                  {subscription?.tariffType === 'PREMIUM' || subscription?.tariffType === 'COMFORT' ? '0' : '150'} ₽
+                  {subscription.tariffType === 'PREMIUM' || subscription.tariffType === 'COMFORT' ? '0' : '150'} ₽
                 </p>
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Специализации</p>
                 <p className="text-lg sm:text-xl font-extrabold text-violet-600">
-                  {subscription ? `до ${subscription.specializationCount || 1}` : '1'}
+                  до {subscription.specializationCount || 1}
                 </p>
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Отклики</p>
                 <p className="text-lg sm:text-xl font-extrabold text-emerald-600">
-                  {subscription?.tariffType === 'PREMIUM' ? '∞' : 'Платные'}
+                  {subscription.tariffType === 'PREMIUM' ? '∞' : 'Платные'}
                 </p>
               </div>
             </div>

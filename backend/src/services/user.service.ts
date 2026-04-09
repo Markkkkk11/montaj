@@ -4,11 +4,30 @@ import settingsService from './settings.service';
 import subscriptionService from './subscription.service';
 
 export class UserService {
+  private async withEffectiveSubscription<T extends { id: string; role: string; subscription?: any | null; executorProfile?: any | null }>(user: T | null): Promise<T | null> {
+    if (!user || user.role !== 'EXECUTOR') {
+      return user;
+    }
+
+    const subscription = await subscriptionService.getCurrentTariff(user.id, user.subscription ?? null);
+
+    return {
+      ...user,
+      subscription,
+      executorProfile: user.executorProfile
+        ? {
+            ...user.executorProfile,
+            specializations: (user.executorProfile.specializations || []).slice(0, subscription.specializationCount || 1),
+          }
+        : user.executorProfile,
+    };
+  }
+
   /**
    * Получить профиль пользователя
    */
   async getProfile(userId: string): Promise<any | null> {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
         executorProfile: true,
@@ -16,6 +35,8 @@ export class UserService {
         subscription: true,
       },
     });
+
+    return this.withEffectiveSubscription(user);
   }
 
   /**
@@ -35,7 +56,7 @@ export class UserService {
     if (data.inn !== undefined) updateData.inn = data.inn;
     if (data.ogrn !== undefined) updateData.ogrn = data.ogrn;
 
-    return prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: updateData,
       include: {
@@ -44,6 +65,8 @@ export class UserService {
         subscription: true,
       },
     });
+
+    return this.withEffectiveSubscription(updatedUser);
   }
 
   /**
@@ -205,4 +228,3 @@ export class UserService {
 }
 
 export default new UserService();
-

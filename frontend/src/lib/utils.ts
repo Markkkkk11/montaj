@@ -66,6 +66,38 @@ export const TARIFF_LABELS: Record<string, string> = {
   PREMIUM: 'Премиум',
 };
 
+export function getEffectiveSubscription(subscription?: User['subscription'] | null) {
+  if (!subscription) {
+    return {
+      tariffType: 'STANDARD' as const,
+      specializationCount: 1,
+      expiresAt: null as string | null,
+      isExpired: false,
+    };
+  }
+
+  const isExpired =
+    subscription.tariffType !== 'STANDARD' &&
+    !!subscription.expiresAt &&
+    new Date(subscription.expiresAt).getTime() <= Date.now();
+
+  if (isExpired) {
+    return {
+      tariffType: 'STANDARD' as const,
+      specializationCount: 1,
+      expiresAt: null as string | null,
+      isExpired: true,
+    };
+  }
+
+  return {
+    tariffType: subscription.tariffType,
+    specializationCount: subscription.specializationCount || 1,
+    expiresAt: subscription.expiresAt || null,
+    isExpired: false,
+  };
+}
+
 // Цвета по специализациям
 export const SPECIALIZATION_COLORS: Record<string, string> = {
   WINDOWS: '#2563eb',       // Окна - синий
@@ -111,4 +143,3 @@ export function getTimeSinceRegistration(createdAt: string): string {
 
   return parts.length > 0 ? parts.join(' ') : 'Менее дня';
 }
-

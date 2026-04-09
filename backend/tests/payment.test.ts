@@ -143,7 +143,7 @@ describe('Payment and Subscription System', () => {
       expect(response.body.canRespond).toBeDefined();
     });
 
-    it('should change tariff to COMFORT', async () => {
+    it('should not allow changing to COMFORT without payment', async () => {
       const response = await request(app)
         .post('/api/subscriptions/change-tariff')
         .set('Authorization', `Bearer ${authToken}`)
@@ -151,9 +151,8 @@ describe('Payment and Subscription System', () => {
           tariffType: 'COMFORT',
         });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.subscription.tariffType).toBe('COMFORT');
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
     });
 
     it('should not allow changing to PREMIUM without payment', async () => {
@@ -178,6 +177,19 @@ describe('Payment and Subscription System', () => {
       expect(response.body.payment).toBeDefined();
       expect(response.body.confirmationUrl).toBeDefined();
       expect(parseFloat(response.body.payment.amount)).toBe(5000);
+    });
+
+    it('should activate COMFORT from balance payment', async () => {
+      const response = await request(app)
+        .post('/api/subscriptions/pay-from-balance')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          tariffType: 'COMFORT',
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.subscription.tariffType).toBe('COMFORT');
     });
   });
 
@@ -247,4 +259,3 @@ describe('Payment and Subscription System', () => {
     });
   });
 });
-

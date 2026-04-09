@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Header } from '@/components/layout/Header';
-import { SPECIALIZATION_LABELS } from '@/lib/utils';
+import { SPECIALIZATION_LABELS, TARIFF_LABELS, getEffectiveSubscription } from '@/lib/utils';
 import { Specialization } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
@@ -21,14 +21,17 @@ export default function SpecializationsPage() {
   const [selected, setSelected] = useState<Specialization[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [maxSpecializations, setMaxSpecializations] = useState(1);
+  const effectiveSubscription = getEffectiveSubscription(user?.subscription);
 
   useEffect(() => {
     if (!isHydrated) return;
     if (!user) { router.push('/login'); return; }
     if (user.role !== 'EXECUTOR') { router.push('/'); return; }
-    if (user.executorProfile) setSelected(user.executorProfile.specializations);
-    if (user.subscription) setMaxSpecializations(user.subscription.specializationCount || 1);
-  }, [user, router, isHydrated]);
+    if (user.executorProfile) {
+      setSelected(user.executorProfile.specializations.slice(0, effectiveSubscription.specializationCount));
+    }
+    setMaxSpecializations(effectiveSubscription.specializationCount);
+  }, [user, router, isHydrated, effectiveSubscription.specializationCount]);
 
   const handleToggle = (spec: Specialization) => {
     if (selected.includes(spec)) {
@@ -62,8 +65,7 @@ export default function SpecializationsPage() {
 
   if (!user || user.role !== 'EXECUTOR') return null;
 
-  const tariffName = user.subscription?.tariffType === 'STANDARD' ? 'Стандарт' :
-                     user.subscription?.tariffType === 'COMFORT' ? 'Комфорт' : 'Премиум';
+  const tariffName = TARIFF_LABELS[effectiveSubscription.tariffType] || 'Стандарт';
 
   return (
     <div className="min-h-screen bg-gray-50/50">

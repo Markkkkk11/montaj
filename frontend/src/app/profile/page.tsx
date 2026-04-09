@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Header } from '@/components/layout/Header';
-import { USER_STATUS_LABELS, SPECIALIZATION_LABELS, getTimeSinceRegistration } from '@/lib/utils';
+import { USER_STATUS_LABELS, SPECIALIZATION_LABELS, getEffectiveSubscription, getTimeSinceRegistration } from '@/lib/utils';
 import Link from 'next/link';
 import { Star, Edit, Phone, Mail, MapPin, Building2, Clock, ChevronRight, ChevronLeft, Shield, Briefcase, X } from 'lucide-react';
 
@@ -25,6 +25,12 @@ export default function ProfilePage() {
   if (!isHydrated || !user) {
     return null;
   }
+
+  const effectiveSubscription = getEffectiveSubscription(user.subscription);
+  const visibleSpecializations =
+    user.role === 'EXECUTOR' && user.executorProfile
+      ? user.executorProfile.specializations.slice(0, effectiveSubscription.specializationCount)
+      : [];
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -133,9 +139,9 @@ export default function ProfilePage() {
 
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2">Специализации</p>
-                {user.executorProfile.specializations.length > 0 ? (
+                {visibleSpecializations.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {user.executorProfile.specializations.map((spec) => (
+                    {visibleSpecializations.map((spec) => (
                       <span
                         key={spec}
                         className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-violet-50 text-blue-700 rounded-xl text-sm font-semibold border border-blue-100"

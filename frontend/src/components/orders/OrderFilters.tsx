@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SPECIALIZATION_LABELS } from '@/lib/utils';
+import { SPECIALIZATION_LABELS, getEffectiveSubscription } from '@/lib/utils';
 import { Specialization, OrderFilters as Filters } from '@/lib/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -32,15 +32,14 @@ export function OrderFilters({ onApply, onSpecializationsSaved, initialFilters =
   const [selectedSpecs, setSelectedSpecs] = useState<Specialization[]>([]);
   const [isSavingSpecs, setIsSavingSpecs] = useState(false);
   const [maxSpecializations, setMaxSpecializations] = useState(1);
+  const effectiveSubscription = getEffectiveSubscription(user?.subscription);
 
   useEffect(() => {
     if (user?.executorProfile) {
-      setSelectedSpecs(user.executorProfile.specializations || []);
+      setSelectedSpecs(user.executorProfile.specializations.slice(0, effectiveSubscription.specializationCount));
     }
-    if (user?.subscription) {
-      setMaxSpecializations(user.subscription.specializationCount || 1);
-    }
-  }, [user]);
+    setMaxSpecializations(effectiveSubscription.specializationCount);
+  }, [user, effectiveSubscription.specializationCount]);
 
   const handleToggleSpec = (spec: Specialization) => {
     if (selectedSpecs.includes(spec)) {
@@ -65,7 +64,7 @@ export function OrderFilters({ onApply, onSpecializationsSaved, initialFilters =
       toast({ variant: 'destructive', title: '❌ Ошибка', description: 'Выберите хотя бы одну специализацию' });
       return;
     }
-    const previousSpecs = user?.executorProfile?.specializations || [];
+    const previousSpecs = (user?.executorProfile?.specializations || []).slice(0, effectiveSubscription.specializationCount);
     try {
       setIsSavingSpecs(true);
       await api.put('/users/executor-profile', { specializations: selectedSpecs });

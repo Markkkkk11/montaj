@@ -7,9 +7,26 @@ export class SubscriptionService {
     return settingsService.getBySection('tariffs');
   }
 
+  private getTariffSpecializationCount(
+    tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM',
+    tariffSettings: Record<string, string>
+  ): number {
+    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
+    const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+
+    const specCounts: Record<'STANDARD' | 'COMFORT' | 'PREMIUM', number> = {
+      STANDARD: standardSpecs,
+      COMFORT: comfortSpecs,
+      PREMIUM: premiumSpecs,
+    };
+
+    return specCounts[tariffType] || standardSpecs;
+  }
+
   private async getStandardSpecializationCount(): Promise<number> {
     const tariffSettings = await this.getTariffSettings();
-    return parseInt(tariffSettings.standardSpecializations || '1', 10);
+    return this.getTariffSpecializationCount('STANDARD', tariffSettings);
   }
 
   private async getStandardResponsePrice(): Promise<number> {
@@ -21,6 +38,29 @@ export class SubscriptionService {
     return subscription.tariffType === 'STANDARD'
       ? true
       : new Date() < new Date(subscription.expiresAt);
+  }
+
+  private async getPaidSubscriptionExpiresAt(userId: string, durationDays: number = 30): Promise<Date> {
+    const existingSubscription = await prisma.subscription.findUnique({
+      where: { userId },
+      select: {
+        tariffType: true,
+        expiresAt: true,
+      },
+    });
+
+    const now = new Date();
+    const baseDate =
+      existingSubscription &&
+      existingSubscription.tariffType !== 'STANDARD' &&
+      new Date(existingSubscription.expiresAt) > now
+        ? new Date(existingSubscription.expiresAt)
+        : now;
+
+    const expiresAt = new Date(baseDate);
+    expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+    return expiresAt;
   }
 
   /**
@@ -95,11 +135,7 @@ export class SubscriptionService {
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
     const tariffSettings = await this.getTariffSettings();
-    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
-    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
-    const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
-    const specCounts: Record<string, number> = { STANDARD: standardSpecs, COMFORT: comfortSpecs, PREMIUM: premiumSpecs };
-    const specializationCount = specCounts[tariffType] || standardSpecs;
+    const specializationCount = this.getTariffSpecializationCount(tariffType, tariffSettings);
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
@@ -115,6 +151,8 @@ export class SubscriptionService {
         specializationCount,
       },
     });
+
+    await this.trimSpecializations(userId, specializationCount);
 
     return subscription;
   }
@@ -134,7 +172,7 @@ export class SubscriptionService {
 
     // Только Standard — бесплатная смена
     const tariffSettings = await this.getTariffSettings();
-    const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+    const standardSpecs = this.getTariffSpecializationCount('STANDARD', tariffSettings);
     const standardExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
     const subscription = await prisma.subscription.upsert({
@@ -178,6 +216,10 @@ export class SubscriptionService {
     } catch (err) {
       console.error('Ошибка обрезки специализаций:', err);
     }
+  }
+
+  async trimSpecializationsToLimit(userId: string, maxSpecs: number) {
+    await this.trimSpecializations(userId, maxSpecs);
   }
 
   /**
@@ -287,27 +329,36 @@ export class SubscriptionService {
       throw new Error('Подписка не найдена');
     }
 
-    // Продлить на 30 дней от текущей даты истечения или от сегодня
-    const baseDate = subscription.isActive
-      ? new Date(subscription.expiresAt)
-      : new Date();
+    return this.activatePaidSubscription(userId, 'PREMIUM', 30);
+  }
 
-    const newExpiresAt = new Date(baseDate);
-    newExpiresAt.setDate(newExpiresAt.getDate() + 30);
-
+  async activatePaidSubscription(
+    userId: string,
+    tariffType: 'COMFORT' | 'PREMIUM',
+    durationDays: number = 30
+  ) {
     const tariffSettings = await this.getTariffSettings();
-    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
+    const specializationCount = this.getTariffSpecializationCount(tariffType, tariffSettings);
+    const expiresAt = await this.getPaidSubscriptionExpiresAt(userId, durationDays);
 
-    const updated = await prisma.subscription.update({
+    const subscription = await prisma.subscription.upsert({
       where: { userId },
-      data: {
-        expiresAt: newExpiresAt,
-        tariffType: 'PREMIUM',
-        specializationCount: premiumSpecs,
+      create: {
+        userId,
+        tariffType,
+        expiresAt,
+        specializationCount,
+      },
+      update: {
+        tariffType,
+        expiresAt,
+        specializationCount,
       },
     });
 
-    return updated;
+    await this.trimSpecializations(userId, specializationCount);
+
+    return subscription;
   }
 
   /**
@@ -337,15 +388,9 @@ export class SubscriptionService {
       throw new Error(`Недостаточно средств на балансе. Нужно ${price}₽, на балансе ${Math.floor(totalBalance)}₽`);
     }
 
-    // Определить кол-во специализаций
-    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
-    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
-    const specCount = tariffType === 'PREMIUM' ? premiumSpecs : comfortSpecs;
-
     // Списать средства: сначала бонусы, потом основной баланс
     let remaining = price;
     const bonusAmount = parseFloat(balance?.bonusAmount.toString() || '0');
-    const mainAmount = parseFloat(balance?.amount.toString() || '0');
 
     let bonusDeduct = Math.min(bonusAmount, remaining);
     remaining -= bonusDeduct;
@@ -359,25 +404,7 @@ export class SubscriptionService {
       },
     });
 
-    // Срок подписки — 30 дней
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
-
-    // Активировать подписку
-    const subscription = await prisma.subscription.upsert({
-      where: { userId },
-      create: {
-        userId,
-        tariffType,
-        expiresAt,
-        specializationCount: specCount,
-      },
-      update: {
-        tariffType,
-        expiresAt,
-        specializationCount: specCount,
-      },
-    });
+    const subscription = await this.activatePaidSubscription(userId, tariffType, 30);
 
     // Создать транзакцию
     await prisma.transaction.create({

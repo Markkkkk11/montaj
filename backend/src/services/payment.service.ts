@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import yookassa from '../config/yookassa';
 import settingsService from './settings.service';
+import subscriptionService from './subscription.service';
 
 export class PaymentService {
   /**
@@ -308,22 +309,7 @@ export class PaymentService {
     const tariffType = metadata.tariffType || 'PREMIUM';
     const duration = 30; // дней
 
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + duration);
-
-    // Берём кол-во специализаций и цены из настроек
     const tariffSettings = await settingsService.getBySection('tariffs');
-    const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
-    const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
-    const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
-
-    // Определяем кол-во специализаций по тарифу
-    const specCounts: Record<string, number> = {
-      STANDARD: standardSpecs,
-      COMFORT: comfortSpecs,
-      PREMIUM: premiumSpecs,
-    };
-    const specCount = specCounts[tariffType] || standardSpecs;
 
     // Определяем цену по тарифу
     const prices: Record<string, number> = {
@@ -340,21 +326,15 @@ export class PaymentService {
       PREMIUM: 'Премиум',
     };
 
-    // Обновить или создать подписку
-    await prisma.subscription.upsert({
-      where: { userId },
-      create: {
-        userId,
-        tariffType,
-        expiresAt,
-        specializationCount: specCount,
-      },
-      update: {
-        tariffType,
-        expiresAt,
-        specializationCount: specCount,
-      },
-    });
+    if (!['COMFORT', 'PREMIUM'].includes(tariffType)) {
+      throw new Error('Неизвестный тариф подписки');
+    }
+
+    await subscriptionService.activatePaidSubscription(
+      userId,
+      tariffType as 'COMFORT' | 'PREMIUM',
+      duration
+    );
 
     // Создать транзакцию
     if (subscriptionPrice > 0) {
@@ -442,4 +422,3 @@ export class PaymentService {
 }
 
 export default new PaymentService();
-

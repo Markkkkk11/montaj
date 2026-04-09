@@ -3,14 +3,22 @@ import notificationService from './notification.service';
 import subscriptionService from './subscription.service';
 
 export class AdminService {
-  private async withEffectiveSubscription<T extends { id: string; role: string; subscription?: any | null }>(user: T): Promise<T> {
+  private async withEffectiveSubscription<T extends { id: string; role: string; subscription?: any | null; executorProfile?: any | null }>(user: T): Promise<T> {
     if (user.role !== 'EXECUTOR') {
       return user;
     }
 
+    const subscription = await subscriptionService.getCurrentTariff(user.id, user.subscription ?? null);
+
     return {
       ...user,
-      subscription: await subscriptionService.getCurrentTariff(user.id, user.subscription ?? null),
+      subscription,
+      executorProfile: user.executorProfile
+        ? {
+            ...user.executorProfile,
+            specializations: (user.executorProfile.specializations || []).slice(0, subscription.specializationCount || 1),
+          }
+        : user.executorProfile,
     };
   }
 
@@ -907,7 +915,7 @@ export class AdminService {
   async updateUserSubscription(userId: string, data: any) {
     const expiresAt = data.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    return await prisma.subscription.upsert({
+    const subscription = await prisma.subscription.upsert({
       where: { userId },
       update: {
         tariffType: data.tariffType,
@@ -921,6 +929,12 @@ export class AdminService {
         expiresAt,
       },
     });
+
+    if (typeof subscription.specializationCount === 'number') {
+      await subscriptionService.trimSpecializationsToLimit(userId, subscription.specializationCount);
+    }
+
+    return subscription;
   }
 
   /**

@@ -7,6 +7,20 @@ import settingsService from './settings.service';
 import subscriptionService from './subscription.service';
 
 export class AuthService {
+  private applyExecutorSpecializationLimit(user: any) {
+    if (user?.role !== 'EXECUTOR' || !user.executorProfile) {
+      return user;
+    }
+
+    const maxSpecializations = user.subscription?.specializationCount || 1;
+    user.executorProfile = {
+      ...user.executorProfile,
+      specializations: (user.executorProfile.specializations || []).slice(0, maxSpecializations),
+    };
+
+    return user;
+  }
+
   /**
    * Нормализация телефона (оставляем только цифры)
    */
@@ -191,7 +205,7 @@ export class AuthService {
       role: user.role,
     });
 
-    return { user, token };
+    return { user: this.applyExecutorSpecializationLimit(user), token };
   }
 
   /**
@@ -220,7 +234,7 @@ export class AuthService {
       }
     }
 
-    return user;
+    return this.applyExecutorSpecializationLimit(user);
   }
 
   /**
@@ -298,4 +312,3 @@ export class AuthService {
 }
 
 export default new AuthService();
-

@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import notificationService from './notification.service';
 import settingsService from './settings.service';
+import subscriptionService from './subscription.service';
 import { config } from '../config/env';
 import fs from 'fs';
 import path from 'path';
@@ -143,15 +144,23 @@ export class OrderService {
     // Если запрос от исполнителя - применить дополнительные фильтры
     if (userId) {
       // Получить профиль исполнителя с его специализациями
-      const executorProfile = await prisma.executorProfile.findUnique({
-        where: { userId },
-        select: { specializations: true }
-      });
+      const [executorProfile, currentTariff] = await Promise.all([
+        prisma.executorProfile.findUnique({
+          where: { userId },
+          select: { specializations: true },
+        }),
+        subscriptionService.getCurrentTariff(userId),
+      ]);
 
       // Фильтровать заказы только по специализациям исполнителя
       if (executorProfile && executorProfile.specializations.length > 0) {
+        const allowedSpecializations = executorProfile.specializations.slice(
+          0,
+          currentTariff.specializationCount || 1
+        );
+
         where.category = {
-          in: executorProfile.specializations
+          in: allowedSpecializations,
         };
       } else {
         // Если специализации не выбраны - не показывать никакие заказы
