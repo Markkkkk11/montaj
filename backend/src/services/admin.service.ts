@@ -933,10 +933,7 @@ export class AdminService {
     }
 
     const specializationCount = await subscriptionService.getSpecializationCountForTariff(tariffType);
-    const tariffSettings = await settingsService.getBySection('tariffs');
-    const comfortPrice = parseInt(tariffSettings.comfortPrice || '0', 10);
-    const isTimeLimitedTariff =
-      tariffType === 'PREMIUM' || (tariffType === 'COMFORT' && comfortPrice > 0);
+    const isTimeLimitedTariff = tariffType === 'PREMIUM';
     const expiresAt =
       data.expiresAt
         ? new Date(data.expiresAt)

@@ -148,13 +148,7 @@ describe('Subscription expiration handling', () => {
     expect(expiresAt.getTime()).toBeLessThanOrEqual(maxExpected.getTime());
   });
 
-  it('extends from the current expiry date and trims specializations when paying from balance', async () => {
-    const currentExpiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
-    const expectedExpiresAt = new Date(currentExpiresAt);
-    expectedExpiresAt.setDate(expectedExpiresAt.getDate() + 30);
-
-    await settingsService.updateSection('tariffs', { comfortPrice: '500' });
-
+  it('switches to free COMFORT and trims specializations when tariff changes', async () => {
     await prisma.balance.update({
       where: { userId: executorId },
       data: {
@@ -179,72 +173,32 @@ describe('Subscription expiration handling', () => {
       },
     });
 
-    const subscription = await subscriptionService.payFromBalance(executorId, 'COMFORT');
+    const subscription = await subscriptionService.changeTariff(executorId, 'COMFORT');
     const executorProfile = await prisma.executorProfile.findUnique({
       where: { userId: executorId },
     });
 
     expect(subscription.tariffType).toBe('COMFORT');
-    expect(new Date(subscription.expiresAt).toISOString()).toBe(expectedExpiresAt.toISOString());
     expect(subscription.specializationCount).toBe(1);
     expect(executorProfile?.specializations).toEqual(['WINDOWS']);
-
-    await settingsService.updateSection('tariffs', { comfortPrice: '0' });
   });
 
-  it('extends and trims specializations when a paid subscription is activated from payment callback', async () => {
-    const currentExpiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-    const expectedExpiresAt = new Date(currentExpiresAt);
-    expectedExpiresAt.setDate(expectedExpiresAt.getDate() + 30);
-
+  it('does not allow paying for COMFORT from balance', async () => {
     await prisma.subscription.update({
       where: { userId: executorId },
       data: {
         tariffType: 'PREMIUM',
-        expiresAt: currentExpiresAt,
+        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
         specializationCount: 3,
       },
     });
 
-    await prisma.executorProfile.update({
-      where: { userId: executorId },
-      data: {
-        specializations: ['WINDOWS', 'DOORS', 'CEILINGS'],
-      },
-    });
-
-    const payment = await prisma.payment.create({
-      data: {
-        userId: executorId,
-        amount: 500,
-        currency: 'RUB',
-        status: 'PENDING',
-        purpose: 'subscription',
-        description: 'COMFORT renewal',
-        metadata: {
-          tariffType: 'COMFORT',
-        },
-      },
-    });
-
-    await paymentService.processSuccessfulPayment(payment.id);
-
-    const subscription = await prisma.subscription.findUnique({
-      where: { userId: executorId },
-    });
-    const executorProfile = await prisma.executorProfile.findUnique({
-      where: { userId: executorId },
-    });
-
-    expect(subscription?.tariffType).toBe('COMFORT');
-    expect(subscription?.specializationCount).toBe(1);
-    expect(new Date(subscription!.expiresAt).toISOString()).toBe(expectedExpiresAt.toISOString());
-    expect(executorProfile?.specializations).toEqual(['WINDOWS']);
+    await expect(subscriptionService.payFromBalance(executorId, 'COMFORT' as any)).rejects.toThrow(
+      'Оплата с баланса доступна только для тарифа «Премиум»'
+    );
   });
 
   it('does not downgrade free COMFORT on auth refresh even if its stored expiry is in the past', async () => {
-    await settingsService.updateSection('tariffs', { comfortPrice: '0' });
-
     await prisma.subscription.update({
       where: { userId: executorId },
       data: {
@@ -265,8 +219,6 @@ describe('Subscription expiration handling', () => {
   });
 
   it('does not extend a paid subscription from the placeholder expiry of free COMFORT during payment callback', async () => {
-    await settingsService.updateSection('tariffs', { comfortPrice: '0' });
-
     const freeComfortPlaceholderExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
     await prisma.subscription.update({
       where: { userId: executorId },

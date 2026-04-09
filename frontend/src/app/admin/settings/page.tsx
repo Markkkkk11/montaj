@@ -41,7 +41,6 @@ export default function AdminSettingsPage() {
   const [tariffSettings, setTariffSettings] = useState({
     standardResponsePrice: '150',
     standardSpecializations: '1',
-    comfortPrice: '0',
     comfortOrderTakenPrice: '500',
     comfortSpecializations: '1',
     premiumPrice: '5000',
@@ -348,18 +347,7 @@ export default function AdminSettingsPage() {
                 <CreditCard className="h-4 w-4 text-blue-500" />
                 Комфорт
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="comfortPrice">Абонплата (₽/мес, 0 = бесплатно)</Label>
-                  <Input
-                    id="comfortPrice"
-                    type="number"
-                    value={tariffSettings.comfortPrice}
-                    onChange={(e) =>
-                      setTariffSettings({ ...tariffSettings, comfortPrice: e.target.value })
-                    }
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="comfortOrderTakenPrice">Цена за взятый заказ (₽)</Label>
                   <Input

@@ -67,21 +67,20 @@ export class PaymentService {
     tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM',
     returnUrl: string
   ) {
+    if (tariffType === 'COMFORT') {
+      throw new Error('Тариф «Комфорт» подключается бесплатно. Выберите его без оплаты.');
+    }
+
     // Определить стоимость подписки из настроек БД
     const tariffSettings = await settingsService.getBySection('tariffs');
     const prices: Record<string, number> = {
       STANDARD: 0, // Бесплатный (платят за отклики)
-      COMFORT: parseInt(tariffSettings.comfortPrice || '0', 10),
       PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
     };
 
     const amount = prices[tariffType] || 0;
 
     if (amount === 0) {
-      if (tariffType === 'COMFORT') {
-        throw new Error('Тариф «Комфорт» не требует оплаты. Переключитесь на него без покупки.');
-      }
-
       throw new Error('Данный тариф не требует оплаты подписки');
     }
 

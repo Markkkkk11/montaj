@@ -32,7 +32,7 @@ export class SubscriptionService {
   ): number {
     const prices: Record<TariffType, number> = {
       STANDARD: 0,
-      COMFORT: parseInt(tariffSettings.comfortPrice || '0', 10),
+      COMFORT: 0,
       PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
     };
 
@@ -41,17 +41,9 @@ export class SubscriptionService {
 
   private isTimeLimitedTariff(
     tariffType: TariffType,
-    tariffSettings: Record<string, string>
+    _tariffSettings: Record<string, string>
   ): boolean {
-    if (tariffType === 'PREMIUM') {
-      return true;
-    }
-
-    if (tariffType === 'COMFORT') {
-      return this.getTariffPrice('COMFORT', tariffSettings) > 0;
-    }
-
-    return false;
+    return tariffType === 'PREMIUM';
   }
 
   private getNonExpiringTariffExpiresAt(): Date {
@@ -196,18 +188,13 @@ export class SubscriptionService {
 
   /**
    * Сменить тариф.
-   * Standard всегда бесплатный, Comfort бесплатный только если отключена абонплата.
+   * Standard и Comfort всегда бесплатные. Premium подключается через оплату.
    */
   async changeTariff(userId: string, newTariffType: TariffType) {
     const tariffSettings = await this.getTariffSettings();
-    const comfortPrice = this.getTariffPrice('COMFORT', tariffSettings);
 
     if (newTariffType === 'PREMIUM') {
       throw new Error('Для перехода на Премиум требуется оплата подписки');
-    }
-
-    if (newTariffType === 'COMFORT' && comfortPrice > 0) {
-      throw new Error('Для перехода на Комфорт требуется оплата подписки');
     }
 
     const specializationCount = this.getTariffSpecializationCount(newTariffType, tariffSettings);
@@ -472,16 +459,11 @@ export class SubscriptionService {
     const tariffSettings = await this.getTariffSettings();
 
     const prices: Record<string, number> = {
-      COMFORT: this.getTariffPrice('COMFORT', tariffSettings),
       PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
     };
     const price = prices[tariffType];
     if (!price) {
-      if (tariffType === 'COMFORT') {
-        throw new Error('Тариф «Комфорт» не требует оплаты. Переключитесь на него без покупки.');
-      }
-
-      throw new Error('Неизвестный тариф');
+      throw new Error('Оплата с баланса доступна только для тарифа «Премиум»');
     }
 
     const tariffNames: Record<string, string> = {
@@ -537,7 +519,6 @@ export class SubscriptionService {
 
     const standardPrice = 0; // Стандарт бесплатный
     const standardResponsePrice = parseInt(tariffSettings.standardResponsePrice || '150', 10);
-    const comfortPrice = this.getTariffPrice('COMFORT', tariffSettings);
     const comfortOrderTakenPrice = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
     const premiumPrice = parseInt(tariffSettings.premiumPrice || '5000', 10);
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
@@ -561,17 +542,14 @@ export class SubscriptionService {
       },
       COMFORT: {
         name: 'Комфорт',
-        price: comfortPrice,
-        periodLabel: comfortPrice > 0 ? 'в месяц' : 'без абонентской платы',
+        price: 0,
+        periodLabel: 'без абонентской платы',
         responsePrice: 0,
         orderTakenPrice: comfortOrderTakenPrice,
-        description:
-          comfortPrice > 0
-            ? `${comfortPrice}₽/мес, ${comfortOrderTakenPrice}₽ за взятый заказ`
-            : `${comfortOrderTakenPrice}₽ только за взятый заказ`,
+        description: `${comfortOrderTakenPrice}₽ только за взятый заказ`,
         specializationCount: comfortSpecs,
         features: [
-          ...(comfortPrice > 0 ? [`Подписка ${comfortPrice}₽/мес`] : ['Бесплатное подключение тарифа']),
+          'Бесплатное подключение тарифа',
           'Бесплатные отклики',
           `${comfortOrderTakenPrice}₽ только при выборе заказчиком`,
           `${comfortSpecs === 1 ? 'Одна специализация' : `До ${comfortSpecs} специализаций`}`,

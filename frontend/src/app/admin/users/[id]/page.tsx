@@ -141,10 +141,9 @@ export default function AdminUserEditPage() {
     );
   }
 
-  const selectedTariffInfo = tariffLimits[tariffType];
   const shouldShowExpiryField =
     !!user.subscription?.expiresAt &&
-    (tariffType === 'PREMIUM' || (tariffType === 'COMFORT' && (selectedTariffInfo?.price || 0) > 0));
+    tariffType === 'PREMIUM';
 
   return (
     <div className="p-8">

@@ -46,9 +46,9 @@ export async function createTopUpPaymentWithReturnPath(
 }
 
 /**
- * Создать платёж для подписки (Comfort / Premium)
+ * Создать платёж для подписки Premium
  */
-export async function createSubscriptionPayment(tariffType: 'COMFORT' | 'PREMIUM'): Promise<{
+export async function createSubscriptionPayment(tariffType: 'PREMIUM'): Promise<{
   payment: Payment;
   confirmationUrl: string;
 }> {
@@ -57,7 +57,7 @@ export async function createSubscriptionPayment(tariffType: 'COMFORT' | 'PREMIUM
 }
 
 export async function createSubscriptionPaymentWithReturnPath(
-  tariffType: 'COMFORT' | 'PREMIUM',
+  tariffType: 'PREMIUM',
   returnPath?: string
 ): Promise<{
   payment: Payment;

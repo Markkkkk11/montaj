@@ -102,7 +102,7 @@ export class SubscriptionController {
   };
 
   /**
-   * Оплатить подписку с баланса
+   * Оплатить Premium с баланса
    */
   payFromBalance = async (req: Request, res: Response) => {
     try {
@@ -110,8 +110,8 @@ export class SubscriptionController {
       const userId = req.user!.id;
       const { tariffType } = req.body;
 
-      if (!tariffType || !['COMFORT', 'PREMIUM'].includes(tariffType)) {
-        throw new Error('Укажите тариф: COMFORT или PREMIUM');
+      if (tariffType !== 'PREMIUM') {
+        throw new Error('Оплата с баланса доступна только для тарифа PREMIUM');
       }
 
       const subscription = await subscriptionService.payFromBalance(userId, tariffType);
@@ -119,7 +119,7 @@ export class SubscriptionController {
       res.json({
         success: true,
         subscription,
-        message: `Подписка «${tariffType === 'COMFORT' ? 'Комфорт' : 'Премиум'}» активирована на 30 дней`,
+        message: 'Подписка «Премиум» активирована на 30 дней',
       });
     } catch (error: any) {
       res.status(400).json({

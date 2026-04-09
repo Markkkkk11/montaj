@@ -46,7 +46,7 @@ export class PaymentController {
   }
 
   /**
-   * Создать платёж для подписки (Comfort / Premium)
+   * Создать платёж для подписки Premium
    */
   async createSubscriptionPayment(req: Request, res: Response) {
     try {
@@ -57,8 +57,8 @@ export class PaymentController {
       const userId = req.user!.id;
       const { tariffType, returnPath } = req.body;
 
-      if (!tariffType || !['COMFORT', 'PREMIUM'].includes(tariffType)) {
-        throw new Error('Укажите тариф: COMFORT или PREMIUM');
+      if (tariffType !== 'PREMIUM') {
+        throw new Error('Оплата через ЮKassa доступна только для тарифа PREMIUM');
       }
 
       const returnUrl = buildReturnUrl('/executor/tariffs', returnPath);

@@ -13,13 +13,13 @@ import {
   getTariffInfo,
   getCurrentTariff,
   changeTariff,
-  paySubscriptionFromBalance,
   Tariff,
   TariffInfo,
+  paySubscriptionFromBalance,
 } from '@/lib/api/subscriptions';
 import {
-  createSubscriptionPaymentWithReturnPath,
   processPaymentSuccess,
+  createSubscriptionPaymentWithReturnPath,
 } from '@/lib/api/payments';
 
 export default function TariffsPage() {
@@ -106,14 +106,12 @@ function TariffsContent() {
   if (!isHydrated || !user) return null;
 
   const stdResponsePrice = tariffInfo.STANDARD?.responsePrice ?? 150;
-  const comfortPrice = tariffInfo.COMFORT?.price ?? 0;
   const comfortOrderPrice = tariffInfo.COMFORT?.orderTakenPrice ?? 500;
   const premiumPrice = tariffInfo.PREMIUM?.price ?? 5000;
   const stdSpecs = tariffInfo.STANDARD?.specializationCount ?? 1;
   const comfortSpecs = tariffInfo.COMFORT?.specializationCount ?? 1;
   const premiumSpecs = tariffInfo.PREMIUM?.specializationCount ?? 3;
   const trialDays = parseInt(settings.trialDays || '30', 10);
-  const comfortIsPaid = comfortPrice > 0;
 
   const tariffs = [
     {
@@ -138,13 +136,11 @@ function TariffsContent() {
     {
       id: 'COMFORT',
       name: 'Комфорт',
-      price: comfortIsPaid ? `${comfortPrice.toLocaleString('ru-RU')} ₽` : 'Бесплатно',
-      period: comfortIsPaid ? 'в месяц' : '',
-      description: comfortIsPaid
-        ? 'Бесплатные отклики, платите за тариф и за взятые заказы'
-        : 'Бесплатные отклики, платите только за взятые заказы',
+      price: 'Бесплатно',
+      period: '',
+      description: 'Бесплатные отклики, платите только за взятые заказы',
       icon: Zap,
-      isPaid: comfortIsPaid,
+      isPaid: false,
       features: [
         `${comfortSpecs === 1 ? 'Доступ к 1 специализации' : `До ${comfortSpecs} специализаций`}`,
         'Бесплатные отклики на заказы',
@@ -184,10 +180,7 @@ function TariffsContent() {
     if (tariffId === currentTariffType) return;
     try {
       setChangingTariff(tariffId);
-      const { confirmationUrl } = await createSubscriptionPaymentWithReturnPath(
-        tariffId as 'COMFORT' | 'PREMIUM',
-        '/executor/tariffs'
-      );
+      const { confirmationUrl } = await createSubscriptionPaymentWithReturnPath('PREMIUM', '/executor/tariffs');
       if (confirmationUrl) {
         window.location.href = confirmationUrl;
       } else {
@@ -200,12 +193,12 @@ function TariffsContent() {
     }
   };
 
-  // Оплата с баланса
-  const handlePayFromBalance = async (tariffId: string) => {
-    if (tariffId === currentTariffType) return;
+  // Оплата с баланса только для Premium
+  const handlePayPremiumFromBalance = async () => {
+    if (currentTariffType === 'PREMIUM') return;
     try {
-      setChangingTariff(tariffId);
-      await paySubscriptionFromBalance(tariffId as 'COMFORT' | 'PREMIUM');
+      setChangingTariff('PREMIUM');
+      await paySubscriptionFromBalance('PREMIUM');
       await loadTariffData();
       await getCurrentUser();
       toast({
@@ -264,7 +257,7 @@ function TariffsContent() {
                     <p className="font-bold text-emerald-900">
                       Текущий тариф: {currentTariffType === 'STANDARD' ? 'Стандарт' : currentTariffType === 'COMFORT' ? 'Комфорт' : 'Премиум'}
                     </p>
-                {currentTariff.expiresAt && (currentTariffType === 'PREMIUM' || (currentTariffType === 'COMFORT' && comfortIsPaid)) && (
+                {currentTariff.expiresAt && currentTariffType === 'PREMIUM' && (
                       <p className="text-sm text-emerald-700">до {new Date(currentTariff.expiresAt).toLocaleDateString('ru-RU')}</p>
                 )}
                   </div>
@@ -316,11 +309,11 @@ function TariffsContent() {
                 ) : tariff.isPaid ? (
                   <div className="space-y-2">
                     {/* Оплата с баланса */}
-                    {userBalance >= (tariff.id === 'COMFORT' ? comfortPrice : premiumPrice) ? (
+                    {userBalance >= premiumPrice ? (
                       <Button
                         className="w-full"
                         variant="default"
-                        onClick={() => handlePayFromBalance(tariff.id)}
+                        onClick={handlePayPremiumFromBalance}
                         disabled={isChanging || changingTariff !== null}
                       >
                         {isChanging && changingTariff === tariff.id ? (
@@ -381,7 +374,7 @@ function TariffsContent() {
           <CardContent className="space-y-5">
             {[
               { q: 'Как работает тариф «Стандарт»?', a: `Тариф «Стандарт» — бесплатный. С вашего баланса списывается ${stdResponsePrice} ₽ за каждый отклик на заказ. Вы можете работать с ${stdSpecs === 1 ? 'одной специализацией' : `${stdSpecs} специализациями`} и при необходимости менять их.` },
-              { q: 'Как работает тариф «Комфорт»?', a: `${comfortIsPaid ? `Тариф «Комфорт» стоит ${comfortPrice.toLocaleString('ru-RU')} ₽/мес. ` : 'Тариф «Комфорт» подключается бесплатно. '}Отклики бесплатны, но на балансе должно быть не менее ${comfortOrderPrice} ₽. Оплата ${comfortOrderPrice} ₽ списывается с баланса когда заказчик выбирает вас исполнителем. Баланс может уйти в минус, если вас выбрали по нескольким заказам. Доступно ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`}.` },
+              { q: 'Как работает тариф «Комфорт»?', a: `Тариф «Комфорт» подключается бесплатно. Отклики бесплатны, но на балансе должно быть не менее ${comfortOrderPrice} ₽. Оплата ${comfortOrderPrice} ₽ списывается с баланса когда заказчик выбирает вас исполнителем. Баланс может уйти в минус, если вас выбрали по нескольким заказам. Доступно ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`}.` },
               { q: 'Что даёт тариф «Премиум»?', a: `Тариф «Премиум» за ${premiumPrice.toLocaleString('ru-RU')} ₽ на 30 дней даёт безлимитные отклики на заказы и возможность работать с ${premiumSpecs} специализациями одновременно.` },
               { q: 'Бонус при регистрации', a: `Новые исполнители получают тариф «Премиум» на ${trialDays} ${trialDays === 1 ? 'день' : trialDays < 5 ? 'дня' : 'дней'} бесплатно. 1000 бонусных рублей начисляется только после первого пополнения баланса на сумму от 150 рублей в течение 30 дней после регистрации.` },
             ].map((item, idx) => (
