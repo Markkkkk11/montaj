@@ -267,6 +267,7 @@ export class OrderService {
             email: true,
             rating: true,
             completedOrders: true,
+            subscription: true,
             executorProfile: true,
           },
         },
@@ -287,6 +288,7 @@ export class OrderService {
                 photo: true,
                 rating: true,
                 completedOrders: true,
+                subscription: true,
                 executorProfile: true,
               },
             },
@@ -312,6 +314,21 @@ export class OrderService {
       delete order.customer.email;
       // @ts-ignore
       delete order.customer.messengers;
+    }
+
+    if (order?.executor) {
+      order.executor = await subscriptionService.normalizeExecutorSubscription(order.executor as any);
+    }
+
+    if (order?.responses?.length) {
+      order.responses = await Promise.all(
+        order.responses.map(async (response: any) => ({
+          ...response,
+          executor: response.executor
+            ? await subscriptionService.normalizeExecutorSubscription(response.executor as any)
+            : response.executor,
+        }))
+      );
     }
 
     return order;

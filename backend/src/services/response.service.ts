@@ -62,6 +62,14 @@ export class ResponseService {
     // Получить текущий тариф и стоимость отклика
     const tariff = await subscriptionService.getCurrentTariff(executorId);
     const commission = await subscriptionService.getResponseCost(executorId);
+    const activeSpecializations = (executor.executorProfile.specializations || []).slice(
+      0,
+      tariff.specializationCount || 1
+    );
+
+    if (!activeSpecializations.includes(order.category)) {
+      throw new Error('Вы можете откликаться только на заказы по выбранным специализациям');
+    }
 
     const totalBalance =
       parseFloat(executor.balance?.amount.toString() || '0') +
@@ -124,6 +132,7 @@ export class ResponseService {
         executor: {
           include: {
             executorProfile: true,
+            subscription: true,
           },
         },
         order: {
@@ -133,6 +142,8 @@ export class ResponseService {
         },
       },
     });
+
+    response.executor = await subscriptionService.normalizeExecutorSubscription(response.executor as any);
 
     // Отправить уведомление заказчику о новом отклике (fire-and-forget)
     notificationService.notifyOrderResponse(
@@ -175,6 +186,7 @@ export class ResponseService {
             photo: true,
             rating: true,
             completedOrders: true,
+            subscription: true,
             executorProfile: {
               select: {
                 region: true,
@@ -192,7 +204,12 @@ export class ResponseService {
       },
     });
 
-    return responses;
+    return Promise.all(
+      responses.map(async (response) => ({
+        ...response,
+        executor: await subscriptionService.normalizeExecutorSubscription(response.executor as any),
+      }))
+    );
   }
 
   /**

@@ -3,15 +3,25 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCurrentTariff, Tariff } from '@/lib/api/subscriptions';
-import { Calendar, CreditCard, Grid3x3 } from 'lucide-react';
+import { Calendar, Grid3x3 } from 'lucide-react';
 
-export default function CurrentSubscription() {
-  const [tariff, setTariff] = useState<Tariff | null>(null);
-  const [loading, setLoading] = useState(true);
+interface CurrentSubscriptionProps {
+  tariff?: Tariff | null;
+}
+
+export default function CurrentSubscription({ tariff: externalTariff }: CurrentSubscriptionProps) {
+  const [tariff, setTariff] = useState<Tariff | null>(externalTariff ?? null);
+  const [loading, setLoading] = useState(!externalTariff);
 
   useEffect(() => {
+    if (externalTariff) {
+      setTariff(externalTariff);
+      setLoading(false);
+      return;
+    }
+
     loadTariff();
-  }, []);
+  }, [externalTariff]);
 
   const loadTariff = async () => {
     try {
@@ -95,4 +105,3 @@ export default function CurrentSubscription() {
     </Card>
   );
 }
-

@@ -9,6 +9,7 @@ import {
   getCurrentTariff,
   changeTariff,
   TariffInfo,
+  Tariff,
 } from '@/lib/api/subscriptions';
 import {
   createSubscriptionPaymentWithReturnPath,
@@ -27,6 +28,7 @@ function SubscriptionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tariffs, setTariffs] = useState<Record<string, TariffInfo>>({});
+  const [currentTariff, setCurrentTariff] = useState<Tariff | null>(null);
   const [currentTariffType, setCurrentTariffType] = useState<string>('STANDARD');
   const [loading, setLoading] = useState(false);
 
@@ -48,6 +50,7 @@ function SubscriptionContent() {
       ]);
 
       setTariffs(tariffsData);
+      setCurrentTariff(currentTariff);
       setCurrentTariffType(currentTariff.tariffType);
     } catch (error) {
       console.error('Failed to load tariffs:', error);
@@ -107,7 +110,7 @@ function SubscriptionContent() {
 
         {/* Текущая подписка */}
         <div className="mb-8">
-          <CurrentSubscription />
+          <CurrentSubscription tariff={currentTariff} />
         </div>
 
         {/* Доступные тарифы */}

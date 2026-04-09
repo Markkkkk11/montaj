@@ -166,6 +166,7 @@ export default function HomeClient() {
 
   const trialDays = parseInt(settings.trialDays || '7', 10);
   const standardResponsePrice = parseInt(settings.standardResponsePrice || '150', 10);
+  const comfortPrice = parseInt(settings.comfortPrice || '500', 10);
   const comfortOrderTakenPrice = parseInt(settings.comfortOrderTakenPrice || '500', 10);
   const trialDaysLabel = `${trialDays} ${trialDays === 1 ? 'день' : trialDays < 5 ? 'дня' : 'дней'}`;
   const faqItems = FAQ_ITEMS.map((item) => ({
@@ -174,7 +175,10 @@ export default function HomeClient() {
       .replaceAll('тариф «Премиум» на 30 дней', `тариф «Премиум» на ${trialDaysLabel}`)
       .replaceAll('Премиум тарифу на 30 дней', `Премиум тарифу на ${trialDaysLabel}`)
       .replaceAll('Стандарт — 150₽', `Стандарт — ${standardResponsePrice}₽`)
-      .replaceAll('Комфорт — 500₽ при выборе', `Комфорт — ${comfortOrderTakenPrice}₽ при выборе`),
+      .replaceAll(
+        'Комфорт — 500₽ при выборе',
+        `Комфорт — ${comfortPrice}₽/мес + ${comfortOrderTakenPrice}₽ при выборе`
+      ),
   }));
 
   return (

@@ -142,31 +142,69 @@ export class SettingsService {
     if (data.premiumSpecializations) {
       const premiumSpecs = parseInt(data.premiumSpecializations, 10);
       if (!isNaN(premiumSpecs) && premiumSpecs > 0) {
-        await prisma.subscription.updateMany({
-          where: { tariffType: 'PREMIUM' },
-          data: { specializationCount: premiumSpecs },
-        });
+        await this.syncTariffSpecializationLimit('PREMIUM', premiumSpecs);
       }
     }
 
     if (data.standardSpecializations) {
       const standardSpecs = parseInt(data.standardSpecializations, 10);
       if (!isNaN(standardSpecs) && standardSpecs > 0) {
-        await prisma.subscription.updateMany({
-          where: { tariffType: 'STANDARD' },
-          data: { specializationCount: standardSpecs },
-        });
+        await this.syncTariffSpecializationLimit('STANDARD', standardSpecs);
       }
     }
 
     if (data.comfortSpecializations) {
       const comfortSpecs = parseInt(data.comfortSpecializations, 10);
       if (!isNaN(comfortSpecs) && comfortSpecs > 0) {
-        await prisma.subscription.updateMany({
-          where: { tariffType: 'COMFORT' },
-          data: { specializationCount: comfortSpecs },
-        });
+        await this.syncTariffSpecializationLimit('COMFORT', comfortSpecs);
       }
+    }
+  }
+
+  private async syncTariffSpecializationLimit(
+    tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM',
+    specializationCount: number
+  ) {
+    await prisma.subscription.updateMany({
+      where: { tariffType },
+      data: { specializationCount },
+    });
+
+    const subscriptions = await prisma.subscription.findMany({
+      where: { tariffType },
+      select: { userId: true },
+    });
+
+    const userIds = subscriptions.map((subscription) => subscription.userId);
+    if (userIds.length === 0) {
+      return;
+    }
+
+    const profiles = await prisma.executorProfile.findMany({
+      where: {
+        userId: {
+          in: userIds,
+        },
+      },
+      select: {
+        userId: true,
+        specializations: true,
+      },
+    });
+
+    const trimUpdates = profiles
+      .filter((profile) => profile.specializations.length > specializationCount)
+      .map((profile) =>
+        prisma.executorProfile.update({
+          where: { userId: profile.userId },
+          data: {
+            specializations: profile.specializations.slice(0, specializationCount),
+          },
+        })
+      );
+
+    if (trimUpdates.length > 0) {
+      await prisma.$transaction(trimUpdates);
     }
   }
 }

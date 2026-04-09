@@ -16,6 +16,7 @@ export interface Subscription {
 export interface TariffInfo {
   name: string;
   price: number;
+  periodLabel?: string;
   responsePrice: number;
   orderTakenPrice: number;
   description: string;
@@ -85,4 +86,3 @@ export async function canRespondToOrder(): Promise<CanRespondResult> {
   const { data } = await api.get('/subscriptions/can-respond');
   return data;
 }
-

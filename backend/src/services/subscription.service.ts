@@ -236,6 +236,37 @@ export class SubscriptionService {
     await this.trimSpecializations(userId, maxSpecs);
   }
 
+  async normalizeExecutorSubscription<T extends {
+    id: string;
+    subscription?: { tariffType: string; expiresAt: Date | string; specializationCount?: number } | null;
+    executorProfile?: { specializations?: Specialization[] | null } | null;
+  }>(executor: T): Promise<
+    T & {
+      subscription: {
+        tariffType: string;
+        isActive: boolean;
+        expiresAt: Date | string | null;
+        specializationCount: number;
+      };
+    }
+  > {
+    const subscription = await this.getCurrentTariff(executor.id, executor.subscription ?? null);
+
+    return {
+      ...executor,
+      subscription,
+      executorProfile: executor.executorProfile
+        ? {
+            ...executor.executorProfile,
+            specializations: ((executor.executorProfile.specializations as Specialization[] | undefined) || []).slice(
+              0,
+              subscription.specializationCount || 1
+            ),
+          }
+        : executor.executorProfile,
+    };
+  }
+
   /**
    * Проверить, может ли пользователь откликнуться на заказ
    */
@@ -452,6 +483,7 @@ export class SubscriptionService {
       STANDARD: {
         name: 'Стандарт',
         price: standardPrice,
+        periodLabel: 'без подписки',
         responsePrice: standardResponsePrice,
         orderTakenPrice: 0,
         description: `Бесплатный тариф, ${standardResponsePrice}₽ за каждый отклик`,
@@ -465,6 +497,7 @@ export class SubscriptionService {
       COMFORT: {
         name: 'Комфорт',
         price: comfortPrice,
+        periodLabel: 'в месяц',
         responsePrice: 0,
         orderTakenPrice: comfortOrderTakenPrice,
         description: `${comfortPrice}₽/мес, ${comfortOrderTakenPrice}₽ за взятый заказ`,
@@ -480,6 +513,7 @@ export class SubscriptionService {
       PREMIUM: {
         name: 'Премиум',
         price: premiumPrice,
+        periodLabel: 'на 30 дней',
         responsePrice: 0,
         orderTakenPrice: 0,
         description: `Подписка на 30 дней — ${premiumPrice.toLocaleString('ru-RU')}₽`,

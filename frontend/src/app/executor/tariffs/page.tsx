@@ -14,6 +14,7 @@ import {
   getCurrentTariff,
   changeTariff,
   paySubscriptionFromBalance,
+  Tariff,
   TariffInfo,
 } from '@/lib/api/subscriptions';
 import {
@@ -35,6 +36,7 @@ function TariffsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const [currentTariff, setCurrentTariff] = useState<Tariff | null>(null);
   const [currentTariffType, setCurrentTariffType] = useState<string>('STANDARD');
   const [tariffInfo, setTariffInfo] = useState<Record<string, TariffInfo>>({});
   const [changingTariff, setChangingTariff] = useState<string | null>(null);
@@ -62,6 +64,7 @@ function TariffsContent() {
         getCurrentTariff(),
       ]);
       setTariffInfo(tariffsData);
+      setCurrentTariff(currentTariff);
       setCurrentTariffType(currentTariff.tariffType);
     } catch (error) {
       console.error('Failed to load tariffs:', error);
@@ -244,7 +247,7 @@ function TariffsContent() {
           <p className="text-sm sm:text-base text-muted-foreground">Выберите подходящий тариф для работы на платформе</p>
         </div>
 
-      {user.subscription && (
+      {currentTariff && (
           <div className="mb-8">
             <Card className="bg-emerald-50/80 border-emerald-200">
               <CardContent className="pt-5 pb-5">
@@ -256,8 +259,8 @@ function TariffsContent() {
                     <p className="font-bold text-emerald-900">
                       Текущий тариф: {currentTariffType === 'STANDARD' ? 'Стандарт' : currentTariffType === 'COMFORT' ? 'Комфорт' : 'Премиум'}
                     </p>
-                {user.subscription.expiresAt && (currentTariffType === 'PREMIUM' || currentTariffType === 'COMFORT') && (
-                      <p className="text-sm text-emerald-700">до {new Date(user.subscription.expiresAt).toLocaleDateString('ru-RU')}</p>
+                {currentTariff.expiresAt && (currentTariffType === 'PREMIUM' || currentTariffType === 'COMFORT') && (
+                      <p className="text-sm text-emerald-700">до {new Date(currentTariff.expiresAt).toLocaleDateString('ru-RU')}</p>
                 )}
                   </div>
                 </div>

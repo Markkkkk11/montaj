@@ -51,7 +51,9 @@ export default function TariffCard({
           {tariff.price > 0 ? (
             <>
               <div className="text-4xl font-bold">{tariff.price.toLocaleString()}₽</div>
-              <div className="text-gray-500 text-sm mt-1">на {tariff.duration} дней</div>
+              {tariff.periodLabel && (
+                <div className="text-gray-500 text-sm mt-1">{tariff.periodLabel}</div>
+              )}
             </>
           ) : (
             <div className="text-4xl font-bold text-green-600">Бесплатно</div>
@@ -103,4 +105,3 @@ export default function TariffCard({
     </Card>
   );
 }
-
