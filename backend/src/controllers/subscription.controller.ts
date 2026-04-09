@@ -2,16 +2,16 @@ import { Request, Response } from 'express';
 import subscriptionService from '../services/subscription.service';
 
 export class SubscriptionController {
-  private ensureExecutor(req: Request) {
+  private ensureExecutor = (req: Request) => {
     if (req.user?.role !== 'EXECUTOR') {
       throw new Error('Раздел тарифов доступен только исполнителям');
     }
-  }
+  };
 
   /**
    * Получить текущую подписку пользователя
    */
-  async getMySubscription(req: Request, res: Response) {
+  getMySubscription = async (req: Request, res: Response) => {
     try {
       this.ensureExecutor(req);
       const userId = req.user!.id;
@@ -28,12 +28,12 @@ export class SubscriptionController {
         error: error.message,
       });
     }
-  }
+  };
 
   /**
    * Получить текущий тариф
    */
-  async getCurrentTariff(req: Request, res: Response) {
+  getCurrentTariff = async (req: Request, res: Response) => {
     try {
       this.ensureExecutor(req);
       const userId = req.user!.id;
@@ -50,13 +50,13 @@ export class SubscriptionController {
         error: error.message,
       });
     }
-  }
+  };
 
   /**
    * Сменить тариф на Standard (бесплатно)
    * Comfort и Premium — через оплату (/payments/subscription)
    */
-  async changeTariff(req: Request, res: Response) {
+  changeTariff = async (req: Request, res: Response) => {
     try {
       this.ensureExecutor(req);
       const userId = req.user!.id;
@@ -80,12 +80,12 @@ export class SubscriptionController {
         error: error.message,
       });
     }
-  }
+  };
 
   /**
    * Получить информацию о всех тарифах
    */
-  async getTariffInfo(req: Request, res: Response) {
+  getTariffInfo = async (req: Request, res: Response) => {
     try {
       const tariffInfo = await subscriptionService.getTariffInfo();
 
@@ -99,12 +99,12 @@ export class SubscriptionController {
         error: error.message,
       });
     }
-  }
+  };
 
   /**
    * Оплатить подписку с баланса
    */
-  async payFromBalance(req: Request, res: Response) {
+  payFromBalance = async (req: Request, res: Response) => {
     try {
       this.ensureExecutor(req);
       const userId = req.user!.id;
@@ -127,12 +127,12 @@ export class SubscriptionController {
         error: error.message,
       });
     }
-  }
+  };
 
   /**
    * Проверить возможность отклика на заказ
    */
-  async checkCanRespond(req: Request, res: Response) {
+  checkCanRespond = async (req: Request, res: Response) => {
     try {
       this.ensureExecutor(req);
       const userId = req.user!.id;
@@ -149,7 +149,7 @@ export class SubscriptionController {
         error: error.message,
       });
     }
-  }
+  };
 }
 
 export default new SubscriptionController();
