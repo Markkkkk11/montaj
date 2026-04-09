@@ -108,7 +108,7 @@ export class UserService {
     if (data.region !== undefined) updateData.region = data.region;
     if (data.specializations !== undefined) {
       const currentSpecializations = user.executorProfile.specializations || [];
-      const nextSpecializations = data.specializations || [];
+      const nextSpecializations = Array.from(new Set(data.specializations || []));
 
       // Проверяем лимит специализаций по текущему тарифу
       const currentTariff = await subscriptionService.getCurrentTariff(userId);

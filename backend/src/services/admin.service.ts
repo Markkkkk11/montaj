@@ -934,9 +934,28 @@ export class AdminService {
 
     const specializationCount = await subscriptionService.getSpecializationCountForTariff(tariffType);
     const isTimeLimitedTariff = tariffType === 'PREMIUM';
-    const expiresAt =
-      data.expiresAt
-        ? new Date(data.expiresAt)
+    const existingSubscription = await prisma.subscription.findUnique({
+      where: { userId },
+      select: {
+        tariffType: true,
+        expiresAt: true,
+      },
+    });
+
+    const shouldKeepExistingExpiry =
+      !data.expiresAt &&
+      existingSubscription &&
+      existingSubscription.tariffType === tariffType;
+
+    const parsedExpiresAt = data.expiresAt ? new Date(data.expiresAt) : null;
+    if (parsedExpiresAt && Number.isNaN(parsedExpiresAt.getTime())) {
+      throw new Error('Некорректная дата окончания подписки');
+    }
+
+    const expiresAt = shouldKeepExistingExpiry
+      ? existingSubscription.expiresAt
+      : parsedExpiresAt
+        ? parsedExpiresAt
         : isTimeLimitedTariff
           ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           : new Date();

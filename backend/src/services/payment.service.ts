@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import yookassa from '../config/yookassa';
 import settingsService from './settings.service';
 import subscriptionService from './subscription.service';
+import { appendQueryParam } from '../utils/url';
 
 export class PaymentService {
   /**
@@ -29,7 +30,7 @@ export class PaymentService {
       const yookassaPayment = await yookassa.createPayment({
         amount,
         description: payment.description,
-        returnUrl: `${returnUrl}?payment_id=${payment.id}`,
+        returnUrl: appendQueryParam(returnUrl, 'payment_id', payment.id),
         metadata: {
           paymentId: payment.id,
           userId,
@@ -64,25 +65,12 @@ export class PaymentService {
    */
   async createSubscriptionPayment(
     userId: string,
-    tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM',
+    tariffType: 'PREMIUM',
     returnUrl: string
   ) {
-    if (tariffType === 'COMFORT') {
-      throw new Error('Тариф «Комфорт» подключается бесплатно. Выберите его без оплаты.');
-    }
-
     // Определить стоимость подписки из настроек БД
     const tariffSettings = await settingsService.getBySection('tariffs');
-    const prices: Record<string, number> = {
-      STANDARD: 0, // Бесплатный (платят за отклики)
-      PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
-    };
-
-    const amount = prices[tariffType] || 0;
-
-    if (amount === 0) {
-      throw new Error('Данный тариф не требует оплаты подписки');
-    }
+    const amount = parseInt(tariffSettings.premiumPrice || '5000', 10);
 
     // Создать запись о платеже
     const payment = await prisma.payment.create({
@@ -104,7 +92,7 @@ export class PaymentService {
       const yookassaPayment = await yookassa.createPayment({
         amount,
         description: payment.description,
-        returnUrl: `${returnUrl}?payment_id=${payment.id}`,
+        returnUrl: appendQueryParam(returnUrl, 'payment_id', payment.id),
         metadata: {
           paymentId: payment.id,
           userId,
@@ -350,13 +338,13 @@ export class PaymentService {
       PREMIUM: 'Премиум',
     };
 
-    if (!['COMFORT', 'PREMIUM'].includes(tariffType)) {
-      throw new Error('Неизвестный тариф подписки');
+    if (tariffType !== 'PREMIUM') {
+      throw new Error('Через оплату можно активировать только тариф «Премиум»');
     }
 
     const { expiresAt, specializationCount } = await subscriptionService.preparePaidSubscription(
       userId,
-      tariffType,
+      'PREMIUM',
       duration,
       db
     );

@@ -29,10 +29,12 @@ export const updateExecutorProfileSchema = Joi.object({
         'FURNITURE'
       )
     )
+    .unique()
     .min(1)
     .max(6)
     .optional()
     .messages({
+      'array.unique': 'Нельзя выбрать одну и ту же специализацию несколько раз',
       'array.min': 'Необходимо выбрать хотя бы одну специализацию',
       'array.max': 'Максимум 6 специализаций',
     }),
@@ -40,4 +42,3 @@ export const updateExecutorProfileSchema = Joi.object({
   fullDescription: Joi.string().max(3000).optional().allow(''),
   isSelfEmployed: Joi.boolean().optional(),
 });
-

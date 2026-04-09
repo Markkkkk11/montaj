@@ -149,6 +149,8 @@ describe('Subscription expiration handling', () => {
   });
 
   it('switches to free COMFORT and trims specializations when tariff changes', async () => {
+    const currentExpiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+
     await prisma.balance.update({
       where: { userId: executorId },
       data: {

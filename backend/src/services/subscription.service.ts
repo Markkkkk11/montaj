@@ -390,7 +390,7 @@ export class SubscriptionService {
 
   async preparePaidSubscription(
     userId: string,
-    tariffType: 'COMFORT' | 'PREMIUM',
+    tariffType: 'PREMIUM',
     durationDays: number = 30,
     db: any = prisma
   ) {
@@ -423,7 +423,7 @@ export class SubscriptionService {
 
   async activatePaidSubscription(
     userId: string,
-    tariffType: 'COMFORT' | 'PREMIUM',
+    tariffType: 'PREMIUM',
     durationDays: number = 30
   ) {
     const { expiresAt, specializationCount } = await this.preparePaidSubscription(
@@ -458,18 +458,11 @@ export class SubscriptionService {
   async payFromBalance(userId: string, tariffType: 'COMFORT' | 'PREMIUM') {
     const tariffSettings = await this.getTariffSettings();
 
-    const prices: Record<string, number> = {
-      PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
-    };
-    const price = prices[tariffType];
-    if (!price) {
+    if (tariffType !== 'PREMIUM') {
       throw new Error('Оплата с баланса доступна только для тарифа «Премиум»');
     }
 
-    const tariffNames: Record<string, string> = {
-      COMFORT: 'Комфорт',
-      PREMIUM: 'Премиум',
-    };
+    const price = parseInt(tariffSettings.premiumPrice || '5000', 10);
 
     // Получить баланс пользователя
     const balance = await prisma.balance.findUnique({ where: { userId } });
@@ -504,7 +497,7 @@ export class SubscriptionService {
         userId,
         type: 'SUBSCRIPTION',
         amount: -price,
-        description: `Оплата подписки «${tariffNames[tariffType]}» с баланса на 30 дней`,
+        description: 'Оплата подписки «Премиум» с баланса на 30 дней',
       },
     });
 

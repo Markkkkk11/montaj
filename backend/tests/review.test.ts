@@ -91,8 +91,8 @@ describe('Review Management', () => {
         userId: executorId,
         region: 'Москва',
         specializations: ['WINDOWS'],
-        bio: 'Опытный монтажник',
-        tariffType: 'PREMIUM',
+        shortDescription: 'Опытный монтажник',
+        workPhotos: [],
       },
     });
 
@@ -237,4 +237,3 @@ describe('Review Management', () => {
     });
   });
 });
-

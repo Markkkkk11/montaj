@@ -37,6 +37,7 @@ export default function AdminUserEditPage() {
   const [bonusBalance, setBonusBalance] = useState('');
   const [tariffType, setTariffType] = useState('');
   const [specializationCount, setSpecializationCount] = useState('');
+  const [initialTariffType, setInitialTariffType] = useState('');
 
   useEffect(() => {
     loadUser();
@@ -68,6 +69,7 @@ export default function AdminUserEditPage() {
       setBalance(data.balance?.amount?.toString() || '0');
       setBonusBalance(data.balance?.bonusAmount?.toString() || '0');
       setTariffType(data.subscription?.tariffType || 'STANDARD');
+      setInitialTariffType(data.subscription?.tariffType || 'STANDARD');
       setSpecializationCount(data.subscription?.specializationCount?.toString() || '1');
     } catch (error) {
       console.error('Failed to load user:', error);
@@ -107,10 +109,11 @@ export default function AdminUserEditPage() {
           parseFloat(bonusBalance)
         );
 
-        // Update subscription
-        await adminApi.updateUserSubscription(userId, {
-          tariffType,
-        });
+        if (tariffType !== initialTariffType) {
+          await adminApi.updateUserSubscription(userId, {
+            tariffType,
+          });
+        }
       }
 
       alert('Пользователь обновлен');
@@ -142,8 +145,12 @@ export default function AdminUserEditPage() {
   }
 
   const shouldShowExpiryField =
-    !!user.subscription?.expiresAt &&
     tariffType === 'PREMIUM';
+  const premiumDurationDays = tariffLimits.PREMIUM?.duration ?? 30;
+  const premiumExpiryDate =
+    user.subscription?.tariffType === 'PREMIUM' && user.subscription?.expiresAt
+      ? new Date(user.subscription.expiresAt)
+      : new Date(Date.now() + premiumDurationDays * 24 * 60 * 60 * 1000);
 
   return (
     <div className="p-8">
@@ -286,9 +293,9 @@ export default function AdminUserEditPage() {
 
                 {shouldShowExpiryField && (
                   <div>
-                    <Label>Действует до</Label>
+                    <Label>{tariffType === initialTariffType ? 'Действует до' : 'Будет действовать до'}</Label>
                     <Input
-                      value={new Date(user.subscription.expiresAt).toLocaleDateString('ru-RU')}
+                      value={premiumExpiryDate.toLocaleDateString('ru-RU')}
                       disabled
                     />
                   </div>
