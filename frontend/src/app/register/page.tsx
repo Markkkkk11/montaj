@@ -61,7 +61,7 @@ function RegisterContent() {
   const standardSpecs = parseInt(settings.standardSpecializations || '1', 10);
   const comfortSpecs = parseInt(settings.comfortSpecializations || '1', 10);
   const premiumSpecs = parseInt(settings.premiumSpecializations || '3', 10);
-  const trialDays = parseInt(settings.trialDays || '7', 10);
+  const trialDays = parseInt(settings.trialDays || '30', 10);
 
   const handleRoleSelect = (selectedRole: 'CUSTOMER' | 'EXECUTOR') => {
     setRole(selectedRole);

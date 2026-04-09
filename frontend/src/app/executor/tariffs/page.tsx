@@ -112,7 +112,7 @@ function TariffsContent() {
   const stdSpecs = tariffInfo.STANDARD?.specializationCount ?? 1;
   const comfortSpecs = tariffInfo.COMFORT?.specializationCount ?? 1;
   const premiumSpecs = tariffInfo.PREMIUM?.specializationCount ?? 3;
-  const trialDays = parseInt(settings.trialDays || '7', 10);
+  const trialDays = parseInt(settings.trialDays || '30', 10);
 
   const tariffs = [
     {

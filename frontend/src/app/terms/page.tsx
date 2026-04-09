@@ -21,7 +21,7 @@ export default function TermsPage() {
   const standardSpecs = parseInt(settings.standardSpecializations || '1', 10);
   const comfortSpecs = parseInt(settings.comfortSpecializations || '1', 10);
   const premiumSpecs = parseInt(settings.premiumSpecializations || '3', 10);
-  const trialDays = parseInt(settings.trialDays || '7', 10);
+  const trialDays = parseInt(settings.trialDays || '30', 10);
 
   return (
     <div className="min-h-screen bg-gray-50">

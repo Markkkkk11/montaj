@@ -1,7 +1,6 @@
 import prisma from '../config/database';
 import yookassa from '../config/yookassa';
 import settingsService from './settings.service';
-import subscriptionService from './subscription.service';
 
 export class PaymentService {
   /**
@@ -135,39 +134,63 @@ export class PaymentService {
    * Обработать успешный платёж (вызывается из webhook или callback)
    */
   async processSuccessfulPayment(paymentId: string) {
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
-    });
+    return prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.findUnique({
+        where: { id: paymentId },
+      });
 
-    if (!payment) {
-      throw new Error('Платёж не найден');
-    }
+      if (!payment) {
+        throw new Error('Платёж не найден');
+      }
 
-    if (payment.paid) {
-      return payment; // Уже обработан
-    }
+      if (payment.paid) {
+        return payment; // Уже обработан
+      }
 
-    // Обновить статус платежа
-    const updatedPayment = await prisma.payment.update({
-      where: { id: paymentId },
-      data: {
+      const paidAt = new Date();
+      const claim = await tx.payment.updateMany({
+        where: {
+          id: paymentId,
+          paid: false,
+        },
+        data: {
+          status: 'SUCCEEDED',
+          paid: true,
+          paidAt,
+        },
+      });
+
+      if (claim.count === 0) {
+        const existingPayment = await tx.payment.findUnique({
+          where: { id: paymentId },
+        });
+
+        if (!existingPayment) {
+          throw new Error('Платёж не найден');
+        }
+
+        return existingPayment;
+      }
+
+      if (payment.purpose === 'top_up') {
+        await this.processTopUp(tx, payment.id, payment.userId, parseFloat(payment.amount.toString()));
+      } else if (payment.purpose === 'subscription') {
+        await this.processSubscription(
+          tx,
+          payment.id,
+          payment.userId,
+          payment.metadata as any,
+          parseFloat(payment.amount.toString())
+        );
+      }
+
+      return {
+        ...payment,
         status: 'SUCCEEDED',
         paid: true,
-        paidAt: new Date(),
-      },
+        paidAt,
+      };
     });
-
-    // Обработать в зависимости от назначения
-    if (payment.purpose === 'top_up') {
-      await this.processTopUp(payment.userId, parseFloat(payment.amount.toString()));
-    } else if (payment.purpose === 'subscription') {
-      await this.processSubscription(
-        payment.userId,
-        payment.metadata as any
-      );
-    }
-
-    return updatedPayment;
   }
 
   /**
@@ -209,9 +232,9 @@ export class PaymentService {
   /**
    * Пополнить баланс пользователя
    */
-  private async processTopUp(userId: string, amount: number) {
+  private async processTopUp(db: any, paymentId: string, userId: string, amount: number) {
     // Обновить баланс
-    await prisma.balance.upsert({
+    await db.balance.upsert({
       where: { userId },
       create: {
         userId,
@@ -226,18 +249,19 @@ export class PaymentService {
     });
 
     // Создать транзакцию
-    await prisma.transaction.create({
+    await db.transaction.create({
       data: {
         userId,
         type: 'TOP_UP',
         amount,
         description: `Пополнение баланса на ${amount}₽`,
+        relatedPaymentId: paymentId,
       },
     });
 
     // Проверить бонус за первое пополнение ≥150₽ в течение 30 дней после регистрации
     if (amount >= 150) {
-      await this.checkAndAwardRegistrationBonus(userId, amount);
+      await this.checkAndAwardRegistrationBonus(db, userId, amount);
     }
   }
 
@@ -245,9 +269,9 @@ export class PaymentService {
    * Начислить бонус 1000₽ за первое пополнение ≥150₽
    * в течение 30 дней с момента регистрации (одноразово)
    */
-  private async checkAndAwardRegistrationBonus(userId: string, topUpAmount: number) {
+  private async checkAndAwardRegistrationBonus(db: any, userId: string, topUpAmount: number) {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: userId },
         select: { createdAt: true },
       });
@@ -261,7 +285,7 @@ export class PaymentService {
       }
 
       // Проверяем, что бонус ещё не начислялся (по наличию транзакции BONUS с описанием)
-      const existingBonus = await prisma.transaction.findFirst({
+      const existingBonus = await db.transaction.findFirst({
         where: {
           userId,
           type: 'BONUS',
@@ -276,7 +300,7 @@ export class PaymentService {
       const bonusAmount = 1000;
 
       // Начислить бонус
-      await prisma.balance.update({
+      await db.balance.update({
         where: { userId },
         data: {
           bonusAmount: {
@@ -286,7 +310,7 @@ export class PaymentService {
       });
 
       // Записать транзакцию
-      await prisma.transaction.create({
+      await db.transaction.create({
         data: {
           userId,
           type: 'BONUS',
@@ -305,19 +329,36 @@ export class PaymentService {
   /**
    * Активировать/продлить подписку
    */
-  private async processSubscription(userId: string, metadata: any) {
+  private async processSubscription(
+    db: any,
+    paymentId: string,
+    userId: string,
+    metadata: any,
+    paidAmount: number
+  ) {
     const tariffType = metadata.tariffType || 'PREMIUM';
     const duration = 30; // дней
-
     const tariffSettings = await settingsService.getBySection('tariffs');
-
-    // Определяем цену по тарифу
-    const prices: Record<string, number> = {
-      STANDARD: 0,
-      COMFORT: parseInt(tariffSettings.comfortPrice || '500', 10),
-      PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
-    };
-    const subscriptionPrice = prices[tariffType] || 0;
+    const specializationCount =
+      tariffType === 'COMFORT'
+        ? parseInt(tariffSettings.comfortSpecializations || '1', 10)
+        : parseInt(tariffSettings.premiumSpecializations || '3', 10);
+    const existingSubscription = await db.subscription.findUnique({
+      where: { userId },
+      select: {
+        tariffType: true,
+        expiresAt: true,
+      },
+    });
+    const now = new Date();
+    const baseDate =
+      existingSubscription &&
+      existingSubscription.tariffType !== 'STANDARD' &&
+      new Date(existingSubscription.expiresAt) > now
+        ? new Date(existingSubscription.expiresAt)
+        : now;
+    const expiresAt = new Date(baseDate);
+    expiresAt.setDate(expiresAt.getDate() + duration);
 
     // Тарифные названия для транзакции
     const tariffNames: Record<string, string> = {
@@ -330,20 +371,46 @@ export class PaymentService {
       throw new Error('Неизвестный тариф подписки');
     }
 
-    await subscriptionService.activatePaidSubscription(
-      userId,
-      tariffType as 'COMFORT' | 'PREMIUM',
-      duration
-    );
+    await db.subscription.upsert({
+      where: { userId },
+      create: {
+        userId,
+        tariffType,
+        expiresAt,
+        specializationCount,
+      },
+      update: {
+        tariffType,
+        expiresAt,
+        specializationCount,
+      },
+    });
+
+    const profile = await db.executorProfile.findUnique({
+      where: { userId },
+      select: {
+        specializations: true,
+      },
+    });
+
+    if (profile && profile.specializations.length > specializationCount) {
+      await db.executorProfile.update({
+        where: { userId },
+        data: {
+          specializations: profile.specializations.slice(0, specializationCount),
+        },
+      });
+    }
 
     // Создать транзакцию
-    if (subscriptionPrice > 0) {
-      await prisma.transaction.create({
+    if (paidAmount > 0) {
+      await db.transaction.create({
         data: {
           userId,
           type: 'SUBSCRIPTION',
-          amount: -subscriptionPrice,
+          amount: -paidAmount,
           description: `Оплата подписки «${tariffNames[tariffType] || tariffType}» на ${duration} дней`,
+          relatedPaymentId: paymentId,
         },
       });
     }

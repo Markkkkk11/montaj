@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import notificationService from './notification.service';
+import responseService from './response.service';
 import settingsService from './settings.service';
 import subscriptionService from './subscription.service';
 import { config } from '../config/env';
@@ -424,30 +425,8 @@ export class OrderService {
       throw new Error('Можно отменить только опубликованные заказы');
     }
 
-    // Возвращаем деньги всем откликнувшимся исполнителям
-    const executorIds: string[] = [];
-    for (const response of order.responses) {
-      await prisma.balance.update({
-        where: { userId: response.executorId },
-        data: {
-          amount: {
-            increment: response.commissionPaid,
-          },
-        },
-      });
-      executorIds.push(response.executorId);
-    }
-
-    // Обновить статус откликов на CANCELLED
-    await prisma.response.updateMany({
-      where: {
-        orderId,
-        status: 'PENDING',
-      },
-      data: {
-        status: 'CANCELLED',
-      },
-    });
+    const executorIds = order.responses.map((response) => response.executorId);
+    await responseService.refundResponses(orderId);
 
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
@@ -498,40 +477,7 @@ export class OrderService {
       throw new Error('Этот исполнитель не откликался на заказ');
     }
 
-    // Если тариф COMFORT - списать комиссию за взятый заказ (баланс может уйти в минус)
-    if (response.tariffType === 'COMFORT') {
-      const executor = await prisma.user.findUnique({
-        where: { id: executorId },
-        include: { balance: true },
-      });
-
-      const tariffSettings = await settingsService.getBySection('tariffs');
-      const orderTakenFee = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
-
-      // Списать комиссию (сначала бонусы, потом основной; баланс может стать отрицательным)
-      const bonusBalance = parseFloat(executor?.balance?.bonusAmount.toString() || '0');
-      const amountFromBonus = Math.min(bonusBalance, orderTakenFee);
-      const amountFromMain = orderTakenFee - amountFromBonus;
-
-      await prisma.balance.update({
-        where: { userId: executorId },
-        data: {
-          bonusAmount: { decrement: amountFromBonus },
-          amount: { decrement: amountFromMain },
-        },
-      });
-
-      // Записать транзакцию
-      await prisma.transaction.create({
-        data: {
-          userId: executorId,
-          type: 'ORDER_FEE',
-          amount: -orderTakenFee,
-          description: `Комиссия за взятый заказ #${orderId.slice(0, 8)}`,
-          relatedOrderId: orderId,
-        },
-      });
-    }
+    await responseService.acceptResponse(orderId, executorId);
 
     // Обновляем заказ
     const updatedOrder = await prisma.order.update({
@@ -546,15 +492,6 @@ export class OrderService {
       },
     });
 
-    // Обновляем статус отклика
-    await prisma.response.update({
-      where: { id: response.id },
-      data: {
-        status: 'ACCEPTED',
-        acceptedAt: new Date(),
-      },
-    });
-
     // Уведомление исполнителю о выборе (fire-and-forget, не блокируем ответ)
     notificationService.notifyExecutorSelected(
       executorId,
@@ -566,15 +503,9 @@ export class OrderService {
 
     // Отклоняем остальные отклики и уведомляем отклонённых исполнителей
     const otherResponses = order.responses.filter((r) => r.executorId !== executorId);
-    for (const otherResponse of otherResponses) {
-      await prisma.response.update({
-        where: { id: otherResponse.id },
-        data: {
-          status: 'REJECTED',
-          rejectedAt: new Date(),
-        },
-      });
+    await responseService.rejectAllExcept(orderId, executorId);
 
+    for (const otherResponse of otherResponses) {
       // Уведомление отклонённому исполнителю (fire-and-forget)
       notificationService.notifyResponseRejected(
         otherResponse.executorId,

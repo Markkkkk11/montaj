@@ -164,7 +164,7 @@ export default function HomeClient() {
     }
   }, [user, router]);
 
-  const trialDays = parseInt(settings.trialDays || '7', 10);
+  const trialDays = parseInt(settings.trialDays || '30', 10);
   const standardResponsePrice = parseInt(settings.standardResponsePrice || '150', 10);
   const comfortPrice = parseInt(settings.comfortPrice || '500', 10);
   const comfortOrderTakenPrice = parseInt(settings.comfortOrderTakenPrice || '500', 10);

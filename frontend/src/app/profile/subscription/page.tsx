@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CurrentSubscription from '@/components/subscriptions/CurrentSubscription';
 import TariffCard from '@/components/subscriptions/TariffCard';
+import { useAuthStore } from '@/stores/authStore';
 import {
   getTariffInfo,
   getCurrentTariff,
@@ -27,6 +28,7 @@ export default function SubscriptionPage() {
 function SubscriptionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { getCurrentUser } = useAuthStore();
   const [tariffs, setTariffs] = useState<Record<string, TariffInfo>>({});
   const [currentTariff, setCurrentTariff] = useState<Tariff | null>(null);
   const [currentTariffType, setCurrentTariffType] = useState<string>('STANDARD');
@@ -61,6 +63,7 @@ function SubscriptionContent() {
     try {
       const payment = await processPaymentSuccess(paymentId);
       await loadData();
+      await getCurrentUser();
       if (payment?.paid) {
         alert('Подписка успешно активирована!');
       } else {
@@ -90,6 +93,7 @@ function SubscriptionContent() {
         // Standard — бесплатная смена
         await changeTariff('STANDARD');
         await loadData();
+        await getCurrentUser();
         alert(`Тариф изменён на ${tariffs[tariffKey]?.name}`);
       }
     } catch (error: any) {

@@ -38,7 +38,7 @@ const defaultSettings: PlatformSettings = {
   premiumPrice: '5000',
   premiumSpecializations: '3',
   standardSpecializations: '1',
-  trialDays: '7',
+  trialDays: '30',
   maxWorkPhotos: '8',
   maxFileSize: '5',
 };

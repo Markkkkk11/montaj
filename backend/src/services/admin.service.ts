@@ -109,8 +109,6 @@ export class AdminService {
     role?: string,
     specialization?: string
   ) {
-    const skip = (page - 1) * limit;
-
     const where: any = {};
     if (status) {
       where.status = status;
@@ -118,35 +116,24 @@ export class AdminService {
     if (role) {
       where.role = role;
     }
-    // Фильтр по специализации (только для исполнителей)
-    if (specialization) {
-      where.executorProfile = {
-        specializations: { has: specialization },
-      };
-    }
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        include: {
-          executorProfile: true,
-          balance: true,
-          subscription: true,
-          _count: {
-            select: {
-              createdOrders: true,
-              assignedOrders: true,
-            },
+    const users = await prisma.user.findMany({
+      where,
+      include: {
+        executorProfile: true,
+        balance: true,
+        subscription: true,
+        _count: {
+          select: {
+            createdOrders: true,
+            assignedOrders: true,
           },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        skip,
-        take: limit,
-      }),
-      prisma.user.count({ where }),
-    ]);
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
     // Убрать пароли, добавить ordersCount
     const usersWithoutPasswords = users.map((user) => {
@@ -161,8 +148,20 @@ export class AdminService {
       usersWithoutPasswords.map((user) => this.withEffectiveSubscription(user))
     );
 
+    const filteredUsers = specialization
+      ? normalizedUsers.filter(
+          (user) =>
+            user.role === 'EXECUTOR' &&
+            (user.executorProfile?.specializations || []).includes(specialization as any)
+        )
+      : normalizedUsers;
+
+    const total = filteredUsers.length;
+    const skip = (page - 1) * limit;
+    const paginatedUsers = filteredUsers.slice(skip, skip + limit);
+
     return {
-      users: normalizedUsers,
+      users: paginatedUsers,
       total,
       page,
       totalPages: Math.ceil(total / limit),

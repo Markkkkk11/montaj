@@ -1,5 +1,6 @@
 import prisma from '../src/config/database';
 import authService from '../src/services/auth.service';
+import orderService from '../src/services/order.service';
 import paymentService from '../src/services/payment.service';
 import responseService from '../src/services/response.service';
 import settingsService from '../src/services/settings.service';
@@ -305,5 +306,169 @@ describe('Subscription expiration handling', () => {
     await expect(responseService.createResponse(order.id, executorId)).rejects.toThrow(
       'Вы можете откликаться только на заказы по выбранным специализациям'
     );
+  });
+
+  it('creates a refund transaction and restores balance when a published order is cancelled', async () => {
+    await prisma.subscription.update({
+      where: { userId: executorId },
+      data: {
+        tariffType: 'STANDARD',
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        specializationCount: 1,
+      },
+    });
+
+    await prisma.balance.update({
+      where: { userId: executorId },
+      data: {
+        amount: 1000,
+        bonusAmount: 0,
+      },
+    });
+
+    await prisma.executorProfile.update({
+      where: { userId: executorId },
+      data: {
+        specializations: ['WINDOWS'],
+      },
+    });
+
+    const order = await prisma.order.create({
+      data: {
+        customerId,
+        category: 'WINDOWS',
+        title: 'Отменяемый заказ',
+        description: 'Тест возврата комиссии',
+        region: 'Moscow',
+        address: 'ул. Тестовая, д. 3',
+        startDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        budget: 10000,
+        paymentMethod: 'CASH',
+        files: [],
+        status: 'PUBLISHED',
+      },
+    });
+
+    const createdResponse = await responseService.createResponse(order.id, executorId);
+    await orderService.cancelOrder(order.id, customerId);
+
+    const balance = await prisma.balance.findUnique({
+      where: { userId: executorId },
+    });
+    const refundTransaction = await prisma.transaction.findFirst({
+      where: {
+        userId: executorId,
+        type: 'REFUND',
+        relatedOrderId: order.id,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    const cancelledResponse = await prisma.response.findUnique({
+      where: { id: createdResponse.id },
+    });
+
+    expect(parseFloat(createdResponse.commissionPaid.toString())).toBeGreaterThan(0);
+    expect(parseFloat(balance!.amount.toString())).toBe(1000);
+    expect(parseFloat(balance!.bonusAmount.toString())).toBe(0);
+    expect(parseFloat(refundTransaction!.amount.toString())).toBe(
+      parseFloat(createdResponse.commissionPaid.toString())
+    );
+    expect(cancelledResponse?.status).toBe('CANCELLED');
+  });
+
+  it('updates the accepted COMFORT response with the charged order fee', async () => {
+    const tariffSettings = await settingsService.getBySection('tariffs');
+    const comfortOrderTakenPrice = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
+
+    await prisma.subscription.update({
+      where: { userId: executorId },
+      data: {
+        tariffType: 'COMFORT',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        specializationCount: 1,
+      },
+    });
+
+    await prisma.balance.update({
+      where: { userId: executorId },
+      data: {
+        amount: 1000,
+        bonusAmount: 0,
+      },
+    });
+
+    await prisma.executorProfile.update({
+      where: { userId: executorId },
+      data: {
+        specializations: ['WINDOWS'],
+      },
+    });
+
+    const order = await prisma.order.create({
+      data: {
+        customerId,
+        category: 'WINDOWS',
+        title: 'Заказ для COMFORT',
+        description: 'Тест комиссии при выборе',
+        region: 'Moscow',
+        address: 'ул. Тестовая, д. 4',
+        startDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        budget: 12000,
+        paymentMethod: 'CASH',
+        files: [],
+        status: 'PUBLISHED',
+      },
+    });
+
+    const createdResponse = await responseService.createResponse(order.id, executorId);
+    await orderService.selectExecutor(order.id, customerId, executorId);
+
+    const acceptedResponse = await prisma.response.findUnique({
+      where: { id: createdResponse.id },
+    });
+    const orderFeeTransaction = await prisma.transaction.findFirst({
+      where: {
+        userId: executorId,
+        type: 'ORDER_FEE',
+        relatedOrderId: order.id,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    expect(parseFloat(createdResponse.commissionPaid.toString())).toBe(0);
+    expect(parseFloat(acceptedResponse!.commissionPaid.toString())).toBe(comfortOrderTakenPrice);
+    expect(acceptedResponse?.status).toBe('ACCEPTED');
+    expect(parseFloat(orderFeeTransaction!.amount.toString())).toBe(-comfortOrderTakenPrice);
+  });
+
+  it('records the actual paid amount for a subscription payment even if tariff settings change later', async () => {
+    const payment = await prisma.payment.create({
+      data: {
+        userId: executorId,
+        amount: 500,
+        currency: 'RUB',
+        status: 'PENDING',
+        purpose: 'subscription',
+        description: 'COMFORT payment with historical price',
+        metadata: {
+          tariffType: 'COMFORT',
+        },
+      },
+    });
+
+    await settingsService.updateSection('tariffs', { comfortPrice: '900' });
+    await paymentService.processSuccessfulPayment(payment.id);
+
+    const subscriptionTransaction = await prisma.transaction.findFirst({
+      where: {
+        userId: executorId,
+        type: 'SUBSCRIPTION',
+        relatedPaymentId: payment.id,
+      },
+    });
+
+    expect(parseFloat(subscriptionTransaction!.amount.toString())).toBe(-500);
+
+    await settingsService.updateSection('tariffs', { comfortPrice: '500' });
   });
 });

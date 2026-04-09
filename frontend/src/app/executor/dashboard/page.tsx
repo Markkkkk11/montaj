@@ -124,6 +124,7 @@ export default function ExecutorDashboard() {
   const subscription = getEffectiveSubscription(user.subscription);
   const profile = user.executorProfile;
   const standardResponsePrice = parseInt(settings.standardResponsePrice || '150', 10);
+  const comfortOrderTakenPrice = parseInt(settings.comfortOrderTakenPrice || '500', 10);
 
   const totalBalance = balance && balance.amount !== undefined && balance.bonusAmount !== undefined
     ? (parseFloat(balance.amount.toString()) + parseFloat(balance.bonusAmount.toString())).toFixed(2)
@@ -438,9 +439,15 @@ export default function ExecutorDashboard() {
 
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
-                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Стоимость отклика</p>
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">
+                  {subscription.tariffType === 'COMFORT' ? 'При выборе' : 'Стоимость отклика'}
+                </p>
                 <p className="text-lg sm:text-xl font-extrabold text-blue-600">
-                  {subscription.tariffType === 'PREMIUM' || subscription.tariffType === 'COMFORT' ? '0' : standardResponsePrice} ₽
+                  {subscription.tariffType === 'PREMIUM'
+                    ? '0 ₽'
+                    : subscription.tariffType === 'COMFORT'
+                      ? `${comfortOrderTakenPrice} ₽`
+                      : `${standardResponsePrice} ₽`}
                 </p>
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
@@ -452,7 +459,11 @@ export default function ExecutorDashboard() {
               <div className="p-3 sm:p-4 bg-gray-50 rounded-xl text-center">
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5 sm:mb-1">Отклики</p>
                 <p className="text-lg sm:text-xl font-extrabold text-emerald-600">
-                  {subscription.tariffType === 'PREMIUM' ? '∞' : 'Платные'}
+                  {subscription.tariffType === 'PREMIUM'
+                    ? '∞'
+                    : subscription.tariffType === 'COMFORT'
+                      ? 'Бесплатные'
+                      : 'Платные'}
                 </p>
               </div>
             </div>

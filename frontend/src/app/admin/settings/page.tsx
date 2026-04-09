@@ -46,7 +46,7 @@ export default function AdminSettingsPage() {
     comfortSpecializations: '1',
     premiumPrice: '5000',
     premiumSpecializations: '3',
-    trialDays: '7',
+    trialDays: '30',
   });
 
   const [emailSettings, setEmailSettings] = useState({

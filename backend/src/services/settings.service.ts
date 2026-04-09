@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS: Record<string, { value: string; section: string }> = {
   premiumSpecializations:   { value: '3',    section: 'tariffs' },
   standardSpecializations:  { value: '1',    section: 'tariffs' },
   comfortSpecializations:   { value: '1',    section: 'tariffs' },
-  trialDays:                { value: '7',    section: 'tariffs' },
+  trialDays:                { value: '30',   section: 'tariffs' },
 
   // Email
   emailEnabled: { value: 'true',              section: 'email' },
