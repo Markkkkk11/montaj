@@ -21,6 +21,34 @@ export class AuthService {
     return user;
   }
 
+  private async normalizeExecutorSubscription(user: any) {
+    if (user?.role !== 'EXECUTOR') {
+      return user;
+    }
+
+    const effectiveSubscription = await subscriptionService.getCurrentTariff(
+      user.id,
+      user.subscription ?? null
+    );
+
+    const shouldPersistFallbackToStandard =
+      !!user.subscription &&
+      user.subscription.tariffType !== 'STANDARD' &&
+      effectiveSubscription.tariffType === 'STANDARD';
+
+    if (shouldPersistFallbackToStandard) {
+      console.log(
+        `⏰ Подписка ${user.subscription.tariffType} истекла у пользователя ${user.id}, переводим на Стандарт`
+      );
+
+      user.subscription = await subscriptionService.changeTariff(user.id, 'STANDARD');
+    } else {
+      user.subscription = effectiveSubscription;
+    }
+
+    return this.applyExecutorSpecializationLimit(user);
+  }
+
   /**
    * Нормализация телефона (оставляем только цифры)
    */
@@ -189,23 +217,13 @@ export class AuthService {
       throw new Error('Ваш профиль не прошёл модерацию');
     }
 
-    // Проверяем срок подписки: если истекла, переводим на Standard
-    if (user.subscription && user.subscription.tariffType !== 'STANDARD') {
-      const isExpired = new Date() >= new Date(user.subscription.expiresAt);
-      if (isExpired) {
-        console.log(`⏰ Подписка ${user.subscription.tariffType} истекла у пользователя ${user.id}, переводим на Стандарт`);
-        const updatedSub = await subscriptionService.changeTariff(user.id, 'STANDARD');
-        user.subscription = updatedSub as any;
-      }
-    }
-
     // Генерируем JWT токен
     const token = generateToken({
       userId: user.id,
       role: user.role,
     });
 
-    return { user: this.applyExecutorSpecializationLimit(user), token };
+    return { user: await this.normalizeExecutorSubscription(user), token };
   }
 
   /**
@@ -224,17 +242,7 @@ export class AuthService {
 
     if (!user) return null;
 
-    // Проверяем срок подписки: если истекла, переводим на Standard
-    if (user.subscription && user.subscription.tariffType !== 'STANDARD') {
-      const isExpired = new Date() >= new Date(user.subscription.expiresAt);
-      if (isExpired) {
-        console.log(`⏰ Подписка ${user.subscription.tariffType} истекла у пользователя ${userId}, переводим на Стандарт`);
-        const updatedSub = await subscriptionService.changeTariff(userId, 'STANDARD');
-        user.subscription = updatedSub as any;
-      }
-    }
-
-    return this.applyExecutorSpecializationLimit(user);
+    return this.normalizeExecutorSubscription(user);
   }
 
   /**

@@ -54,6 +54,13 @@ export class SubscriptionService {
     return false;
   }
 
+  private getNonExpiringTariffExpiresAt(): Date {
+    // Для бессрочных тарифов храним техническую дату "сейчас",
+    // чтобы такие записи не превращались в ложные оплаченные периоды,
+    // если настройки тарифа позже изменятся.
+    return new Date();
+  }
+
   private async getStandardSpecializationCount(): Promise<number> {
     const tariffSettings = await this.getTariffSettings();
     return this.getTariffSpecializationCount('STANDARD', tariffSettings);
@@ -185,10 +192,10 @@ export class SubscriptionService {
     tariffType: TariffType,
     durationDays: number = 30
   ) {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + durationDays);
-
     const tariffSettings = await this.getTariffSettings();
+    const expiresAt = this.isTimeLimitedTariff(tariffType, tariffSettings)
+      ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
+      : this.getNonExpiringTariffExpiresAt();
     const specializationCount = this.getTariffSpecializationCount(tariffType, tariffSettings);
 
     const subscription = await prisma.subscription.upsert({
@@ -228,7 +235,7 @@ export class SubscriptionService {
     }
 
     const specializationCount = this.getTariffSpecializationCount(newTariffType, tariffSettings);
-    const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    const expiresAt = this.getNonExpiringTariffExpiresAt();
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },

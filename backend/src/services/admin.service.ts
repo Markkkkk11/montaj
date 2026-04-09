@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import notificationService from './notification.service';
 import subscriptionService from './subscription.service';
+import settingsService from './settings.service';
 
 export class AdminService {
   private async withEffectiveSubscription<T extends { id: string; role: string; subscription?: any | null; executorProfile?: any | null }>(user: T): Promise<T> {
@@ -919,12 +920,16 @@ export class AdminService {
     }
 
     const specializationCount = await subscriptionService.getSpecializationCountForTariff(tariffType);
+    const tariffSettings = await settingsService.getBySection('tariffs');
+    const comfortPrice = parseInt(tariffSettings.comfortPrice || '0', 10);
+    const isTimeLimitedTariff =
+      tariffType === 'PREMIUM' || (tariffType === 'COMFORT' && comfortPrice > 0);
     const expiresAt =
       data.expiresAt
         ? new Date(data.expiresAt)
-        : tariffType === 'STANDARD'
-          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        : isTimeLimitedTariff
+          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          : new Date();
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },

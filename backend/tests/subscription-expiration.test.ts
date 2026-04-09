@@ -242,6 +242,72 @@ describe('Subscription expiration handling', () => {
     expect(executorProfile?.specializations).toEqual(['WINDOWS']);
   });
 
+  it('does not downgrade free COMFORT on auth refresh even if its stored expiry is in the past', async () => {
+    await settingsService.updateSection('tariffs', { comfortPrice: '0' });
+
+    await prisma.subscription.update({
+      where: { userId: executorId },
+      data: {
+        tariffType: 'COMFORT',
+        expiresAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        specializationCount: 1,
+      },
+    });
+
+    const user = await authService.getCurrentUser(executorId);
+    const storedSubscription = await prisma.subscription.findUnique({
+      where: { userId: executorId },
+    });
+
+    expect(user?.subscription.tariffType).toBe('COMFORT');
+    expect(user?.subscription.expiresAt).toBeNull();
+    expect(storedSubscription?.tariffType).toBe('COMFORT');
+  });
+
+  it('does not extend a paid subscription from the placeholder expiry of free COMFORT during payment callback', async () => {
+    await settingsService.updateSection('tariffs', { comfortPrice: '0' });
+
+    const freeComfortPlaceholderExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    await prisma.subscription.update({
+      where: { userId: executorId },
+      data: {
+        tariffType: 'COMFORT',
+        expiresAt: freeComfortPlaceholderExpiry,
+        specializationCount: 1,
+      },
+    });
+
+    const payment = await prisma.payment.create({
+      data: {
+        userId: executorId,
+        amount: 5000,
+        currency: 'RUB',
+        status: 'PENDING',
+        purpose: 'subscription',
+        description: 'PREMIUM after free COMFORT',
+        metadata: {
+          tariffType: 'PREMIUM',
+        },
+      },
+    });
+
+    const minExpected = new Date();
+    minExpected.setDate(minExpected.getDate() + 29);
+    const maxExpected = new Date();
+    maxExpected.setDate(maxExpected.getDate() + 31);
+
+    await paymentService.processSuccessfulPayment(payment.id);
+
+    const updatedSubscription = await prisma.subscription.findUnique({
+      where: { userId: executorId },
+    });
+    const updatedExpiresAt = new Date(updatedSubscription!.expiresAt);
+
+    expect(updatedSubscription?.tariffType).toBe('PREMIUM');
+    expect(updatedExpiresAt.getTime()).toBeGreaterThanOrEqual(minExpected.getTime());
+    expect(updatedExpiresAt.getTime()).toBeLessThanOrEqual(maxExpected.getTime());
+  });
+
   it('trims stored specializations when tariff limits are lowered in settings', async () => {
     await prisma.subscription.update({
       where: { userId: executorId },

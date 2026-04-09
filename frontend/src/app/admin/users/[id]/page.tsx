@@ -141,6 +141,11 @@ export default function AdminUserEditPage() {
     );
   }
 
+  const selectedTariffInfo = tariffLimits[tariffType];
+  const shouldShowExpiryField =
+    !!user.subscription?.expiresAt &&
+    (tariffType === 'PREMIUM' || (tariffType === 'COMFORT' && (selectedTariffInfo?.price || 0) > 0));
+
   return (
     <div className="p-8">
       <Button variant="ghost" onClick={() => router.back()} className="mb-4">
@@ -280,7 +285,7 @@ export default function AdminUserEditPage() {
                   </p>
                 </div>
 
-                {user.subscription?.expiresAt && tariffType !== 'STANDARD' && (
+                {shouldShowExpiryField && (
                   <div>
                     <Label>Действует до</Label>
                     <Input

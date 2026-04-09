@@ -343,6 +343,7 @@ export class PaymentService {
     const tariffType = metadata.tariffType || 'PREMIUM';
     const duration = 30; // дней
     const tariffSettings = await settingsService.getBySection('tariffs');
+    const comfortPrice = parseInt(tariffSettings.comfortPrice || '0', 10);
     const specializationCount =
       tariffType === 'COMFORT'
         ? parseInt(tariffSettings.comfortSpecializations || '1', 10)
@@ -355,9 +356,12 @@ export class PaymentService {
       },
     });
     const now = new Date();
-    const baseDate =
+    const isExistingSubscriptionTimeLimited =
       existingSubscription &&
-      existingSubscription.tariffType !== 'STANDARD' &&
+      (existingSubscription.tariffType === 'PREMIUM' ||
+        (existingSubscription.tariffType === 'COMFORT' && comfortPrice > 0));
+    const baseDate =
+      isExistingSubscriptionTimeLimited &&
       new Date(existingSubscription.expiresAt) > now
         ? new Date(existingSubscription.expiresAt)
         : now;
