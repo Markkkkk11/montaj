@@ -1,7 +1,19 @@
 import prisma from '../config/database';
 import notificationService from './notification.service';
+import subscriptionService from './subscription.service';
 
 export class AdminService {
+  private async withEffectiveSubscription<T extends { id: string; role: string; subscription?: any | null }>(user: T): Promise<T> {
+    if (user.role !== 'EXECUTOR') {
+      return user;
+    }
+
+    return {
+      ...user,
+      subscription: await subscriptionService.getCurrentTariff(user.id, user.subscription ?? null),
+    };
+  }
+
   /**
    * Получить статистику платформы
    */
@@ -137,8 +149,12 @@ export class AdminService {
       };
     });
 
+    const normalizedUsers = await Promise.all(
+      usersWithoutPasswords.map((user) => this.withEffectiveSubscription(user))
+    );
+
     return {
-      users: usersWithoutPasswords,
+      users: normalizedUsers,
       total,
       page,
       totalPages: Math.ceil(total / limit),
@@ -833,14 +849,14 @@ export class AdminService {
       throw new Error('Пользователь не найден');
     }
 
-    return user;
+    return this.withEffectiveSubscription(user);
   }
 
   /**
    * Обновить пользователя
    */
   async updateUser(userId: string, data: any) {
-    return await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         fullName: data.fullName,
@@ -854,6 +870,8 @@ export class AdminService {
         subscription: true,
       },
     });
+
+    return this.withEffectiveSubscription(updatedUser);
   }
 
   /**
@@ -954,4 +972,3 @@ export class AdminService {
 }
 
 export default new AdminService();
-

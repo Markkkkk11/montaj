@@ -3,6 +3,26 @@ import { Specialization } from '@prisma/client';
 import settingsService from './settings.service';
 
 export class SubscriptionService {
+  private async getTariffSettings() {
+    return settingsService.getBySection('tariffs');
+  }
+
+  private async getStandardSpecializationCount(): Promise<number> {
+    const tariffSettings = await this.getTariffSettings();
+    return parseInt(tariffSettings.standardSpecializations || '1', 10);
+  }
+
+  private async getStandardResponsePrice(): Promise<number> {
+    const tariffSettings = await this.getTariffSettings();
+    return parseInt(tariffSettings.standardResponsePrice || '150', 10);
+  }
+
+  private isStoredSubscriptionActive(subscription: { tariffType: string; expiresAt: Date | string }) {
+    return subscription.tariffType === 'STANDARD'
+      ? true
+      : new Date() < new Date(subscription.expiresAt);
+  }
+
   /**
    * Получить подписку пользователя
    */
@@ -16,9 +36,7 @@ export class SubscriptionService {
     }
 
     // Стандарт — бессрочный, остальные — проверяем дату
-    const isActive = subscription.tariffType === 'STANDARD'
-      ? true
-      : new Date() < new Date(subscription.expiresAt);
+    const isActive = this.isStoredSubscriptionActive(subscription);
 
     return {
       ...subscription,
@@ -37,15 +55,23 @@ export class SubscriptionService {
   /**
    * Получить текущий тариф пользователя
    */
-  async getCurrentTariff(userId: string) {
-    const subscription = await this.getUserSubscription(userId);
+  async getCurrentTariff(
+    userId: string,
+    existingSubscription?: { tariffType: string; expiresAt: Date | string; specializationCount?: number } | null
+  ) {
+    const subscription = existingSubscription
+      ? {
+          ...existingSubscription,
+          isActive: this.isStoredSubscriptionActive(existingSubscription),
+        }
+      : await this.getUserSubscription(userId);
 
     if (!subscription || !subscription.isActive) {
       return {
         tariffType: 'STANDARD',
         isActive: true, // Стандарт — бессрочный
         expiresAt: null,
-        specializationCount: 1,
+        specializationCount: await this.getStandardSpecializationCount(),
       };
     }
 
@@ -68,7 +94,7 @@ export class SubscriptionService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + durationDays);
 
-    const tariffSettings = await settingsService.getBySection('tariffs');
+    const tariffSettings = await this.getTariffSettings();
     const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
     const comfortSpecs = parseInt(tariffSettings.comfortSpecializations || '1', 10);
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
@@ -107,19 +133,21 @@ export class SubscriptionService {
     }
 
     // Только Standard — бесплатная смена
-    const tariffSettings = await settingsService.getBySection('tariffs');
+    const tariffSettings = await this.getTariffSettings();
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
+    const standardExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
       create: {
         userId,
         tariffType: 'STANDARD',
-        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 год для бесплатных
+        expiresAt: standardExpiresAt, // 1 год для бесплатных
         specializationCount: standardSpecs,
       },
       update: {
         tariffType: 'STANDARD',
+        expiresAt: standardExpiresAt,
         specializationCount: standardSpecs,
       },
     });
@@ -160,16 +188,15 @@ export class SubscriptionService {
     reason?: string;
     costPerResponse?: number;
   }> {
-    const subscription = await this.getUserSubscription(userId);
+    const tariff = await this.getCurrentTariff(userId);
     const balance = await prisma.balance.findUnique({
       where: { userId },
     });
 
-    // Если нет подписки, назначаем Standard
-    const tariffType = subscription?.tariffType || 'STANDARD';
+    const tariffType = tariff.tariffType;
 
     // Premium - безлимитные отклики
-    if (tariffType === 'PREMIUM' && subscription?.isActive) {
+    if (tariffType === 'PREMIUM') {
       return {
         canRespond: true,
       };
@@ -177,7 +204,7 @@ export class SubscriptionService {
 
     // Standard - платный отклик 150₽
     if (tariffType === 'STANDARD') {
-      const cost = 150;
+      const cost = await this.getStandardResponsePrice();
       const totalBalance = parseFloat(balance?.amount.toString() || '0') + 
                           parseFloat(balance?.bonusAmount.toString() || '0');
 
@@ -198,7 +225,7 @@ export class SubscriptionService {
     // Comfort - бесплатный отклик, но баланс должен быть >= comfortOrderTakenPrice
     // (списывается только при принятии заказа заказчиком)
     if (tariffType === 'COMFORT') {
-      const tariffSettings = await settingsService.getBySection('tariffs');
+      const tariffSettings = await this.getTariffSettings();
       const comfortFee = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
       const totalBalance = parseFloat(balance?.amount.toString() || '0') + 
                           parseFloat(balance?.bonusAmount.toString() || '0');
@@ -227,27 +254,24 @@ export class SubscriptionService {
    * Получить стоимость отклика для пользователя
    */
   async getResponseCost(userId: string): Promise<number> {
-    const subscription = await this.getUserSubscription(userId);
-    const tariffType = subscription?.tariffType || 'STANDARD';
+    const tariff = await this.getCurrentTariff(userId);
 
-    const costs: any = {
-      STANDARD: 150,  // 150₽ за отклик
-      COMFORT: 0,     // 0₽ за отклик, 500₽ при выборе
-      PREMIUM: 0,     // Безлимитные отклики
-    };
+    if (tariff.tariffType === 'STANDARD') {
+      return this.getStandardResponsePrice();
+    }
 
-    return costs[tariffType];
+    return 0;
   }
 
   /**
    * Получить стоимость за взятый заказ (для Comfort)
    */
   async getOrderTakenCost(userId: string): Promise<number> {
-    const subscription = await this.getUserSubscription(userId);
-    const tariffType = subscription?.tariffType || 'STANDARD';
+    const tariff = await this.getCurrentTariff(userId);
 
-    if (tariffType === 'COMFORT') {
-      return 500; // 500₽ за взятый заказ
+    if (tariff.tariffType === 'COMFORT') {
+      const tariffSettings = await this.getTariffSettings();
+      return parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
     }
 
     return 0;
@@ -271,7 +295,7 @@ export class SubscriptionService {
     const newExpiresAt = new Date(baseDate);
     newExpiresAt.setDate(newExpiresAt.getDate() + 30);
 
-    const tariffSettings = await settingsService.getBySection('tariffs');
+    const tariffSettings = await this.getTariffSettings();
     const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
 
     const updated = await prisma.subscription.update({
@@ -290,7 +314,7 @@ export class SubscriptionService {
    * Оплатить подписку с баланса пользователя
    */
   async payFromBalance(userId: string, tariffType: 'COMFORT' | 'PREMIUM') {
-    const tariffSettings = await settingsService.getBySection('tariffs');
+    const tariffSettings = await this.getTariffSettings();
 
     const prices: Record<string, number> = {
       COMFORT: parseInt(tariffSettings.comfortPrice || '500', 10),
@@ -372,7 +396,7 @@ export class SubscriptionService {
    * Получить информацию о тарифах (из настроек БД)
    */
   async getTariffInfo() {
-    const tariffSettings = await settingsService.getBySection('tariffs');
+    const tariffSettings = await this.getTariffSettings();
 
     const standardPrice = 0; // Стандарт бесплатный
     const standardResponsePrice = parseInt(tariffSettings.standardResponsePrice || '150', 10);
@@ -432,4 +456,3 @@ export class SubscriptionService {
 }
 
 export default new SubscriptionService();
-

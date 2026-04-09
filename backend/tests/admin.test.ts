@@ -164,6 +164,35 @@ describe('Admin Panel', () => {
   });
 
   describe('User Moderation', () => {
+    it('should show expired premium as STANDARD in admin users list', async () => {
+      await prisma.subscription.upsert({
+        where: { userId },
+        update: {
+          tariffType: 'PREMIUM',
+          expiresAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          specializationCount: 3,
+        },
+        create: {
+          userId,
+          tariffType: 'PREMIUM',
+          expiresAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          specializationCount: 3,
+        },
+      });
+
+      const response = await request(app)
+        .get('/api/admin/users')
+        .query({ status: 'PENDING' })
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.status).toBe(200);
+
+      const moderatedUser = response.body.users.find((candidate: any) => candidate.id === userId);
+      expect(moderatedUser).toBeDefined();
+      expect(moderatedUser.subscription.tariffType).toBe('STANDARD');
+      expect(moderatedUser.subscription.expiresAt).toBeNull();
+    });
+
     it('should get users for moderation', async () => {
       const response = await request(app)
         .get('/api/admin/users')
@@ -311,4 +340,3 @@ describe('Admin Panel', () => {
     });
   });
 });
-

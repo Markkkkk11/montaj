@@ -43,7 +43,7 @@ interface User {
   };
   subscription?: {
     tariffType: string;
-    expiresAt: string;
+    expiresAt: string | null;
   };
   executorProfile?: {
     specializations?: string[];
@@ -214,6 +214,12 @@ export default function AdminUsersPage() {
     if (status === 'ACTIVE') return 'Активен';
     if (status === 'PENDING') return 'Модерация';
     return 'Заблокирован';
+  };
+
+  const getTariffLabel = (tariffType: string) => {
+    if (tariffType === 'PREMIUM') return 'Премиум';
+    if (tariffType === 'COMFORT') return 'Комфорт';
+    return 'Стандарт';
   };
 
   const getTransactionTypeLabel = (type: string) => {
@@ -515,8 +521,8 @@ export default function AdminUsersPage() {
                                         {user.subscription && (
                                           <div className="flex items-center gap-2 mt-1">
                                             <span className="text-muted-foreground">Тариф:</span>
-                                            <span className="font-medium">{user.subscription.tariffType}</span>
-                                            {user.subscription.tariffType !== 'STANDARD' && (
+                                            <span className="font-medium">{getTariffLabel(user.subscription.tariffType)}</span>
+                                            {user.subscription.tariffType !== 'STANDARD' && user.subscription.expiresAt && (
                                               <span className="text-xs text-muted-foreground">до {new Date(user.subscription.expiresAt).toLocaleDateString('ru-RU')}</span>
                                             )}
                                           </div>
