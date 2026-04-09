@@ -20,10 +20,10 @@ export const createTopUpSchema = Joi.object({
 
 export const changeTariffSchema = Joi.object({
   tariffType: Joi.string()
-    .valid('STANDARD')
+    .valid('STANDARD', 'COMFORT')
     .required()
     .messages({
-      'any.only': 'Бесплатно можно перейти только на STANDARD. Для Комфорт и Премиум — оплатите через /payments/subscription',
+      'any.only': 'Можно выбрать только STANDARD или COMFORT. Для PREMIUM требуется оплата.',
       'any.required': 'Укажите тип тарифа',
     }),
 });

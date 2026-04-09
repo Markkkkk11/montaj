@@ -82,16 +82,16 @@ function SubscriptionContent() {
     try {
       setLoading(true);
 
-      if (tariffKey === 'COMFORT' || tariffKey === 'PREMIUM') {
-        // Comfort и Premium — оплата через ЮKassa
+      if (tariffKey === 'PREMIUM' || (tariffKey === 'COMFORT' && (tariffs.COMFORT?.price || 0) > 0)) {
+        // Платные тарифы — оплата через ЮKassa
         const { confirmationUrl } = await createSubscriptionPaymentWithReturnPath(
           tariffKey as 'COMFORT' | 'PREMIUM',
           '/profile/subscription'
         );
         window.location.href = confirmationUrl;
       } else {
-        // Standard — бесплатная смена
-        await changeTariff('STANDARD');
+        // Бесплатная смена тарифа
+        await changeTariff(tariffKey as 'STANDARD' | 'COMFORT');
         await loadData();
         await getCurrentUser();
         alert(`Тариф изменён на ${tariffs[tariffKey]?.name}`);
@@ -106,6 +106,7 @@ function SubscriptionContent() {
   const standardTariff = tariffs.STANDARD;
   const comfortTariff = tariffs.COMFORT;
   const premiumTariff = tariffs.PREMIUM;
+  const comfortRequiresPayment = (comfortTariff?.price || 0) > 0;
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -153,16 +154,16 @@ function SubscriptionContent() {
             <div>
               <h4 className="font-semibold mb-2">
                 Комфорт
-                {comfortTariff ? ` — ${comfortTariff.price} ₽/мес` : ''}
+                {comfortTariff && comfortTariff.price > 0 ? ` — ${comfortTariff.price} ₽/мес` : ''}
               </h4>
               <p className="text-gray-600">
                 {comfortTariff
-                  ? `Подписка ${comfortTariff.price}₽/мес. Бесплатные отклики. ${comfortTariff.orderTakenPrice}₽ списывается при выборе заказчиком. ${
+                  ? `${comfortRequiresPayment ? `Подписка ${comfortTariff.price}₽/мес. ` : ''}Бесплатные отклики. ${comfortTariff.orderTakenPrice}₽ списывается при выборе заказчиком. ${
                       comfortTariff.specializationCount === 1
                         ? 'Одна специализация.'
                         : `До ${comfortTariff.specializationCount} специализаций.`
                     }`
-                  : 'Подписка с бесплатными откликами и оплатой только при выборе заказчиком.'}
+                  : 'Тариф с бесплатными откликами и оплатой только при выборе заказчиком.'}
               </p>
             </div>
             <div>

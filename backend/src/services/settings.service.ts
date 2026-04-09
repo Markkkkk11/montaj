@@ -19,7 +19,7 @@ const DEFAULT_SETTINGS: Record<string, { value: string; section: string }> = {
   // Тарифы
   standardPrice:            { value: '0',    section: 'tariffs' },
   standardResponsePrice:    { value: '150',  section: 'tariffs' },
-  comfortPrice:             { value: '500',  section: 'tariffs' },
+  comfortPrice:             { value: '0',    section: 'tariffs' },
   comfortOrderTakenPrice:   { value: '500',  section: 'tariffs' },
   premiumPrice:             { value: '5000', section: 'tariffs' },
   premiumSpecializations:   { value: '3',    section: 'tariffs' },

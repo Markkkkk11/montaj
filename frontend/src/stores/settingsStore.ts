@@ -32,7 +32,7 @@ const defaultSettings: PlatformSettings = {
   defaultRegion: 'Москва и обл.',
   standardPrice: '0',
   standardResponsePrice: '150',
-  comfortPrice: '500',
+  comfortPrice: '0',
   comfortOrderTakenPrice: '500',
   comfortSpecializations: '1',
   premiumPrice: '5000',

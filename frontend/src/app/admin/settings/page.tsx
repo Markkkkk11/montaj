@@ -41,7 +41,7 @@ export default function AdminSettingsPage() {
   const [tariffSettings, setTariffSettings] = useState({
     standardResponsePrice: '150',
     standardSpecializations: '1',
-    comfortPrice: '500',
+    comfortPrice: '0',
     comfortOrderTakenPrice: '500',
     comfortSpecializations: '1',
     premiumPrice: '5000',
@@ -350,7 +350,7 @@ export default function AdminSettingsPage() {
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="comfortPrice">Подписка (₽/мес)</Label>
+                  <Label htmlFor="comfortPrice">Абонплата (₽/мес, 0 = бесплатно)</Label>
                   <Input
                     id="comfortPrice"
                     type="number"

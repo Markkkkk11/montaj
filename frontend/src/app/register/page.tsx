@@ -55,7 +55,7 @@ function RegisterContent() {
   }, [resendTimer]);
 
   const standardResponsePrice = parseInt(settings.standardResponsePrice || '150', 10);
-  const comfortPrice = parseInt(settings.comfortPrice || '500', 10);
+  const comfortPrice = parseInt(settings.comfortPrice || '0', 10);
   const comfortOrderTakenPrice = parseInt(settings.comfortOrderTakenPrice || '500', 10);
   const premiumPrice = parseInt(settings.premiumPrice || '5000', 10);
   const standardSpecs = parseInt(settings.standardSpecializations || '1', 10);
@@ -499,8 +499,8 @@ function RegisterContent() {
                             <p className="text-xs text-gray-500 mt-0.5">{`${standardResponsePrice} ₽ за каждый отклик. ${standardSpecs === 1 ? '1 специализация' : `${standardSpecs} специализации`} (свободный выбор).`}</p>
                           </div>
                           <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-                            <p className="text-sm font-semibold text-blue-800">{`Комфорт — ${comfortPrice} ₽/мес`}</p>
-                            <p className="text-xs text-blue-600/70 mt-0.5">{`Бесплатные отклики. ${comfortOrderTakenPrice} ₽ списывается при выборе заказчиком. ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`} (свободный выбор).`}</p>
+                            <p className="text-sm font-semibold text-blue-800">{comfortPrice > 0 ? `Комфорт — ${comfortPrice} ₽/мес` : 'Комфорт'}</p>
+                            <p className="text-xs text-blue-600/70 mt-0.5">{`${comfortPrice > 0 ? 'Абонплата по тарифу. ' : ''}Бесплатные отклики. ${comfortOrderTakenPrice} ₽ списывается при выборе заказчиком. ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`} (свободный выбор).`}</p>
                           </div>
                           <div className="p-3 bg-violet-50/50 rounded-xl border border-violet-100">
                             <p className="text-sm font-semibold text-violet-800">Премиум</p>

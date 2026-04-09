@@ -144,7 +144,7 @@ describe('Payment and Subscription System', () => {
       expect(response.body.canRespond).toBeDefined();
     });
 
-    it('should not allow changing to COMFORT without payment', async () => {
+    it('should allow changing to COMFORT when it has no monthly fee', async () => {
       const response = await request(app)
         .post('/api/subscriptions/change-tariff')
         .set('Authorization', `Bearer ${authToken}`)
@@ -152,8 +152,9 @@ describe('Payment and Subscription System', () => {
           tariffType: 'COMFORT',
         });
 
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.subscription.tariffType).toBe('COMFORT');
     });
 
     it('should not allow changing to PREMIUM without payment', async () => {
@@ -186,11 +187,11 @@ describe('Payment and Subscription System', () => {
         .mockResolvedValue({
           id: 'subscription-payment',
           userId: executorId,
-          amount: 500,
+          amount: 5000,
           currency: 'RUB',
           status: 'PROCESSING',
           purpose: 'subscription',
-          description: 'Подписка COMFORT на 30 дней',
+          description: 'Подписка PREMIUM на 30 дней',
           confirmationUrl: 'https://example.com/pay',
           paid: false,
           createdAt: new Date(),
@@ -201,21 +202,21 @@ describe('Payment and Subscription System', () => {
         .post('/api/payments/subscription')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          tariffType: 'COMFORT',
+          tariffType: 'PREMIUM',
           returnPath: '/profile/subscription',
         });
 
       expect(response.status).toBe(200);
       expect(paymentSpy).toHaveBeenCalledWith(
         executorId,
-        'COMFORT',
+        'PREMIUM',
         expect.stringContaining('/profile/subscription')
       );
 
       paymentSpy.mockRestore();
     });
 
-    it('should activate COMFORT from balance payment', async () => {
+    it('should not allow paying for COMFORT from balance when it is free', async () => {
       const response = await request(app)
         .post('/api/subscriptions/pay-from-balance')
         .set('Authorization', `Bearer ${authToken}`)
@@ -223,9 +224,8 @@ describe('Payment and Subscription System', () => {
           tariffType: 'COMFORT',
         });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.subscription.tariffType).toBe('COMFORT');
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
     });
   });
 

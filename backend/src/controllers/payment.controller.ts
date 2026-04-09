@@ -50,6 +50,10 @@ export class PaymentController {
    */
   async createSubscriptionPayment(req: Request, res: Response) {
     try {
+      if (req.user?.role !== 'EXECUTOR') {
+        throw new Error('Подписка доступна только исполнителям');
+      }
+
       const userId = req.user!.id;
       const { tariffType, returnPath } = req.body;
 

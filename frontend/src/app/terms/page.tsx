@@ -15,7 +15,7 @@ export default function TermsPage() {
   }, [fetchSettings]);
 
   const standardResponsePrice = parseInt(settings.standardResponsePrice || '150', 10);
-  const comfortPrice = parseInt(settings.comfortPrice || '500', 10);
+  const comfortPrice = parseInt(settings.comfortPrice || '0', 10);
   const comfortOrderTakenPrice = parseInt(settings.comfortOrderTakenPrice || '500', 10);
   const premiumPrice = parseInt(settings.premiumPrice || '5000', 10);
   const standardSpecs = parseInt(settings.standardSpecializations || '1', 10);
@@ -120,8 +120,8 @@ export default function TermsPage() {
                   <p className="text-sm text-gray-500 mt-1">{`${standardResponsePrice} ₽ за каждый отклик. ${standardSpecs === 1 ? '1 специализация' : `${standardSpecs} специализации`} (свободный выбор).`}</p>
                 </div>
                 <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-                  <p className="font-semibold text-blue-800">{`Комфорт — ${comfortPrice} ₽/мес`}</p>
-                  <p className="text-sm text-blue-600/70 mt-1">{`Бесплатные отклики. ${comfortOrderTakenPrice} ₽ списывается при выборе заказчиком. ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`}.`}</p>
+                  <p className="font-semibold text-blue-800">{comfortPrice > 0 ? `Комфорт — ${comfortPrice} ₽/мес` : 'Комфорт'}</p>
+                  <p className="text-sm text-blue-600/70 mt-1">{`${comfortPrice > 0 ? 'Абонплата по тарифу. ' : ''}Бесплатные отклики. ${comfortOrderTakenPrice} ₽ списывается при выборе заказчиком. ${comfortSpecs === 1 ? '1 специализация' : `${comfortSpecs} специализации`}.`}</p>
                 </div>
                 <div className="p-4 bg-violet-50/50 rounded-2xl border border-violet-100">
                   <p className="font-semibold text-violet-800">Премиум</p>

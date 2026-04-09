@@ -153,6 +153,8 @@ describe('Subscription expiration handling', () => {
     const expectedExpiresAt = new Date(currentExpiresAt);
     expectedExpiresAt.setDate(expectedExpiresAt.getDate() + 30);
 
+    await settingsService.updateSection('tariffs', { comfortPrice: '500' });
+
     await prisma.balance.update({
       where: { userId: executorId },
       data: {
@@ -186,6 +188,8 @@ describe('Subscription expiration handling', () => {
     expect(new Date(subscription.expiresAt).toISOString()).toBe(expectedExpiresAt.toISOString());
     expect(subscription.specializationCount).toBe(1);
     expect(executorProfile?.specializations).toEqual(['WINDOWS']);
+
+    await settingsService.updateSection('tariffs', { comfortPrice: '0' });
   });
 
   it('extends and trims specializations when a paid subscription is activated from payment callback', async () => {
@@ -469,6 +473,6 @@ describe('Subscription expiration handling', () => {
 
     expect(parseFloat(subscriptionTransaction!.amount.toString())).toBe(-500);
 
-    await settingsService.updateSection('tariffs', { comfortPrice: '500' });
+    await settingsService.updateSection('tariffs', { comfortPrice: '0' });
   });
 });

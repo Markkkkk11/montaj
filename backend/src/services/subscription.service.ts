@@ -2,13 +2,15 @@ import prisma from '../config/database';
 import { Specialization } from '@prisma/client';
 import settingsService from './settings.service';
 
+type TariffType = 'STANDARD' | 'COMFORT' | 'PREMIUM';
+
 export class SubscriptionService {
   private async getTariffSettings() {
     return settingsService.getBySection('tariffs');
   }
 
   private getTariffSpecializationCount(
-    tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM',
+    tariffType: TariffType,
     tariffSettings: Record<string, string>
   ): number {
     const premiumSpecs = parseInt(tariffSettings.premiumSpecializations || '3', 10);
@@ -24,13 +26,41 @@ export class SubscriptionService {
     return specCounts[tariffType] || standardSpecs;
   }
 
+  private getTariffPrice(
+    tariffType: TariffType,
+    tariffSettings: Record<string, string>
+  ): number {
+    const prices: Record<TariffType, number> = {
+      STANDARD: 0,
+      COMFORT: parseInt(tariffSettings.comfortPrice || '0', 10),
+      PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
+    };
+
+    return prices[tariffType] || 0;
+  }
+
+  private isTimeLimitedTariff(
+    tariffType: TariffType,
+    tariffSettings: Record<string, string>
+  ): boolean {
+    if (tariffType === 'PREMIUM') {
+      return true;
+    }
+
+    if (tariffType === 'COMFORT') {
+      return this.getTariffPrice('COMFORT', tariffSettings) > 0;
+    }
+
+    return false;
+  }
+
   private async getStandardSpecializationCount(): Promise<number> {
     const tariffSettings = await this.getTariffSettings();
     return this.getTariffSpecializationCount('STANDARD', tariffSettings);
   }
 
   async getSpecializationCountForTariff(
-    tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM'
+    tariffType: TariffType
   ): Promise<number> {
     const tariffSettings = await this.getTariffSettings();
     return this.getTariffSpecializationCount(tariffType, tariffSettings);
@@ -41,13 +71,19 @@ export class SubscriptionService {
     return parseInt(tariffSettings.standardResponsePrice || '150', 10);
   }
 
-  private isStoredSubscriptionActive(subscription: { tariffType: string; expiresAt: Date | string }) {
-    return subscription.tariffType === 'STANDARD'
-      ? true
-      : new Date() < new Date(subscription.expiresAt);
+  private isStoredSubscriptionActive(
+    subscription: { tariffType: string; expiresAt: Date | string },
+    tariffSettings: Record<string, string>
+  ) {
+    const tariffType = subscription.tariffType as TariffType;
+
+    return this.isTimeLimitedTariff(tariffType, tariffSettings)
+      ? new Date() < new Date(subscription.expiresAt)
+      : true;
   }
 
   private async getPaidSubscriptionExpiresAt(userId: string, durationDays: number = 30): Promise<Date> {
+    const tariffSettings = await this.getTariffSettings();
     const existingSubscription = await prisma.subscription.findUnique({
       where: { userId },
       select: {
@@ -59,7 +95,7 @@ export class SubscriptionService {
     const now = new Date();
     const baseDate =
       existingSubscription &&
-      existingSubscription.tariffType !== 'STANDARD' &&
+      this.isTimeLimitedTariff(existingSubscription.tariffType as TariffType, tariffSettings) &&
       new Date(existingSubscription.expiresAt) > now
         ? new Date(existingSubscription.expiresAt)
         : now;
@@ -74,6 +110,7 @@ export class SubscriptionService {
    * Получить подписку пользователя
    */
   async getUserSubscription(userId: string) {
+    const tariffSettings = await this.getTariffSettings();
     const subscription = await prisma.subscription.findUnique({
       where: { userId },
     });
@@ -83,7 +120,7 @@ export class SubscriptionService {
     }
 
     // Стандарт — бессрочный, остальные — проверяем дату
-    const isActive = this.isStoredSubscriptionActive(subscription);
+    const isActive = this.isStoredSubscriptionActive(subscription, tariffSettings);
 
     return {
       ...subscription,
@@ -106,10 +143,11 @@ export class SubscriptionService {
     userId: string,
     existingSubscription?: { tariffType: string; expiresAt: Date | string; specializationCount?: number } | null
   ) {
+    const tariffSettings = await this.getTariffSettings();
     const subscription = existingSubscription
       ? {
           ...existingSubscription,
-          isActive: this.isStoredSubscriptionActive(existingSubscription),
+          isActive: this.isStoredSubscriptionActive(existingSubscription, tariffSettings),
         }
       : await this.getUserSubscription(userId);
 
@@ -122,14 +160,16 @@ export class SubscriptionService {
       };
     }
 
-    const fallbackSpecializationCount = await this.getSpecializationCountForTariff(
-      subscription.tariffType as 'STANDARD' | 'COMFORT' | 'PREMIUM'
-    );
+    const effectiveTariffType = subscription.tariffType as TariffType;
+    const fallbackSpecializationCount = this.getTariffSpecializationCount(effectiveTariffType, tariffSettings);
+    const expiresAt = this.isTimeLimitedTariff(effectiveTariffType, tariffSettings)
+      ? subscription.expiresAt
+      : null;
 
     return {
-      tariffType: subscription.tariffType,
+      tariffType: effectiveTariffType,
       isActive: true,
-      expiresAt: subscription.expiresAt,
+      expiresAt,
       specializationCount:
         typeof subscription.specializationCount === 'number' && subscription.specializationCount > 0
           ? subscription.specializationCount
@@ -142,7 +182,7 @@ export class SubscriptionService {
    */
   async upsertSubscription(
     userId: string,
-    tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM',
+    tariffType: TariffType,
     durationDays: number = 30
   ) {
     const expiresAt = new Date();
@@ -172,40 +212,41 @@ export class SubscriptionService {
   }
 
   /**
-   * Сменить тариф (бесплатно — только на Standard)
+   * Сменить тариф.
+   * Standard всегда бесплатный, Comfort бесплатный только если отключена абонплата.
    */
-  async changeTariff(userId: string, newTariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM') {
-    // Переход на Comfort и Premium требует оплаты через ЮKassa
+  async changeTariff(userId: string, newTariffType: TariffType) {
+    const tariffSettings = await this.getTariffSettings();
+    const comfortPrice = this.getTariffPrice('COMFORT', tariffSettings);
+
     if (newTariffType === 'PREMIUM') {
       throw new Error('Для перехода на Премиум требуется оплата подписки');
     }
 
-    if (newTariffType === 'COMFORT') {
+    if (newTariffType === 'COMFORT' && comfortPrice > 0) {
       throw new Error('Для перехода на Комфорт требуется оплата подписки');
     }
 
-    // Только Standard — бесплатная смена
-    const tariffSettings = await this.getTariffSettings();
-    const standardSpecs = this.getTariffSpecializationCount('STANDARD', tariffSettings);
-    const standardExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    const specializationCount = this.getTariffSpecializationCount(newTariffType, tariffSettings);
+    const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
       create: {
         userId,
-        tariffType: 'STANDARD',
-        expiresAt: standardExpiresAt, // 1 год для бесплатных
-        specializationCount: standardSpecs,
+        tariffType: newTariffType,
+        expiresAt,
+        specializationCount,
       },
       update: {
-        tariffType: 'STANDARD',
-        expiresAt: standardExpiresAt,
-        specializationCount: standardSpecs,
+        tariffType: newTariffType,
+        expiresAt,
+        specializationCount,
       },
     });
 
     // Обрезаем сохранённые специализации до нового лимита
-    await this.trimSpecializations(userId, standardSpecs);
+    await this.trimSpecializations(userId, specializationCount);
 
     return subscription;
   }
@@ -413,11 +454,17 @@ export class SubscriptionService {
     const tariffSettings = await this.getTariffSettings();
 
     const prices: Record<string, number> = {
-      COMFORT: parseInt(tariffSettings.comfortPrice || '500', 10),
+      COMFORT: this.getTariffPrice('COMFORT', tariffSettings),
       PREMIUM: parseInt(tariffSettings.premiumPrice || '5000', 10),
     };
     const price = prices[tariffType];
-    if (!price) throw new Error('Неизвестный тариф');
+    if (!price) {
+      if (tariffType === 'COMFORT') {
+        throw new Error('Тариф «Комфорт» не требует оплаты. Переключитесь на него без покупки.');
+      }
+
+      throw new Error('Неизвестный тариф');
+    }
 
     const tariffNames: Record<string, string> = {
       COMFORT: 'Комфорт',
@@ -472,7 +519,7 @@ export class SubscriptionService {
 
     const standardPrice = 0; // Стандарт бесплатный
     const standardResponsePrice = parseInt(tariffSettings.standardResponsePrice || '150', 10);
-    const comfortPrice = parseInt(tariffSettings.comfortPrice || '500', 10);
+    const comfortPrice = this.getTariffPrice('COMFORT', tariffSettings);
     const comfortOrderTakenPrice = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
     const premiumPrice = parseInt(tariffSettings.premiumPrice || '5000', 10);
     const standardSpecs = parseInt(tariffSettings.standardSpecializations || '1', 10);
@@ -497,13 +544,16 @@ export class SubscriptionService {
       COMFORT: {
         name: 'Комфорт',
         price: comfortPrice,
-        periodLabel: 'в месяц',
+        periodLabel: comfortPrice > 0 ? 'в месяц' : 'без абонентской платы',
         responsePrice: 0,
         orderTakenPrice: comfortOrderTakenPrice,
-        description: `${comfortPrice}₽/мес, ${comfortOrderTakenPrice}₽ за взятый заказ`,
+        description:
+          comfortPrice > 0
+            ? `${comfortPrice}₽/мес, ${comfortOrderTakenPrice}₽ за взятый заказ`
+            : `${comfortOrderTakenPrice}₽ только за взятый заказ`,
         specializationCount: comfortSpecs,
         features: [
-          `Подписка ${comfortPrice}₽/мес`,
+          ...(comfortPrice > 0 ? [`Подписка ${comfortPrice}₽/мес`] : ['Бесплатное подключение тарифа']),
           'Бесплатные отклики',
           `${comfortOrderTakenPrice}₽ только при выборе заказчиком`,
           `${comfortSpecs === 1 ? 'Одна специализация' : `До ${comfortSpecs} специализаций`}`,
