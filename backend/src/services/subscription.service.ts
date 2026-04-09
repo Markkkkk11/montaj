@@ -89,30 +89,6 @@ export class SubscriptionService {
       : true;
   }
 
-  private async getPaidSubscriptionExpiresAt(userId: string, durationDays: number = 30): Promise<Date> {
-    const tariffSettings = await this.getTariffSettings();
-    const existingSubscription = await prisma.subscription.findUnique({
-      where: { userId },
-      select: {
-        tariffType: true,
-        expiresAt: true,
-      },
-    });
-
-    const now = new Date();
-    const baseDate =
-      existingSubscription &&
-      this.isTimeLimitedTariff(existingSubscription.tariffType as TariffType, tariffSettings) &&
-      new Date(existingSubscription.expiresAt) > now
-        ? new Date(existingSubscription.expiresAt)
-        : now;
-
-    const expiresAt = new Date(baseDate);
-    expiresAt.setDate(expiresAt.getDate() + durationDays);
-
-    return expiresAt;
-  }
-
   /**
    * Получить подписку пользователя
    */
@@ -425,14 +401,49 @@ export class SubscriptionService {
     return this.activatePaidSubscription(userId, 'PREMIUM', 30);
   }
 
+  async preparePaidSubscription(
+    userId: string,
+    tariffType: 'COMFORT' | 'PREMIUM',
+    durationDays: number = 30,
+    db: any = prisma
+  ) {
+    const tariffSettings = await this.getTariffSettings();
+    const specializationCount = this.getTariffSpecializationCount(tariffType, tariffSettings);
+    const existingSubscription = await db.subscription.findUnique({
+      where: { userId },
+      select: {
+        tariffType: true,
+        expiresAt: true,
+      },
+    });
+
+    const now = new Date();
+    const baseDate =
+      existingSubscription &&
+      this.isTimeLimitedTariff(existingSubscription.tariffType as TariffType, tariffSettings) &&
+      new Date(existingSubscription.expiresAt) > now
+        ? new Date(existingSubscription.expiresAt)
+        : now;
+
+    const expiresAt = new Date(baseDate);
+    expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+    return {
+      expiresAt,
+      specializationCount,
+    };
+  }
+
   async activatePaidSubscription(
     userId: string,
     tariffType: 'COMFORT' | 'PREMIUM',
     durationDays: number = 30
   ) {
-    const tariffSettings = await this.getTariffSettings();
-    const specializationCount = this.getTariffSpecializationCount(tariffType, tariffSettings);
-    const expiresAt = await this.getPaidSubscriptionExpiresAt(userId, durationDays);
+    const { expiresAt, specializationCount } = await this.preparePaidSubscription(
+      userId,
+      tariffType,
+      durationDays
+    );
 
     const subscription = await prisma.subscription.upsert({
       where: { userId },
@@ -545,7 +556,7 @@ export class SubscriptionService {
         features: [
           `Платный отклик ${standardResponsePrice}₽`,
           `${standardSpecs === 1 ? 'Одна специализация' : `До ${standardSpecs} специализаций`}`,
-          'Доступ к заказам',
+          'Доступ ко всем заказам по выбранным специализациям',
         ],
       },
       COMFORT: {
@@ -564,7 +575,7 @@ export class SubscriptionService {
           'Бесплатные отклики',
           `${comfortOrderTakenPrice}₽ только при выборе заказчиком`,
           `${comfortSpecs === 1 ? 'Одна специализация' : `До ${comfortSpecs} специализаций`}`,
-          'Приоритет в откликах',
+          'Переключение между специализациями',
         ],
       },
       PREMIUM: {
@@ -578,9 +589,9 @@ export class SubscriptionService {
         specializationCount: premiumSpecs,
         features: [
           'Безлимитные отклики',
-          `До ${premiumSpecs} специализаций`,
-          'Приоритет в откликах',
-          'Расширенная статистика',
+          `До ${premiumSpecs} специализаций одновременно`,
+          'Переключение между специализациями',
+          'Подключение на 30 дней',
         ],
       },
     };

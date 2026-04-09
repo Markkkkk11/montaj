@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import yookassa from '../config/yookassa';
 import settingsService from './settings.service';
+import subscriptionService from './subscription.service';
 
 export class PaymentService {
   /**
@@ -342,31 +343,6 @@ export class PaymentService {
   ) {
     const tariffType = metadata.tariffType || 'PREMIUM';
     const duration = 30; // дней
-    const tariffSettings = await settingsService.getBySection('tariffs');
-    const comfortPrice = parseInt(tariffSettings.comfortPrice || '0', 10);
-    const specializationCount =
-      tariffType === 'COMFORT'
-        ? parseInt(tariffSettings.comfortSpecializations || '1', 10)
-        : parseInt(tariffSettings.premiumSpecializations || '3', 10);
-    const existingSubscription = await db.subscription.findUnique({
-      where: { userId },
-      select: {
-        tariffType: true,
-        expiresAt: true,
-      },
-    });
-    const now = new Date();
-    const isExistingSubscriptionTimeLimited =
-      existingSubscription &&
-      (existingSubscription.tariffType === 'PREMIUM' ||
-        (existingSubscription.tariffType === 'COMFORT' && comfortPrice > 0));
-    const baseDate =
-      isExistingSubscriptionTimeLimited &&
-      new Date(existingSubscription.expiresAt) > now
-        ? new Date(existingSubscription.expiresAt)
-        : now;
-    const expiresAt = new Date(baseDate);
-    expiresAt.setDate(expiresAt.getDate() + duration);
 
     // Тарифные названия для транзакции
     const tariffNames: Record<string, string> = {
@@ -378,6 +354,13 @@ export class PaymentService {
     if (!['COMFORT', 'PREMIUM'].includes(tariffType)) {
       throw new Error('Неизвестный тариф подписки');
     }
+
+    const { expiresAt, specializationCount } = await subscriptionService.preparePaidSubscription(
+      userId,
+      tariffType,
+      duration,
+      db
+    );
 
     await db.subscription.upsert({
       where: { userId },
