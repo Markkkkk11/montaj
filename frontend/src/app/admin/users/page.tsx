@@ -44,6 +44,8 @@ interface User {
   subscription?: {
     tariffType: string;
     expiresAt: string | null;
+    specializationCount?: number;
+    isActive?: boolean;
   };
   executorProfile?: {
     specializations?: string[];
@@ -522,6 +524,11 @@ export default function AdminUsersPage() {
                                           <div className="flex items-center gap-2 mt-1">
                                             <span className="text-muted-foreground">Тариф:</span>
                                             <span className="font-medium">{getTariffLabel(user.subscription.tariffType)}</span>
+                                            {typeof user.subscription.specializationCount === 'number' && (
+                                              <span className="text-xs text-muted-foreground">
+                                                • {user.subscription.specializationCount} спец.
+                                              </span>
+                                            )}
                                             {user.subscription.tariffType !== 'STANDARD' && user.subscription.expiresAt && (
                                               <span className="text-xs text-muted-foreground">до {new Date(user.subscription.expiresAt).toLocaleDateString('ru-RU')}</span>
                                             )}

@@ -4,11 +4,11 @@ export interface Subscription {
   id: string;
   userId: string;
   tariffType: 'STANDARD' | 'COMFORT' | 'PREMIUM';
-  startedAt: string;
-  expiresAt: string;
-  autoRenew: boolean;
+  startedAt?: string;
+  expiresAt: string | null;
+  autoRenew?: boolean;
   specializationCount: number;
-  isActive: boolean;
+  isActive?: boolean;
   createdAt: string;
   updatedAt: string;
 }

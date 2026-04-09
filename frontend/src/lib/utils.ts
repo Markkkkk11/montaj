@@ -67,25 +67,24 @@ export const TARIFF_LABELS: Record<string, string> = {
 };
 
 export function getEffectiveSubscription(subscription?: User['subscription'] | null) {
+  const fallbackSubscription = {
+    tariffType: 'STANDARD' as const,
+    specializationCount: 1,
+    expiresAt: null as string | null,
+    isActive: true,
+    isExpired: false,
+  };
+
   if (!subscription) {
-    return {
-      tariffType: 'STANDARD' as const,
-      specializationCount: 1,
-      expiresAt: null as string | null,
-      isExpired: false,
-    };
+    return fallbackSubscription;
   }
 
-  const isExpired =
-    subscription.tariffType !== 'STANDARD' &&
-    !!subscription.expiresAt &&
-    new Date(subscription.expiresAt).getTime() <= Date.now();
-
-  if (isExpired) {
+  // Эффективный тариф рассчитывает бэкенд: фронт не должен самостоятельно
+  // "протухать" подписку по дате, иначе бесплатный COMFORT можно ошибочно
+  // показать как STANDARD.
+  if (subscription.isActive === false) {
     return {
-      tariffType: 'STANDARD' as const,
-      specializationCount: 1,
-      expiresAt: null as string | null,
+      ...fallbackSubscription,
       isExpired: true,
     };
   }
@@ -94,6 +93,7 @@ export function getEffectiveSubscription(subscription?: User['subscription'] | n
     tariffType: subscription.tariffType,
     specializationCount: subscription.specializationCount || 1,
     expiresAt: subscription.expiresAt || null,
+    isActive: true,
     isExpired: false,
   };
 }

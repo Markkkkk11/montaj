@@ -913,6 +913,19 @@ export class AdminService {
    * Обновить подписку пользователя
    */
   async updateUserSubscription(userId: string, data: any) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (!user) {
+      throw new Error('Пользователь не найден');
+    }
+
+    if (user.role !== 'EXECUTOR') {
+      throw new Error('Подписка доступна только исполнителям');
+    }
+
     const tariffType = data.tariffType as 'STANDARD' | 'COMFORT' | 'PREMIUM';
 
     if (!tariffType || !['STANDARD', 'COMFORT', 'PREMIUM'].includes(tariffType)) {
