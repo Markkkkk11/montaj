@@ -92,6 +92,7 @@ export class OrderService {
     userId?: string  // ID текущего пользователя (исполнителя)
   ): Promise<{ orders: any[]; total: number; pages: number }> {
     const where: any = {};
+    const now = new Date();
 
     // Применяем статус только если он не undefined явно
     if (filters.status !== undefined) {
@@ -140,6 +141,21 @@ export class OrderService {
 
     if (filters.executorId) {
       where.executorId = filters.executorId;
+    }
+
+    const shouldHideExpiredPublishedOrders =
+      filters.status === undefined || filters.status === 'PUBLISHED';
+
+    if (shouldHideExpiredPublishedOrders) {
+      where.AND = [
+        ...(where.AND || []),
+        {
+          OR: [
+            { endDate: null },
+            { endDate: { gte: now } },
+          ],
+        },
+      ];
     }
 
     // Если запрос от исполнителя - применить дополнительные фильтры
@@ -879,18 +895,37 @@ export class OrderService {
     const now = new Date();
     const threshold120h = new Date(now.getTime() - 120 * 60 * 60 * 1000);
 
-    // Только PUBLISHED + нет откликов + startDate + 120ч уже прошло
+    // Снимаем с публикации:
+    // 1. заказы, где уже прошла дата окончания;
+    // 2. заказы без откликов через 120 часов после даты начала работ.
     const expiredOrders = await prisma.order.findMany({
       where: {
         status: 'PUBLISHED',
-        startDate: {
-          lt: threshold120h,
-        },
+        OR: [
+          {
+            endDate: {
+              lt: now,
+            },
+          },
+          {
+            endDate: null,
+            startDate: {
+              lt: threshold120h,
+            },
+            responses: {
+              none: {},
+            },
+          },
+        ],
+      },
+      include: {
+        customer: true,
         responses: {
-          none: {},
+          select: {
+            id: true,
+          },
         },
       },
-      include: { customer: true },
     });
 
     if (expiredOrders.length === 0) {
@@ -911,11 +946,18 @@ export class OrderService {
 
     // Уведомляем заказчиков и удаляем файлы
     for (const order of expiredOrders) {
-      notificationService.notifyOrderExpiredWithoutResponses(
-        order.customerId,
-        order.id,
-        order.title
-      ).catch(err => console.error('Notification error (auto-close):', err));
+      const expiredWithoutResponses =
+        order.responses.length === 0 &&
+        !order.endDate &&
+        order.startDate < threshold120h;
+
+      if (expiredWithoutResponses) {
+        notificationService.notifyOrderExpiredWithoutResponses(
+          order.customerId,
+          order.id,
+          order.title
+        ).catch(err => console.error('Notification error (auto-close):', err));
+      }
 
       this.cleanupOrderFiles(order.id, order.files || [])
         .catch(err => console.error('File cleanup error (auto-close):', err));

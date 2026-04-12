@@ -38,6 +38,25 @@ export default function AdminUserEditPage() {
   const [tariffType, setTariffType] = useState('');
   const [specializationCount, setSpecializationCount] = useState('');
   const [initialTariffType, setInitialTariffType] = useState('');
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState('');
+  const [initialSubscriptionExpiresAt, setInitialSubscriptionExpiresAt] = useState('');
+
+  const formatDateForInput = (value?: string | null) => {
+    if (!value) {
+      return '';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  };
 
   useEffect(() => {
     loadUser();
@@ -71,6 +90,9 @@ export default function AdminUserEditPage() {
       setTariffType(data.subscription?.tariffType || 'STANDARD');
       setInitialTariffType(data.subscription?.tariffType || 'STANDARD');
       setSpecializationCount(data.subscription?.specializationCount?.toString() || '1');
+      const expiryDate = formatDateForInput(data.subscription?.expiresAt);
+      setSubscriptionExpiresAt(expiryDate);
+      setInitialSubscriptionExpiresAt(expiryDate);
     } catch (error) {
       console.error('Failed to load user:', error);
       alert('Ошибка загрузки пользователя');
@@ -109,9 +131,14 @@ export default function AdminUserEditPage() {
           parseFloat(bonusBalance)
         );
 
-        if (tariffType !== initialTariffType) {
+        const shouldUpdateSubscription =
+          tariffType !== initialTariffType ||
+          (tariffType === 'PREMIUM' && subscriptionExpiresAt !== initialSubscriptionExpiresAt);
+
+        if (shouldUpdateSubscription) {
           await adminApi.updateUserSubscription(userId, {
             tariffType,
+            expiresAt: tariffType === 'PREMIUM' ? subscriptionExpiresAt || undefined : undefined,
           });
         }
       }
@@ -124,6 +151,26 @@ export default function AdminUserEditPage() {
       setSaving(false);
     }
   };
+
+  const shouldShowExpiryField =
+    tariffType === 'PREMIUM';
+  const premiumDurationDays = tariffLimits.PREMIUM?.duration ?? 30;
+
+  useEffect(() => {
+    if (tariffType !== 'PREMIUM') {
+      return;
+    }
+
+    if (subscriptionExpiresAt) {
+      return;
+    }
+
+    const fallbackDate = new Date(Date.now() + premiumDurationDays * 24 * 60 * 60 * 1000);
+    const year = fallbackDate.getFullYear();
+    const month = String(fallbackDate.getMonth() + 1).padStart(2, '0');
+    const day = String(fallbackDate.getDate()).padStart(2, '0');
+    setSubscriptionExpiresAt(`${year}-${month}-${day}`);
+  }, [premiumDurationDays, subscriptionExpiresAt, tariffType]);
 
   if (loading) {
     return (
@@ -143,14 +190,6 @@ export default function AdminUserEditPage() {
       </div>
     );
   }
-
-  const shouldShowExpiryField =
-    tariffType === 'PREMIUM';
-  const premiumDurationDays = tariffLimits.PREMIUM?.duration ?? 30;
-  const premiumExpiryDate =
-    user.subscription?.tariffType === 'PREMIUM' && user.subscription?.expiresAt
-      ? new Date(user.subscription.expiresAt)
-      : new Date(Date.now() + premiumDurationDays * 24 * 60 * 60 * 1000);
 
   return (
     <div className="p-8">
@@ -295,8 +334,9 @@ export default function AdminUserEditPage() {
                   <div>
                     <Label>{tariffType === initialTariffType ? 'Действует до' : 'Будет действовать до'}</Label>
                     <Input
-                      value={premiumExpiryDate.toLocaleDateString('ru-RU')}
-                      disabled
+                      type="date"
+                      value={subscriptionExpiresAt}
+                      onChange={(e) => setSubscriptionExpiresAt(e.target.value)}
                     />
                   </div>
                 )}

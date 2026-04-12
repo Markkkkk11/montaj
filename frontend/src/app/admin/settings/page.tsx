@@ -403,15 +403,16 @@ export default function AdminSettingsPage() {
                 />
               </div>
               <div>
-                  <Label htmlFor="trialDays">Пробный период (дней)</Label>
+                <Label htmlFor="trialDays">Пробный период (дней)</Label>
                 <Input
                   id="trialDays"
                   type="number"
                   value={tariffSettings.trialDays}
-                  onChange={(e) =>
-                    setTariffSettings({ ...tariffSettings, trialDays: e.target.value })
-                  }
+                  disabled
                 />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Пробный Premium для новых исполнителей зафиксирован на 30 дней.
+                </p>
               </div>
               </div>
             </div>

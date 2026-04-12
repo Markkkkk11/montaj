@@ -1,4 +1,5 @@
 import prisma from '../src/config/database';
+import adminService from '../src/services/admin.service';
 import authService from '../src/services/auth.service';
 import orderService from '../src/services/order.service';
 import paymentService from '../src/services/payment.service';
@@ -10,6 +11,7 @@ import userService from '../src/services/user.service';
 describe('Subscription expiration handling', () => {
   let executorId: string;
   let customerId: string;
+  const extraUserIds: string[] = [];
 
   beforeAll(async () => {
     const user = await prisma.user.create({
@@ -82,6 +84,12 @@ describe('Subscription expiration handling', () => {
     await prisma.transaction.deleteMany({ where: { userId: executorId } });
     await prisma.subscription.deleteMany({ where: { userId: executorId } });
     await prisma.balance.deleteMany({ where: { userId: executorId } });
+    if (extraUserIds.length > 0) {
+      await prisma.subscription.deleteMany({ where: { userId: { in: extraUserIds } } });
+      await prisma.balance.deleteMany({ where: { userId: { in: extraUserIds } } });
+      await prisma.executorProfile.deleteMany({ where: { userId: { in: extraUserIds } } });
+      await prisma.user.deleteMany({ where: { id: { in: extraUserIds } } });
+    }
     await prisma.user.deleteMany({ where: { id: customerId } });
     await prisma.user.deleteMany({ where: { id: executorId } });
     await prisma.$disconnect();
@@ -146,6 +154,42 @@ describe('Subscription expiration handling', () => {
     expect(subscription.tariffType).toBe('PREMIUM');
     expect(expiresAt.getTime()).toBeGreaterThanOrEqual(minExpected.getTime());
     expect(expiresAt.getTime()).toBeLessThanOrEqual(maxExpected.getTime());
+  });
+
+  it('keeps the trial premium period fixed at 30 days even if trialDays is configured differently', async () => {
+    await settingsService.updateSection('tariffs', { trialDays: '60' });
+
+    const user = await prisma.user.create({
+      data: {
+        phone: '+78888888883',
+        password: 'test-password',
+        fullName: 'Trial Period Executor',
+        city: 'Moscow',
+        role: 'EXECUTOR',
+        status: 'ACTIVE',
+        isPhoneVerified: true,
+      },
+    });
+
+    extraUserIds.push(user.id);
+
+    const minExpected = new Date();
+    minExpected.setDate(minExpected.getDate() + 29);
+    const maxExpected = new Date();
+    maxExpected.setDate(maxExpected.getDate() + 31);
+
+    await (authService as any).initializeExecutorData(user.id);
+
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId: user.id },
+    });
+    const expiresAt = new Date(subscription!.expiresAt);
+
+    expect(subscription?.tariffType).toBe('PREMIUM');
+    expect(expiresAt.getTime()).toBeGreaterThanOrEqual(minExpected.getTime());
+    expect(expiresAt.getTime()).toBeLessThanOrEqual(maxExpected.getTime());
+
+    await settingsService.updateSection('tariffs', { trialDays: '30' });
   });
 
   it('switches to free COMFORT and trims specializations when tariff changes', async () => {
@@ -400,6 +444,58 @@ describe('Subscription expiration handling', () => {
     expect(cancelledResponse?.status).toBe('CANCELLED');
   });
 
+  it('hides executor responses for orders whose end date has already passed', async () => {
+    await prisma.subscription.update({
+      where: { userId: executorId },
+      data: {
+        tariffType: 'PREMIUM',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        specializationCount: 3,
+      },
+    });
+
+    await prisma.executorProfile.update({
+      where: { userId: executorId },
+      data: {
+        specializations: ['WINDOWS'],
+      },
+    });
+
+    const order = await prisma.order.create({
+      data: {
+        customerId,
+        category: 'WINDOWS',
+        title: 'Просроченный заказ',
+        description: 'Тест скрытия просроченного заказа из откликов',
+        region: 'Moscow',
+        address: 'ул. Тестовая, д. 5',
+        startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        endDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        budget: 10000,
+        paymentMethod: 'CASH',
+        files: [],
+        status: 'PUBLISHED',
+      },
+    });
+
+    const response = await prisma.response.create({
+      data: {
+        orderId: order.id,
+        executorId,
+        commissionPaid: 0,
+        tariffType: 'PREMIUM',
+        status: 'PENDING',
+      },
+    });
+
+    const myResponses = await responseService.getExecutorResponses(executorId);
+    await orderService.autoCloseExpiredOrders();
+    const updatedOrder = await prisma.order.findUnique({ where: { id: order.id } });
+
+    expect(myResponses.some((item) => item.id === response.id)).toBe(false);
+    expect(updatedOrder?.status).toBe('CANCELLED');
+  });
+
   it('updates the accepted COMFORT response with the charged order fee', async () => {
     const tariffSettings = await settingsService.getBySection('tariffs');
     const comfortOrderTakenPrice = parseInt(tariffSettings.comfortOrderTakenPrice || '500', 10);
@@ -494,5 +590,21 @@ describe('Subscription expiration handling', () => {
     expect(parseFloat(subscriptionTransaction!.amount.toString())).toBe(-500);
 
     await settingsService.updateSection('tariffs', { comfortPrice: '0' });
+  });
+
+  it('updates premium expiry from a date-only admin value', async () => {
+    const subscription = await adminService.updateUserSubscription(executorId, {
+      tariffType: 'PREMIUM',
+      expiresAt: '2026-05-10',
+    });
+
+    const expiresAt = new Date(subscription.expiresAt);
+
+    expect(subscription.tariffType).toBe('PREMIUM');
+    expect(expiresAt.getFullYear()).toBe(2026);
+    expect(expiresAt.getMonth()).toBe(4);
+    expect(expiresAt.getDate()).toBe(10);
+    expect(expiresAt.getHours()).toBe(23);
+    expect(expiresAt.getMinutes()).toBe(59);
   });
 });

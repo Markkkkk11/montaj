@@ -35,6 +35,31 @@ const DEFAULT_SETTINGS: Record<string, { value: string; section: string }> = {
 };
 
 export class SettingsService {
+  private normalizeSettingsResult(section: string, data: Record<string, string>) {
+    if (section !== 'tariffs') {
+      return data;
+    }
+
+    return {
+      ...data,
+      trialDays: '30',
+    };
+  }
+
+  private normalizeSectionData(section: string, data: Record<string, string>) {
+    if (section !== 'tariffs') {
+      return data;
+    }
+
+    const normalized = { ...data };
+
+    if (normalized.trialDays) {
+      normalized.trialDays = '30';
+    }
+
+    return normalized;
+  }
+
   /**
    * Инициализация дефолтных настроек (вызывается при старте)
    */
@@ -62,6 +87,10 @@ export class SettingsService {
       grouped[row.section][row.key] = row.value;
     }
 
+    if (grouped.tariffs) {
+      grouped.tariffs = this.normalizeSettingsResult('tariffs', grouped.tariffs);
+    }
+
     return grouped;
   }
 
@@ -74,13 +103,17 @@ export class SettingsService {
     for (const row of rows) {
       result[row.key] = row.value;
     }
-    return result;
+    return this.normalizeSettingsResult(section, result);
   }
 
   /**
    * Получить одну настройку по ключу
    */
   async get(key: string): Promise<string | null> {
+    if (key === 'trialDays') {
+      return '30';
+    }
+
     const row = await prisma.platformSetting.findUnique({ where: { key } });
     return row?.value ?? DEFAULT_SETTINGS[key]?.value ?? null;
   }
@@ -110,14 +143,16 @@ export class SettingsService {
         result[key] = DEFAULT_SETTINGS[key].value;
       }
     }
-    return result;
+    return this.normalizeSettingsResult('tariffs', result);
   }
 
   /**
    * Обновить настройки секции (массово)
    */
   async updateSection(section: string, data: Record<string, string>) {
-    const updates = Object.entries(data).map(([key, value]) =>
+    const normalizedData = this.normalizeSectionData(section, data);
+
+    const updates = Object.entries(normalizedData).map(([key, value]) =>
       prisma.platformSetting.upsert({
         where: { key },
         update: { value },
@@ -129,7 +164,7 @@ export class SettingsService {
 
     // При изменении тарифных настроек — обновить существующие подписки
     if (section === 'tariffs') {
-      await this.syncSubscriptionLimits(data);
+      await this.syncSubscriptionLimits(normalizedData);
     }
 
     return this.getBySection(section);

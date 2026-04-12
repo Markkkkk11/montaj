@@ -4,6 +4,33 @@ import subscriptionService from './subscription.service';
 import settingsService from './settings.service';
 
 export class AdminService {
+  private parseSubscriptionExpiry(expiresAt?: string | null) {
+    if (!expiresAt) {
+      return null;
+    }
+
+    const trimmedValue = expiresAt.trim();
+    if (!trimmedValue) {
+      return null;
+    }
+
+    const dateOnlyMatch = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+      const [, year, month, day] = dateOnlyMatch;
+      return new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        23,
+        59,
+        59,
+        999
+      );
+    }
+
+    return new Date(trimmedValue);
+  }
+
   private async withEffectiveSubscription<T extends { id: string; role: string; subscription?: any | null; executorProfile?: any | null }>(user: T): Promise<T> {
     if (user.role !== 'EXECUTOR') {
       return user;
@@ -947,7 +974,7 @@ export class AdminService {
       existingSubscription &&
       existingSubscription.tariffType === tariffType;
 
-    const parsedExpiresAt = data.expiresAt ? new Date(data.expiresAt) : null;
+    const parsedExpiresAt = this.parseSubscriptionExpiry(data.expiresAt);
     if (parsedExpiresAt && Number.isNaN(parsedExpiresAt.getTime())) {
       throw new Error('Некорректная дата окончания подписки');
     }

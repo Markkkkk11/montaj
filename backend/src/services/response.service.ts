@@ -216,14 +216,26 @@ export class ResponseService {
    * Получить отклики исполнителя
    */
   async getExecutorResponses(executorId: string) {
+    const now = new Date();
+
     const responses = await prisma.response.findMany({
       where: {
         executorId,
         status: 'PENDING',
         order: {
-          status: {
-            in: ['PUBLISHED', 'PENDING'],
-          },
+          AND: [
+            {
+              status: {
+                in: ['PUBLISHED', 'PENDING'],
+              },
+            },
+            {
+              OR: [
+                { endDate: null },
+                { endDate: { gte: now } },
+              ],
+            },
+          ],
         },
       },
       include: {
