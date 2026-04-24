@@ -302,6 +302,9 @@ export class AdminService {
               phone: true,
               email: true,
               organization: true,
+              city: true,
+              rating: true,
+              completedOrders: true,
             },
           },
           executor: {
@@ -309,7 +312,9 @@ export class AdminService {
               id: true,
               fullName: true,
               phone: true,
+              email: true,
               rating: true,
+              completedOrders: true,
             },
           },
           responses: {
@@ -317,6 +322,12 @@ export class AdminService {
               id: true,
               executorId: true,
               status: true,
+            },
+          },
+          _count: {
+            select: {
+              responses: { where: { status: { not: 'CANCELLED' } } },
+              views: true,
             },
           },
         },
@@ -877,6 +888,39 @@ export class AdminService {
         balance: true,
         subscription: true,
         executorProfile: true,
+        _count: {
+          select: {
+            createdOrders: true,
+            assignedOrders: true,
+            responses: true,
+            reviewsGiven: true,
+            reviewsReceived: true,
+          },
+        },
+        createdOrders: {
+          select: {
+            id: true,
+            orderNumber: true,
+            title: true,
+            status: true,
+            budget: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+        assignedOrders: {
+          select: {
+            id: true,
+            orderNumber: true,
+            title: true,
+            status: true,
+            budget: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
       },
     });
 
@@ -884,7 +928,8 @@ export class AdminService {
       throw new Error('Пользователь не найден');
     }
 
-    return this.withEffectiveSubscription(user);
+    const { password, ...userWithoutPassword } = user;
+    return this.withEffectiveSubscription(userWithoutPassword);
   }
 
   /**

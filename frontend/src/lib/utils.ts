@@ -43,7 +43,7 @@ export function isExecutorProfileComplete(user: User | null): boolean {
 
 // Маппинг специализаций на русский
 export const SPECIALIZATION_LABELS: Record<string, string> = {
-  WINDOWS: 'Окна',
+  WINDOWS: 'Окна и СПК',
   DOORS: 'Двери',
   CEILINGS: 'Потолки',
   CONDITIONERS: 'Кондиционеры',
@@ -100,7 +100,7 @@ export function getEffectiveSubscription(subscription?: User['subscription'] | n
 
 // Цвета по специализациям
 export const SPECIALIZATION_COLORS: Record<string, string> = {
-  WINDOWS: '#2563eb',       // Окна - синий
+  WINDOWS: '#2563eb',       // Окна и СПК - синий
   DOORS: '#9333ea',         // Двери - фиолетовый
   CEILINGS: '#16a34a',      // Потолки - зелёный
   CONDITIONERS: '#ea580c',  // Кондиционеры - оранжевый

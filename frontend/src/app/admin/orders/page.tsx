@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
 import { SPECIALIZATION_LABELS } from '@/lib/utils';
-import { Search, Eye, Trash2, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Eye, Trash2, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, XCircle, ImageIcon, UserCog } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const AVAILABLE_REGIONS = [
@@ -37,15 +37,24 @@ interface Order {
   category: string;
   region: string;
   budget: number;
+  files?: string[];
   status: string;
   createdAt: string;
   customer: {
+    id: string;
     fullName: string;
     phone: string;
+    email?: string;
   };
   executor?: {
+    id: string;
     fullName: string;
     phone: string;
+    email?: string;
+  };
+  _count?: {
+    responses: number;
+    views: number;
   };
 }
 
@@ -59,6 +68,7 @@ export default function AdminOrdersPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<string>('desc');
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     loadOrders();
@@ -130,6 +140,7 @@ export default function AdminOrdersPage() {
     return (
       order.title.toLowerCase().includes(query) ||
       order.customer.fullName.toLowerCase().includes(query) ||
+      order.customer.phone.includes(query) ||
       order.region.toLowerCase().includes(query) ||
       categoryLabel.includes(query) ||
       (order.orderNumber && order.orderNumber.toString().includes(query))
@@ -164,6 +175,12 @@ export default function AdminOrdersPage() {
     if (sortOrder === 'desc') return <ArrowDown className="h-3 w-3" />;
     return <ArrowUp className="h-3 w-3" />;
   };
+
+  const getFileUrl = (file: string) => (
+    file.startsWith('/') ? `${API_URL}${file}` : file
+  );
+
+  const isImageFile = (file: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(file.split('?')[0]);
 
   return (
     <div className="p-4 sm:p-8">
@@ -295,6 +312,7 @@ export default function AdminOrdersPage() {
                   <TableHead>Категория</TableHead>
                   <TableHead>Регион</TableHead>
                   <TableHead>Бюджет</TableHead>
+                  <TableHead>Фото</TableHead>
                   <TableHead>Заказчик</TableHead>
                   <TableHead>Исполнитель</TableHead>
                   <TableHead>Статус</TableHead>
@@ -328,15 +346,62 @@ export default function AdminOrdersPage() {
                     <TableCell>{order.region}</TableCell>
                     <TableCell>{Math.round(Number(order.budget)).toLocaleString('ru-RU')} ₽</TableCell>
                     <TableCell>
+                      {order.files && order.files.length > 0 ? (
+                        <div className="flex items-center gap-1.5">
+                          {order.files.slice(0, 3).map((file, idx) => {
+                            const fileUrl = getFileUrl(file);
+                            const filename = file.split('/').pop() || `Файл ${idx + 1}`;
+                            return (
+                              <a
+                                key={`${file}-${idx}`}
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={filename}
+                                className="h-9 w-9 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center hover:border-primary"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {isImageFile(file) ? (
+                                  <img src={fileUrl} alt={filename} className="h-full w-full object-cover" />
+                                ) : (
+                                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </a>
+                            );
+                          })}
+                          {order.files.length > 3 && (
+                            <span className="text-xs text-muted-foreground">+{order.files.length - 3}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <div className="text-sm">
-                        <div>{order.customer.fullName}</div>
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/admin/users/${order.customer.id}`)}
+                          className="font-medium text-left hover:text-primary hover:underline"
+                        >
+                          {order.customer.fullName}
+                        </button>
                         <div className="text-muted-foreground">{order.customer.phone}</div>
+                        {order.customer.email && (
+                          <div className="text-muted-foreground">{order.customer.email}</div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
                       {order.executor ? (
                         <div className="text-sm">
-                          <div>{order.executor.fullName}</div>
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/admin/users/${order.executor!.id}`)}
+                            className="font-medium text-left hover:text-primary hover:underline"
+                          >
+                            {order.executor.fullName}
+                          </button>
                           <div className="text-muted-foreground">{order.executor.phone}</div>
                         </div>
                       ) : (
@@ -381,9 +446,17 @@ export default function AdminOrdersPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => router.push(`/orders/${order.id}`)}
-                          title="Просмотр"
+                          title="Просмотр заявки"
                         >
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.push(`/admin/users/${order.customer.id}`)}
+                          title="Профиль заказчика"
+                        >
+                          <UserCog className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"

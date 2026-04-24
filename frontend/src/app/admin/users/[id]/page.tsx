@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { adminApi } from '@/lib/api/admin';
 import { getTariffInfo, TariffInfo } from '@/lib/api/subscriptions';
+import { SPECIALIZATION_LABELS } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 
 export default function AdminUserEditPage() {
@@ -155,6 +156,25 @@ export default function AdminUserEditPage() {
   const shouldShowExpiryField =
     tariffType === 'PREMIUM';
   const premiumDurationDays = tariffLimits.PREMIUM?.duration ?? 30;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleString('ru-RU');
+  };
+
+  const displayValue = (value?: string | number | boolean | null) => {
+    if (value === true) return 'Да';
+    if (value === false) return 'Нет';
+    if (value === 0) return '0';
+    return value || '—';
+  };
+
+  const getFileUrl = (file: string) => (
+    file.startsWith('/') ? `${API_URL}${file}` : file
+  );
 
   useEffect(() => {
     if (tariffType !== 'PREMIUM') {
@@ -206,6 +226,116 @@ export default function AdminUserEditPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Полный профиль</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-6 text-sm">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-900">Контакты</h3>
+                <p><span className="text-muted-foreground">Телефон:</span> {displayValue(user.phone)}</p>
+                <p><span className="text-muted-foreground">Email:</span> {displayValue(user.email)}</p>
+                <p><span className="text-muted-foreground">Город:</span> {displayValue(user.city)}</p>
+                <p><span className="text-muted-foreground">Адрес:</span> {displayValue(user.address)}</p>
+                <p><span className="text-muted-foreground">MAX:</span> {displayValue(user.messengers?.max)}</p>
+                <p><span className="text-muted-foreground">Телефон подтверждён:</span> {displayValue(user.isPhoneVerified)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-900">Организация</h3>
+                <p><span className="text-muted-foreground">Название:</span> {displayValue(user.organization)}</p>
+                <p><span className="text-muted-foreground">ИНН:</span> {displayValue(user.inn)}</p>
+                <p><span className="text-muted-foreground">ОГРН:</span> {displayValue(user.ogrn)}</p>
+                <p><span className="text-muted-foreground">Сайт:</span> {displayValue(user.website)}</p>
+                <p><span className="text-muted-foreground">Роль:</span> {user.role === 'EXECUTOR' ? 'Исполнитель' : user.role === 'CUSTOMER' ? 'Заказчик' : 'Админ'}</p>
+                <p><span className="text-muted-foreground">ID:</span> <span className="font-mono text-xs">{user.id}</span></p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-900">Активность</h3>
+                <p><span className="text-muted-foreground">Рейтинг:</span> {Number(user.rating || 0).toFixed(1)}</p>
+                <p><span className="text-muted-foreground">Завершённых заказов:</span> {displayValue(user.completedOrders)}</p>
+                <p><span className="text-muted-foreground">Создано заявок:</span> {displayValue(user._count?.createdOrders)}</p>
+                <p><span className="text-muted-foreground">Назначено заявок:</span> {displayValue(user._count?.assignedOrders)}</p>
+                <p><span className="text-muted-foreground">Откликов:</span> {displayValue(user._count?.responses)}</p>
+                <p><span className="text-muted-foreground">Регистрация:</span> {formatDateTime(user.createdAt)}</p>
+                <p><span className="text-muted-foreground">Обновлён:</span> {formatDateTime(user.updatedAt)}</p>
+              </div>
+            </div>
+
+            {user.about && (
+              <div className="mt-6 border-t pt-4">
+                <h3 className="font-semibold text-gray-900 mb-2">О себе / компании</h3>
+                <p className="whitespace-pre-line text-sm">{user.about}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {user.role === 'EXECUTOR' && user.executorProfile && (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Полный профиль исполнителя</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5 text-sm">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-muted-foreground mb-1">Регион работы</p>
+                  <p className="font-medium">{displayValue(user.executorProfile.region)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-1">Самозанятый</p>
+                  <p className="font-medium">{displayValue(user.executorProfile.isSelfEmployed)}</p>
+                </div>
+              </div>
+
+              {user.executorProfile.specializations?.length > 0 && (
+                <div>
+                  <p className="text-muted-foreground mb-2">Специализации</p>
+                  <div className="flex flex-wrap gap-2">
+                    {user.executorProfile.specializations.map((spec: string) => (
+                      <span key={spec} className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                        {SPECIALIZATION_LABELS[spec] || spec}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {user.executorProfile.shortDescription && (
+                <div>
+                  <p className="text-muted-foreground mb-1">Краткое описание</p>
+                  <p className="whitespace-pre-line">{user.executorProfile.shortDescription}</p>
+                </div>
+              )}
+
+              {user.executorProfile.fullDescription && (
+                <div>
+                  <p className="text-muted-foreground mb-1">Подробное описание</p>
+                  <p className="whitespace-pre-line">{user.executorProfile.fullDescription}</p>
+                </div>
+              )}
+
+              {user.executorProfile.workPhotos?.length > 0 && (
+                <div>
+                  <p className="text-muted-foreground mb-2">Фото работ ({user.executorProfile.workPhotos.length})</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {user.executorProfile.workPhotos.map((photo: string, index: number) => {
+                      const photoUrl = getFileUrl(photo);
+                      return (
+                        <a key={`${photo}-${index}`} href={photoUrl} target="_blank" rel="noopener noreferrer" className="aspect-square overflow-hidden rounded-lg border bg-gray-50">
+                          <img src={photoUrl} alt={`Фото работы ${index + 1}`} className="h-full w-full object-cover hover:scale-105 transition-transform" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Basic Info */}
         <Card>
           <CardHeader>
